@@ -636,4 +636,87 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                                                         <ul className="text-sm space-y-1 text-gray-700">
                                                             {dimension.indicators.map((indicator, idx) => (
                                                                 <li key={idx} className="flex items-start">
-                                                                    <span className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-
+                                                                    <li key={idx} className="flex items-start">
+                                                                <span className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                                                                <span className="text-sm">{indicator}</span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                    </div>
+                    {/* Right Sidebar - Calculator */}
+                    <div className="xl:col-span-1 p-6 bg-white rounded-lg shadow h-fit sticky top-6">
+                        <div className="flex items-center space-x-2 mb-4">
+                            <span className="text-blue-600">📊</span>
+                            <h2 className="text-xl font-semibold">Four-Dimensional Assessment Calculator</h2>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-4">
+                            Use the sliders below to score an innovation on each dimension and see a final classification.
+                        </p>
+                        <div className="space-y-4">
+                            {Object.entries(dimensions).map(([key, dimension]) => (
+                                <div key={key} className="p-4 bg-gray-50 rounded-lg border">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <label className="text-sm font-medium text-gray-700" htmlFor={key}>
+                                            {dimension.name}
+                                        </label>
+                                        <span className="text-sm font-semibold text-gray-900">{scores[key]}/2</span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        id={key}
+                                        min="0"
+                                        max="2"
+                                        step="1"
+                                        value={scores[key]}
+                                        onChange={(e) => handleScoreChange(key, e.target.value)}
+                                        className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-2">{dimension.description}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-6 flex justify-between items-center">
+                            <button
+                                onClick={calculateAssessment}
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium"
+                            >
+                                Calculate Assessment
+                            </button>
+                            <button
+                                onClick={resetTool}
+                                className="text-gray-600 hover:text-gray-800 font-medium text-sm"
+                            >
+                                Reset
+                            </button>
+                        </div>
+
+                        {assessment && (
+                            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <h3 className="text-lg font-semibold text-blue-900 mb-2">Final Classification</h3>
+                                <div className="flex items-center space-x-2 text-blue-800">
+                                    <span className="text-2xl">{getClassificationIcon()}</span>
+                                    <p className="text-lg font-bold">{assessment.classification}</p>
+                                </div>
+                                <p className="text-blue-700 mt-2 text-sm">{assessment.recommendation}</p>
+                                <p className="text-blue-700 text-sm">Total Score: **{assessment.totalScore}/8**</p>
+                                <p className="text-blue-700 text-sm">Confidence: **{assessment.confidence}**</p>
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    ReactDOM.render(<MilitaryInnovationTool />, document.getElementById('root'));
+</script>
