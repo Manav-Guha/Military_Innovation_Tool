@@ -8,6 +8,7 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js" data-presets="react"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         .animate-spin {
             animation: spin 1s linear infinite;
@@ -48,7 +49,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect, useRef } = React;
 
         const MilitaryInnovationTool = () => {
             const [scores, setScores] = useState({
@@ -64,6 +65,8 @@
             const [showIndicators, setShowIndicators] = useState({});
             const [selectedExample, setSelectedExample] = useState('');
             const [copySuccess, setCopySuccess] = useState(false);
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
 
             const dimensions = {
                 discontinuity: {
@@ -111,7 +114,7 @@
             const historicalExamples = {
                 // Historical Innovations
                 "Stirrups": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 4 },
                     classification: "Genuine Innovation",
                     rationale: "Revolutionized cavalry warfare, enabled feudal military systems, transformed mounted combat doctrine globally",
                     period: "~400-800 CE",
@@ -123,7 +126,7 @@
                     ]
                 },
                 "Conoidal Bullet (Minié Ball)": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 1 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 2, cognitive: 2 },
                     classification: "Genuine Innovation", 
                     rationale: "Transformed infantry effectiveness and engagement ranges, made massed infantry attacks obsolete",
                     period: "1840s-1860s",
@@ -135,7 +138,7 @@
                     ]
                 },
                 "Machine Gun": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 4 },
                     classification: "Genuine Innovation",
                     rationale: "Ended era of massed infantry attacks, created modern defensive warfare, forced tactical revolution",
                     period: "1880s-1920s", 
@@ -147,7 +150,7 @@
                     ]
                 },
                 "Tank": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 4 },
                     classification: "Genuine Innovation",
                     rationale: "Broke WWI trench warfare stalemate, enabled mobile warfare, created armored doctrine",
                     period: "1916-1940s",
@@ -159,7 +162,7 @@
                     ]
                 },
                 "Carrier Aviation": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 4 },
                     classification: "Genuine Innovation",
                     rationale: "Ended battleship dominance, enabled power projection, created naval aviation doctrine",
                     period: "1920s-1945",
@@ -171,7 +174,7 @@
                     ]
                 },
                 "Nuclear Weapons": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 4 },
                     classification: "Genuine Innovation",
                     rationale: "Created strategic deterrence, ended conventional great power war, revolutionized strategy",
                     period: "1945-present",
@@ -183,7 +186,7 @@
                     ]
                 },
                 "Blitzkrieg Doctrine": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 4 },
                     classification: "Genuine Innovation",
                     rationale: "Shattered WWI attrition paradigm, created modern maneuver warfare, established operational art",
                     period: "1920s-1940s",
@@ -197,7 +200,7 @@
 
                 // Cold War Era
                 "Stealth Technology": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 0 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 2, cognitive: 0 },
                     classification: "Modernization",
                     rationale: "Important capability advancement but limited doctrinal transformation, mainly platform improvement",
                     period: "1970s-present",
@@ -209,7 +212,7 @@
                     ]
                 },
                 "Precision-Guided Munitions": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 2 },
                     classification: "Genuine Innovation",
                     rationale: "Transformed strike warfare accuracy, created effects-based operations, reduced collateral damage",
                     period: "1970s-1990s",
@@ -223,7 +226,7 @@
 
                 // Modern Era  
                 "Network-Centric Warfare": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 2 },
                     classification: "Partially Realized Innovation",
                     rationale: "Conceptually transformative but operationally incomplete, network effects not fully realized",
                     period: "1990s-present",
@@ -235,7 +238,7 @@
                     ]
                 },
                 "Unmanned Aerial Vehicles": {
-                    scores: { discontinuity: 1, irreversibility: 2, generative: 2, cognitive: 1 },
+                    scores: { discontinuity: 2, irreversibility: 4, generative: 4, cognitive: 2 },
                     classification: "Watch Category",
                     rationale: "Significant capability but evolutionary rather than revolutionary, extending existing air power concepts",
                     period: "1990s-present",
@@ -247,7 +250,7 @@
                     ]
                 },
                 "Cyber Warfare": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 4, cognitive: 4 },
                     classification: "Genuine Innovation",
                     rationale: "Created new warfare domain, enables non-kinetic effects, challenges traditional deterrence",
                     period: "1990s-present",
@@ -261,7 +264,7 @@
 
                 // Contemporary Era
                 "Anti-Ship Ballistic Missile": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 2 },
+                    scores: { discontinuity: 4, irreversibility: 4, generative: 2, cognitive: 4 },
                     classification: "Genuine Innovation", 
                     rationale: "Conceptual breakthrough challenging naval supremacy, land-based precision strikes against maritime targets",
                     period: "2000s-present",
@@ -273,7 +276,7 @@
                     ]
                 },
                 "Laser Weapons": {
-                    scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 1 },
+                    scores: { discontinuity: 4, irreversibility: 2, generative: 2, cognitive: 2 },
                     classification: "Watch Category",
                     rationale: "Paradigm shift potential from kinetic to directed energy but implementation still limited",
                     period: "2010s-present", 
@@ -285,7 +288,7 @@
                     ]
                 },
                 "Military Robotics": {
-                    scores: { discontinuity: 1, irreversibility: 2, generative: 2, cognitive: 1 },
+                    scores: { discontinuity: 2, irreversibility: 4, generative: 4, cognitive: 2 },
                     classification: "Watch Category",
                     rationale: "Significant potential but currently evolutionary, extending human capabilities rather than replacing them",
                     period: "2000s-present",
@@ -297,7 +300,7 @@
                     ]
                 },
                 "AI Targeting Systems": {
-                    scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 },
+                    scores: { discontinuity: 2, irreversibility: 2, generative: 4, cognitive: 2 },
                     classification: "Watch Category",
                     rationale: "High potential but early implementation, more modernization than innovation currently",
                     period: "2010s-present",
@@ -309,7 +312,7 @@
                     ]
                 },
                 "Hypersonic Weapons": {
-                    scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 1 },
+                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
                     classification: "Watch Category", 
                     rationale: "Speed advantage but questionable whether fundamentally different from existing precision strike",
                     period: "2010s-present",
@@ -328,12 +331,6 @@
                     return;
                 }
                 
-                // Get the rationales from the historical examples that match the user's scores
-                let rationales = {};
-                Object.keys(dimensions).forEach(key => {
-                    rationales[key] = historicalExamples["Stirrups"].rationale; // Placeholder, as no research text is provided
-                });
-
                 const prompt = `You are a senior military analyst and expert on military innovation. Your task is to assess a proposed military capability using a rigorous four-dimensional framework.
 
 **PROPOSED CAPABILITY:**
@@ -344,19 +341,19 @@ Based on your own research, you have scored this capability on each dimension be
 
 **FOUR-DIMENSIONAL FRAMEWORK:**
 
-**1. DISCONTINUITY (Score 0-2):**
+**1. DISCONTINUITY (Score 0-4):**
 Does this capability break existing patterns rather than extending them?
 Indicators: ${dimensions.discontinuity.indicators.join('; ')}
 
-**2. IRREVERSIBILITY (Score 0-2):**
+**2. IRREVERSIBILITY (Score 0-4):**
 Does this capability create new baseline conditions that cannot be undone?
 Indicators: ${dimensions.irreversibility.indicators.join('; ')}
 
-**3. GENERATIVE CAPACITY (Score 0-2):**
+**3. GENERATIVE CAPACITY (Score 0-4):**
 Does this capability spawn further developments across multiple domains?
 Indicators: ${dimensions.generative.indicators.join('; ')}
 
-**4. COGNITIVE DISRUPTION (Score 0-2):**
+**4. COGNITIVE DISRUPTION (Score 0-4):**
 Does this capability force fundamental reconceptualization of warfare?
 Indicators: ${dimensions.cognitive.indicators.join('; ')}
 
@@ -369,13 +366,13 @@ Indicators: ${dimensions.cognitive.indicators.join('; ')}
 - Irreversibility: ${scores.irreversibility}
 - Generative Capacity: ${scores.generative}
 - Cognitive Disruption: ${scores.cognitive}
-**Total Score: ${scores.discontinuity + scores.irreversibility + scores.generative + scores.cognitive}/8**
+**Total Score: ${scores.discontinuity + scores.irreversibility + scores.generative + scores.cognitive}/16**
 
 **EVIDENCE-BASED RATIONALE:**
 (Provide your own justification here, referencing external research)
 
 **FINAL CLASSIFICATION:**
-Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 OR Cognitive Disruption ≥1):
+Based on the decision rule (≥10 points total AND includes Irreversibility ≥1 OR Cognitive Disruption ≥1):
 - [ ] Genuine Innovation
 - [ ] Watch Category
 - [ ] Modernization
@@ -418,29 +415,21 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                 const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
                 const hasIrreversibility = scores.irreversibility >= 1;
                 const hasCognitive = scores.cognitive >= 1;
-                const meetsThreshold = totalScore >= 6 && (hasIrreversibility || hasCognitive);
+                const meetsThreshold = totalScore >= 10 && (hasIrreversibility || hasCognitive);
                 
-                let classification, recommendation, confidence;
+                let classification;
                 
                 if (meetsThreshold) {
                     classification = "Genuine Innovation";
-                    recommendation = "High priority funding recommended";
-                    confidence = totalScore >= 7 ? "High" : "Medium";
-                } else if (totalScore >= 4) {
+                } else if (totalScore >= 6) {
                     classification = "Watch Category";
-                    recommendation = "Monitor development; selective investment";
-                    confidence = "Medium";
                 } else {
                     classification = "Modernization";
-                    recommendation = "Limited funding; incremental improvements";
-                    confidence = "High";
                 }
 
                 setAssessment({
                     totalScore,
                     classification,
-                    recommendation,
-                    confidence,
                     meetsThreshold
                 });
             };
@@ -453,8 +442,8 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
             };
 
             const getScoreColor = (score) => {
-                if (score >= 2) return "text-green-600 bg-green-50";
-                if (score >= 1) return "text-yellow-600 bg-yellow-50"; 
+                if (score >= 3) return "text-green-600 bg-green-50";
+                if (score >= 2) return "text-yellow-600 bg-yellow-50"; 
                 return "text-red-600 bg-red-50";
             };
 
@@ -484,6 +473,65 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                 setGeneratedPrompt(null);
                 setShowIndicators({});
             };
+            
+            useEffect(() => {
+                if (chartInstance.current) {
+                    chartInstance.current.destroy();
+                }
+                
+                const labels = Object.keys(dimensions).map(key => dimensions[key].name);
+                const data = Object.values(scores);
+                const ctx = chartRef.current.getContext('2d');
+                
+                chartInstance.current = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Dimension Score',
+                            data: data,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            title: {
+                                display: true,
+                                text: 'Score Profile Across Dimensions',
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                },
+                                color: '#1f2937'
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 4,
+                                ticks: {
+                                    stepSize: 1
+                                },
+                                grid: {
+                                    color: '#e5e7eb'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }, [scores]);
 
             return (
                 <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
@@ -527,7 +575,7 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                                     <div className="border-l-4 border-green-500 pl-4">
                                         <h3 className="font-semibold text-gray-800 mb-2">Step 2: Score Each Dimension</h3>
                                         <p className="text-sm text-gray-600 italic mb-4">
-                                            The score you provide is not necessarily a metric; rather it is indicative of how you would rank each criterion. As such, it is not a quantitative but a qualitative tool.
+                                            Score each criterion from **0 (no evidence)** to **4 (strong evidence)**. This tool is a qualitative guide, not a precise quantitative metric.
                                         </p>
                                         <div className="space-y-4">
                                             {Object.entries(dimensions).map(([key, dimension]) => (
@@ -535,7 +583,7 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                                                     <div className="flex items-center justify-between mb-2">
                                                         <h4 className="font-semibold text-gray-800">{dimension.name}</h4>
                                                         <div className="flex space-x-2 score-radio">
-                                                            {[0, 1, 2].map(score => (
+                                                            {[0, 1, 2, 3, 4].map(score => (
                                                                 <div key={score}>
                                                                     <input
                                                                         type="radio"
@@ -557,6 +605,12 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                                             ))}
                                         </div>
                                     </div>
+                                    
+                                    {/* Line Graph */}
+                                    <div className="p-6 bg-white rounded-lg shadow">
+                                        <canvas ref={chartRef} id="scoreChart"></canvas>
+                                    </div>
+
 
                                     {/* Step 3: Generate Prompt */}
                                     <div className="border-l-4 border-purple-500 pl-4">
@@ -637,6 +691,9 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                             {selectedExample && (
                                 <div className="space-y-4">
                                     <h3 className="text-lg font-semibold text-gray-800">Framework Application: {selectedExample}</h3>
+                                    <div className="p-6 bg-white rounded-lg shadow">
+                                        <canvas ref={chartRef} id="scoreChart"></canvas>
+                                    </div>
                                     {Object.entries(dimensions).map(([key, dimension]) => (
                                         <div key={key} className="p-6 bg-white rounded-lg shadow">
                                             <div className="flex justify-between items-center">
@@ -647,7 +704,7 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                                                     <p className="text-gray-600 text-sm mt-1">{dimension.description}</p>
                                                 </div>
                                                 <div className={`px-4 py-2 rounded-full text-sm font-bold ${getScoreColor(scores[key])}`}>
-                                                    {scores[key]}/2
+                                                    {scores[key]}/4
                                                 </div>
                                             </div>
                                             <div className="mt-4">
@@ -698,7 +755,7 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                                                         <h4 className="font-bold text-lg text-green-800">Classification: {assessment.classification}</h4>
                                                     </div>
                                                     <p className="text-sm text-green-700 mt-2">
-                                                        <span className="font-semibold">Total Score:</span> {assessment.totalScore}/8
+                                                        <span className="font-semibold">Total Score:</span> {assessment.totalScore}/16
                                                     </p>
                                                     <p className="text-sm text-green-700 mt-1">
                                                         <span className="font-semibold">Decision:</span> {assessment.meetsThreshold ? 'Meets threshold for Genuine Innovation.' : 'Does not meet threshold for Genuine Innovation.'}
