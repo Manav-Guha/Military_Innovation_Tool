@@ -260,9 +260,20 @@
                         {/* Dimension Scoring (Horizontal Layout) */}
                         <div className="p-6 bg-white rounded-lg shadow">
                             <h2 className="text-xl font-semibold mb-4">Step 2: Score Dimensions (0-5)</h2>
-                            <p className="text-sm text-gray-600 mb-4">
-                                <span className="font-semibold text-red-600">Disclaimer:</span> This is a conceptual tool. Scores are **indicative**, not quantitative, and must be justified by real-world evidence.
+                            <p className="text-sm text-gray-600 mb-4 font-semibold italic">
+                                The score are representations along a gradient, not definitive values, and must be justified by real-world evidence.
                             </p>
+                            <div className="text-sm text-gray-700 mb-4 space-y-1">
+                                <p><strong>Scoring Legend:</strong></p>
+                                <ul className="list-disc list-inside space-y-1 ml-4">
+                                    <li><strong>0 = Not Applicable/No Evidence:</strong> The innovation doesn't demonstrate any of the dimension's properties.</li>
+                                    <li><strong>1 = Minimal Impact:</strong> The innovation has a slight effect on the dimension but doesn't create any meaningful change.</li>
+                                    <li><strong>2 = Limited but Measurable Impact:</strong> The innovation shows a clear effect on the dimension, but the impact is contained and doesn't propagate widely.</li>
+                                    <li><strong>3 = Significant Impact:</strong> The innovation creates a major effect on the dimension, clearly disrupting existing patterns or generating new capabilities.</li>
+                                    <li><strong>4 = Transformative Impact:</strong> The innovation fundamentally changes the nature of the dimension, creating a new, enduring reality for all actors.</li>
+                                    <li><strong>5 = Revolutionary Impact:</strong> The innovation is a genuine revolution that completely upends the dimension.</li>
+                                </ul>
+                            </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {Object.entries(DIMENSIONS).map(([dimKey, dim]) => (
                                     <div key={dimKey} className="p-4 bg-gray-100 rounded-lg border">
