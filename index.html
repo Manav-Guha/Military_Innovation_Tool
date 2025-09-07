@@ -674,4 +674,45 @@ Based on the decision rule (≥6 points total AND includes Irreversibility ≥1 
                                                     </p>
                                                     <p className="text-sm text-green-700 mt-1">
                                                         <span className="font-semibold">Decision:</span> {assessment.meetsThreshold ? 'Meets threshold for Genuine Innovation.' : 'Does not meet threshold for Genuine Innovation.'}
-                                                    </p
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Sidebar */}
+                        <div className="xl:col-span-1">
+                            <div className="p-6 bg-white rounded-lg shadow sticky top-6">
+                                <div className="flex items-center space-x-2 mb-4">
+                                    <span className="text-gray-500">⚙️</span>
+                                    <h2 className="text-xl font-semibold">Framework Details</h2>
+                                </div>
+
+                                <div className="space-y-5">
+                                    {Object.entries(dimensions).map(([key, dimension]) => (
+                                        <div key={key} className="border-b border-gray-200 pb-4">
+                                            <h3 className="font-semibold text-lg text-gray-900 mb-1">{dimension.name}</h3>
+                                            <p className="text-sm text-gray-600">{dimension.description}</p>
+                                            <p className="text-xs text-gray-500 mt-2">
+                                                **Indicators:** {dimension.indicators.join('; ')}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button onClick={resetTool} className="mt-6 w-full bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 rounded-md transition-colors">
+                                    Reset Tool
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<MilitaryInnovationTool />, document.getElementById('root'));
+    </script>
+</body>
+</html>
