@@ -155,7 +155,7 @@
                     DIMENSIONS[dimKey].indicators.map(ind => ind.name)
                 );
                 const indData = Object.values(scores).flat();
-                const indColors = Object.values(DIMENSIONS).flatMap(dim => dim.indicators.map(ind => dim.color));
+                const indColors = Object.values(DIMENSIONS).flatMap(dim => dim.indicators.map(ind => ind.color));
 
                 // Dimension Chart
                 dimChartInstance.current = new Chart(dimChartRef.current, {
