@@ -72,22 +72,25 @@
 
         const EXAMPLES = {
             "Stirrups": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
-            "Minié Ball": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [4, 4, 3, 3], cognitive: [4, 4, 3, 3] } },
+            "Minie Ball/Connoidal Bullet": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [4, 4, 3, 3], cognitive: [5, 5, 5, 5] } },
             "Machine Gun": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
             "Tank": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
             "Carrier Aviation": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
             "Nuclear Weapons": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
             "Blitzkrieg": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
-            "Stealth": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [3, 3, 2, 2], cognitive: [1, 1, 1, 1] } },
-            "PGMs": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [4, 4, 3, 3] } },
-            "Network‑Centric Warfare": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [4, 4, 3, 3] } },
-            "UAVs": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [3, 3, 3, 3] } },
-            "Cyber Warfare": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
-            "ASBM": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [3, 3, 3, 3], cognitive: [5, 5, 5, 5] } },
-            "Lasers": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [3, 3, 3, 3], generative: [3, 3, 3, 3], cognitive: [3, 3, 3, 3] } },
-            "Military Robotics": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [3, 3, 3, 3] } },
-            "AI Targeting": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [3, 3, 3, 3], generative: [5, 5, 5, 5], cognitive: [3, 3, 3, 3] } },
-            "Hypersonics": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [3, 3, 3, 3], generative: [3, 3, 3, 3], cognitive: [3, 3, 3, 3] } }
+            "Stealth": { scores: { discontinuity: [4, 4, 3, 3], irreversibility: [3, 3, 2, 2], generative: [4, 4, 3, 3], cognitive: [2, 2, 1, 1] } },
+            "PGMs": { scores: { discontinuity: [3, 3, 2, 2], irreversibility: [2, 2, 1, 1], generative: [4, 4, 3, 3], cognitive: [2, 2, 1, 1] } },
+            "Network‑Centric Warfare": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "UAVs": { scores: { discontinuity: [3, 3, 2, 2], irreversibility: [2, 2, 1, 1], generative: [4, 4, 3, 3], cognitive: [2, 2, 1, 1] } },
+            "Cyber Warfare": { scores: { discontinuity: [4, 4, 3, 3], irreversibility: [3, 3, 2, 2], generative: [5, 5, 4, 4], cognitive: [3, 3, 2, 2] } },
+            "ASBM": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [4, 4, 3, 3], generative: [3, 3, 2, 2], cognitive: [5, 5, 4, 4] } },
+            "Lasers": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [4, 4, 3, 3], generative: [4, 4, 3, 3], cognitive: [5, 5, 4, 4] } },
+            "Military Robotics": { scores: { discontinuity: [3, 3, 2, 2], irreversibility: [2, 2, 1, 1], generative: [4, 4, 3, 3], cognitive: [2, 2, 1, 1] } },
+            "AI-Targeting": { scores: { discontinuity: [2, 2, 1, 1], irreversibility: [2, 2, 1, 1], generative: [3, 3, 2, 2], cognitive: [2, 2, 1, 1] } },
+            "Hypersonics": { scores: { discontinuity: [1, 1, 0, 0], irreversibility: [1, 1, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 1, 0, 0] } },
+            "F-16 Block D": { scores: { discontinuity: [1, 1, 0, 0], irreversibility: [1, 1, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 1, 0, 0] } },
+            "AIP Submarine": { scores: { discontinuity: [2, 1, 1, 1], irreversibility: [2, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [2, 1, 0, 0] } },
+            "T-72B3M Main Battle Tank": { scores: { discontinuity: [1, 1, 0, 0], irreversibility: [1, 1, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 1, 0, 0] } },
         };
 
         const App = () => {
@@ -113,7 +116,6 @@
             const classification = useMemo(() => {
                 const meetsGate = (dimensionTotals.irreversibility >= 10 || dimensionTotals.cognitive >= 10);
                 if (totalScore >= 18 && meetsGate) return "Genuine Innovation";
-                if (totalScore >= 12 && meetsGate) return "Modernization";
                 if (totalScore >= 12) return "Modernization";
                 return "Upgradation";
             }, [totalScore, dimensionTotals]);
@@ -131,7 +133,7 @@
                 } else if (classification === "Modernization") {
                      return `This is a **Modernization**. The overall score of ${totalScore} suggests a significant improvement, but it does not pass the key "gate" for a genuine innovation because its scores in both Irreversibility (${dimensionTotals.irreversibility}) and Cognitive Disruption (${dimensionTotals.cognitive}) are below the required 10-point threshold. This suggests it is an important improvement but not a fundamental innovation.`;
                 } else {
-                    return `This is classified as **Upgradation**. The overall score of ${totalScore} is below the 12-point threshold for a modernization, and it did not pass the critical "gate" in either the Irreversibility or Cognitive Disruption dimensions (with scores of ${dimensionTotals.irreversibility} and ${dimensionTotals.cognitive} respectively). This suggests it is an important improvement but not a fundamental innovation.`;
+                    return `This is classified as **Upgradation**. The overall score of ${totalScore} is below the 12-point threshold for a modernization. This suggests it is an important improvement but not a fundamental innovation.`;
                 }
             }, [classification, totalScore, dimensionTotals]);
 
