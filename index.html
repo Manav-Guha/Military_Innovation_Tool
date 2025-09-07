@@ -113,28 +113,25 @@
             const classification = useMemo(() => {
                 const meetsGate = (dimensionTotals.irreversibility >= 10 || dimensionTotals.cognitive >= 10);
                 if (totalScore >= 18 && meetsGate) return "Genuine Innovation";
-                if (totalScore >= 12) return "Watch Category";
-                return "Modernization";
+                if (totalScore >= 12 && meetsGate) return "Modernization";
+                if (totalScore >= 12) return "Modernization";
+                return "Upgradation";
             }, [totalScore, dimensionTotals]);
 
             const recommendation = useMemo(() => {
                 if (classification === "Genuine Innovation") return "Prioritize funding and doctrine development.";
-                if (classification === "Watch Category") return "Monitor, prototype selectively, collect evidence.";
-                return "Treat as modernization; fund incremental improvements.";
+                if (classification === "Modernization") return "Monitor, prototype selectively, collect evidence.";
+                return "Treat as an upgrade; fund incremental improvements.";
             }, [classification]);
             
             const classificationExplanation = useMemo(() => {
+                const meetsGate = (dimensionTotals.irreversibility >= 10 || dimensionTotals.cognitive >= 10);
                 if (classification === "Genuine Innovation") {
-                    return `This is classified as a **Genuine Innovation** because it meets two key conditions: 1) It has a total score of 18 or higher (your score is ${totalScore}), and 2) It passes the "gate" by scoring at least 10 in either the Irreversibility or Cognitive Disruption dimension. These two dimensions are considered the most critical for a truly transformative innovation.`;
-                } else if (classification === "Watch Category") {
-                    const meetsGate = (dimensionTotals.irreversibility >= 10 || dimensionTotals.cognitive >= 10);
-                    if (meetsGate) {
-                         return `This is a **Watch Category** innovation. While it passes the "gate" with a score of ${dimensionTotals.irreversibility} or ${dimensionTotals.cognitive} in a key dimension (Irreversibility or Cognitive Disruption), its overall score of ${totalScore} is below the 18-point threshold for a Genuine Innovation. It shows promise but requires further evidence.`;
-                    } else {
-                        return `This is a **Watch Category** innovation. It has a total score of ${totalScore} (which is between 12 and 18), but it did not pass the critical "gate" because its scores in both Irreversibility (${dimensionTotals.irreversibility}) and Cognitive Disruption (${dimensionTotals.cognitive}) are below the required 10-point threshold.`;
-                    }
+                    return `This is classified as a **Genuine Innovation** because it meets two key conditions: 1) It has a total score of 18 or higher (your score is ${totalScore}), and 2) It passes the "gate" by scoring at least 10 in either the Irreversibility (${dimensionTotals.irreversibility}) or Cognitive Disruption (${dimensionTotals.cognitive}) dimension. These two dimensions are considered the most critical for a truly transformative innovation.`;
+                } else if (classification === "Modernization") {
+                     return `This is a **Modernization**. The overall score of ${totalScore} suggests a significant improvement, but it does not pass the key "gate" for a genuine innovation because its scores in both Irreversibility (${dimensionTotals.irreversibility}) and Cognitive Disruption (${dimensionTotals.cognitive}) are below the required 10-point threshold. This suggests it is an important improvement but not a fundamental innovation.`;
                 } else {
-                    return `This is classified as **Modernization**. The overall score of ${totalScore} is below the 12-point threshold for a "Watch Category" innovation, and it did not pass the critical "gate" in either the Irreversibility or Cognitive Disruption dimensions (with scores of ${dimensionTotals.irreversibility} and ${dimensionTotals.cognitive} respectively). This suggests it is an important improvement but not a fundamental innovation.`;
+                    return `This is classified as **Upgradation**. The overall score of ${totalScore} is below the 12-point threshold for a modernization, and it did not pass the critical "gate" in either the Irreversibility or Cognitive Disruption dimensions (with scores of ${dimensionTotals.irreversibility} and ${dimensionTotals.cognitive} respectively). This suggests it is an important improvement but not a fundamental innovation.`;
                 }
             }, [classification, totalScore, dimensionTotals]);
 
@@ -145,23 +142,25 @@
 
                 const dimLabels = Object.keys(DIMENSIONS).map(key => DIMENSIONS[key].name);
                 const dimData = Object.values(dimensionTotals);
+                const dimColors = Object.values(DIMENSIONS).map(dim => dim.indicators[0].color);
 
                 const indLabels = Object.keys(DIMENSIONS).flatMap(dimKey =>
                     DIMENSIONS[dimKey].indicators.map(ind => ind.name)
                 );
                 const indData = Object.values(scores).flat();
+                const indColors = Object.values(DIMENSIONS).flatMap(dim => dim.indicators.map(ind => ind.color));
 
                 // Dimension Chart
                 dimChartInstance.current = new Chart(dimChartRef.current, {
-                    type: 'line',
+                    type: 'bar',
                     data: {
                         labels: dimLabels,
                         datasets: [{
                             label: 'Total Score per Dimension',
                             data: dimData,
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1,
-                            fill: false,
+                            backgroundColor: dimColors,
+                            borderColor: dimColors,
+                            borderWidth: 1
                         }]
                     },
                     options: {
@@ -178,24 +177,15 @@
 
                 // Indicator Chart
                 indChartInstance.current = new Chart(indChartRef.current, {
-                    type: 'line',
+                    type: 'bar',
                     data: {
                         labels: indLabels,
                         datasets: [{
-                            label: 'Indicator Scores',
+                            label: 'Individual Indicator Scores',
                             data: indData,
-                            borderColor: 'rgb(255, 99, 132)',
-                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
-                            tension: 0.1,
-                            fill: false,
-                            segment: {
-                                borderColor: ctx => {
-                                    const dim = ['discontinuity', 'irreversibility', 'generative', 'cognitive'];
-                                    const index = ctx.p0DataIndex;
-                                    const dimIndex = index >= 0 && index < 4 ? 0 : index >= 4 && index < 8 ? 1 : index >= 8 && index < 12 ? 2 : 3;
-                                    return DIMENSIONS[dim[dimIndex]].indicators[0].color;
-                                }
-                            }
+                            backgroundColor: indColors,
+                            borderColor: indColors,
+                            borderWidth: 1
                         }]
                     },
                     options: {
@@ -206,6 +196,12 @@
                         },
                         scales: {
                             y: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
+                            x: {
+                                ticks: {
+                                    maxRotation: 90,
+                                    minRotation: 90
+                                }
+                            }
                         }
                     }
                 });
@@ -315,7 +311,7 @@
                                 </div>
                                 <div>
                                     <p className="text-gray-600">Classification</p>
-                                    <div className={`text-xl font-bold ${classification === 'Genuine Innovation' ? 'text-green-600' : classification === 'Watch Category' ? 'text-yellow-600' : 'text-slate-600'}`}>
+                                    <div className={`text-xl font-bold ${classification === 'Genuine Innovation' ? 'text-green-600' : classification === 'Modernization' ? 'text-yellow-600' : 'text-slate-600'}`}>
                                         {classification}
                                     </div>
                                 </div>
