@@ -8,543 +8,350 @@
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .animate-spin {
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .copy-button {
-            transition: all 0.3s ease;
-        }
-        .copy-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        .copy-success {
-            background-color: #10b981 !important;
-        }
+        @media print { .no-print { display: none; } }
+        .score-badge { border-radius: 9999px; padding: 0.25rem 0.75rem; font-weight: 700; font-size: 0.85rem; }
     </style>
 </head>
-<body>
+<body class="bg-gray-50">
     <div id="root"></div>
 
     <script type="text/babel">
-        const { useState } = React;
+        const { useState, useEffect, useRef, useMemo } = React;
 
-        const MilitaryInnovationTool = () => {
-            const [scores, setScores] = useState({
-                discontinuity: 0,
-                irreversibility: 0,
-                generative: 0,
-                cognitive: 0
-            });
+        const DIMENSIONS = {
+            discontinuity: {
+                name: "Discontinuity",
+                description: "Breaks existing patterns rather than extending them",
+                indicators: [
+                    { name: "Enemy OODA disruption", color: 'rgba(79, 70, 229, 1)' },
+                    { name: "Doctrinal breakpoints", color: 'rgba(79, 70, 229, 0.8)' },
+                    { name: "Shift in kill-chain topology", color: 'rgba(79, 70, 229, 0.6)' },
+                    { name: "Adversary scrambles to counter", color: 'rgba(79, 70, 229, 0.4)' }
+                ]
+            },
+            irreversibility: {
+                name: "Irreversibility",
+                description: "Creates new baseline conditions that cannot be undone",
+                indicators: [
+                    { name: "Sunk training pipelines", color: 'rgba(239, 68, 68, 1)' },
+                    { name: "Logistics/infrastructure path dependence", color: 'rgba(239, 68, 68, 0.8)' },
+                    { name: "Adversary compulsion to mirror", color: 'rgba(239, 68, 68, 0.6)' },
+                    { name: "Force-structure changes", color: 'rgba(239, 68, 68, 0.4)' }
+                ]
+            },
+            generative: {
+                name: "Generative Capacity",
+                description: "Spawns further developments across multiple domains",
+                indicators: [
+                    { name: "Follow-on doctrines/capabilities", color: 'rgba(34, 197, 94, 1)' },
+                    { name: "Cross-domain spillovers", color: 'rgba(34, 197, 94, 0.8)' },
+                    { name: "Budget migration", color: 'rgba(34, 197, 94, 0.6)' },
+                    { name: "New capability categories", color: 'rgba(34, 197, 94, 0.4)' }
+                ]
+            },
+            cognitive: {
+                name: "Cognitive Disruption",
+                description: "Forces fundamental reconceptualization of problems",
+                indicators: [
+                    { name: "Doctrinal rewrites", color: 'rgba(234, 179, 8, 1)' },
+                    { name: "PME syllabus changes", color: 'rgba(234, 179, 8, 0.8)' },
+                    { name: "Wargame outcome reversals", color: 'rgba(234, 179, 8, 0.6)' },
+                    { name: "Senior guidance reframes metrics", color: 'rgba(234, 179, 8, 0.4)' }
+                ]
+            }
+        };
 
+        const INITIAL_SCORES = {
+            discontinuity: [0, 0, 0, 0],
+            irreversibility: [0, 0, 0, 0],
+            generative: [0, 0, 0, 0],
+            cognitive: [0, 0, 0, 0]
+        };
+
+        const EXAMPLES = {
+            "Stirrups": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "Minié Ball": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [4, 4, 3, 3], cognitive: [4, 4, 3, 3] } },
+            "Machine Gun": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "Tank": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "Carrier Aviation": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "Nuclear Weapons": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "Blitzkrieg": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "Stealth": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [3, 3, 2, 2], cognitive: [1, 1, 1, 1] } },
+            "PGMs": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [4, 4, 3, 3] } },
+            "Network‑Centric Warfare": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [4, 4, 3, 3] } },
+            "UAVs": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [3, 3, 3, 3] } },
+            "Cyber Warfare": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [5, 5, 5, 5] } },
+            "ASBM": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [5, 5, 5, 5], generative: [3, 3, 3, 3], cognitive: [5, 5, 5, 5] } },
+            "Lasers": { scores: { discontinuity: [5, 5, 5, 5], irreversibility: [3, 3, 3, 3], generative: [3, 3, 3, 3], cognitive: [3, 3, 3, 3] } },
+            "Military Robotics": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [5, 5, 5, 5], generative: [5, 5, 5, 5], cognitive: [3, 3, 3, 3] } },
+            "AI Targeting": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [3, 3, 3, 3], generative: [5, 5, 5, 5], cognitive: [3, 3, 3, 3] } },
+            "Hypersonics": { scores: { discontinuity: [3, 3, 3, 3], irreversibility: [3, 3, 3, 3], generative: [3, 3, 3, 3], cognitive: [3, 3, 3, 3] } }
+        };
+
+        const App = () => {
             const [capability, setCapability] = useState('');
-            const [researchText, setResearchText] = useState('');
-            const [assessment, setAssessment] = useState(null);
-            const [showIndicators, setShowIndicators] = useState({});
+            const [scores, setScores] = useState(INITIAL_SCORES);
             const [selectedExample, setSelectedExample] = useState('');
+            const dimChartRef = useRef(null);
+            const indChartRef = useRef(null);
+            const dimChartInstance = useRef(null);
+            const indChartInstance = useRef(null);
 
-            const dimensions = {
-                discontinuity: {
-                    name: "Discontinuity",
-                    description: "Breaks existing patterns rather than extending them",
-                    indicators: [
-                        "Enemy OODA disruption in exercises/warfare",
-                        "Break points in doctrinal evolution (sudden shifts)",
-                        "Sudden shift in kill-chain topology",
-                        "Adversary scrambling to understand and counter"
-                    ]
-                },
-                irreversibility: {
-                    name: "Irreversibility",
-                    description: "Creates new baseline conditions that cannot be undone",
-                    indicators: [
-                        "Sunk training pipelines and institutional restructuring",
-                        "Logistics/infrastructure path dependence",
-                        "Adversary compulsion to mirror or counter at scale",
-                        "Persistent changes in force structure beyond initial adopters"
-                    ]
-                },
-                generative: {
-                    name: "Generative Capacity",
-                    description: "Spawns further developments across multiple domains",
-                    indicators: [
-                        "Multiple follow-on doctrines/capabilities within 5-10 years",
-                        "Cross-domain spillovers (land→sea→air→space→cyber)",
-                        "Budget share migration away from legacy categories",
-                        "Emergence of new capability categories in force planning"
-                    ]
-                },
-                cognitive: {
-                    name: "Cognitive Disruption",
-                    description: "Forces fundamental reconceptualization of problems",
-                    indicators: [
-                        "Doctrinal rewrites (not just updates)",
-                        "PME syllabus changes reflecting new strategic concepts",
-                        "Wargame outcome reversals attributable to concept",
-                        "Senior guidance reframing success metrics"
-                    ]
+            const calculateDimensionTotals = () => {
+                const totals = {};
+                for (const dim in scores) {
+                    totals[dim] = scores[dim].reduce((sum, score) => sum + score, 0);
                 }
+                return totals;
             };
 
-            const historicalExamples = {
-                // Historical Innovations
-                "Stirrups": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Revolutionized cavalry warfare, enabled feudal military systems, transformed mounted combat doctrine globally",
-                    period: "~400-800 CE",
-                    evidence: [
-                        "Enabled heavy cavalry charges, fundamentally changing battlefield tactics",
-                        "Created new social-military classes (knights, mounted warriors)",
-                        "Spawned castle architecture, feudal land systems, cavalry-centered doctrines",
-                        "Forced complete reconceptualization of warfare from infantry to cavalry dominance"
-                    ]
-                },
-                "Conoidal Bullet (Minié Ball)": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 1 },
-                    classification: "Genuine Innovation",
-                    rationale: "Transformed infantry effectiveness and engagement ranges, made massed infantry attacks obsolete",
-                    period: "1840s-1860s",
-                    evidence: [
-                        "Tripled effective rifle range, made Napoleonic tactics suicidal",
-                        "Required new infantry training, marksmanship programs globally",
-                        "Led to entrenchments, skirmisher tactics, modern rifle development",
-                        "Changed tactical thinking from mass formations to dispersed infantry"
-                    ]
-                },
-                "Machine Gun": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Ended era of massed infantry attacks, created modern defensive warfare, forced tactical revolution",
-                    period: "1880s-1920s",
-                    evidence: [
-                        "Made massed infantry attacks impossible, ended Napoleonic battle concepts",
-                        "Required new logistics, ammunition production, crew training worldwide",
-                        "Spawned indirect fire, combined arms, air support, assault tactics",
-                        "Forced complete reconceptualization from offensive to defensive-dominant warfare"
-                    ]
-                },
-                "Tank": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Broke WWI trench warfare stalemate, enabled mobile warfare, created armored doctrine",
-                    period: "1916-1940s",
-                    evidence: [
-                        "Ended trench warfare stalemate, restored battlefield mobility",
-                        "Required new crew training, maintenance infrastructure, tactical formations",
-                        "Generated blitzkrieg, combined arms, mechanized infantry, armored divisions",
-                        "Revolutionized thinking from static defense to mobile operations"
-                    ]
-                },
-                "Carrier Aviation": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Ended battleship dominance, enabled power projection, created naval aviation doctrine",
-                    period: "1920s-1945",
-                    evidence: [
-                        "Made battleships obsolete, shifted naval combat beyond visual range",
-                        "Created new naval architecture, pilot training, carrier task forces",
-                        "Spawned amphibious warfare, naval air power, maritime strike operations",
-                        "Transformed naval strategy from gun duels to air-sea operations"
-                    ]
-                },
-                "Nuclear Weapons": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Created strategic deterrence, ended conventional great power war, revolutionized strategy",
-                    period: "1945-present",
-                    evidence: [
-                        "Made conventional great power war impossible, created deterrence paradigm",
-                        "Required new security infrastructure, command systems, nuclear forces",
-                        "Generated missile technology, space programs, arms control, extended deterrence",
-                        "Completely reconceptualized strategy from war-fighting to war-prevention"
-                    ]
-                },
-                "Blitzkrieg Doctrine": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Shattered WWI attrition paradigm, created modern maneuver warfare, established operational art",
-                    period: "1920s-1940s",
-                    evidence: [
-                        "Ended WWI attrition warfare, restored decisive battle possibilities",
-                        "Required combined arms training, radio communications, mechanized logistics",
-                        "Created operational art, air-land battle, deep operations, maneuver warfare",
-                        "Revolutionized military thinking from firepower to speed and coordination"
-                    ]
-                },
+            const dimensionTotals = useMemo(calculateDimensionTotals, [scores]);
+            const totalScore = useMemo(() => Object.values(dimensionTotals).reduce((sum, total) => sum + total, 0), [dimensionTotals]);
 
-                // Cold War Era
-                "Stealth Technology": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 0 },
-                    classification: "Modernization",
-                    rationale: "Important capability advancement but limited doctrinal transformation, mainly platform improvement",
-                    period: "1970s-present",
-                    evidence: [
-                        "Broke radar detection paradigms, created first-day-of-war advantages",
-                        "Required new aircraft design, materials, pilot training programs",
-                        "Limited generativity - mainly platform stealth, some countermeasure development",
-                        "No fundamental warfare reconceptualization - tactical advantage only"
-                    ]
-                },
-                "Precision-Guided Munitions": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 },
-                    classification: "Genuine Innovation",
-                    rationale: "Transformed strike warfare accuracy, created effects-based operations, reduced collateral damage",
-                    period: "1970s-1990s",
-                    evidence: [
-                        "Ended area bombing, made surgical strikes possible with conventional weapons",
-                        "Required new guidance systems, target designation, battle damage assessment",
-                        "Generated smart weapons, network targeting, effects-based operations",
-                        "Partially transformed thinking toward precise effects rather than mass destruction"
-                    ]
-                },
+            const classification = useMemo(() => {
+                const meetsGate = (dimensionTotals.irreversibility >= 10 || dimensionTotals.cognitive >= 10);
+                if (totalScore >= 18 && meetsGate) return "Genuine Innovation";
+                if (totalScore >= 12) return "Watch Category";
+                return "Modernization";
+            }, [totalScore, dimensionTotals]);
 
-                // Modern Era
-                "Network-Centric Warfare": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 },
-                    classification: "Partially Realized Innovation",
-                    rationale: "Conceptually transformative but operationally incomplete, network effects not fully realized",
-                    period: "1990s-present",
-                    evidence: [
-                        "Shifted from platform-centric to network-centric thinking about military power",
-                        "Required C4ISR systems, data links, network infrastructure investments",
-                        "Generated multi-domain operations, AI integration, distributed operations",
-                        "Partial cognitive impact - planning revolutionized but tactical implementation uneven"
-                    ]
-                },
-                "Unmanned Aerial Vehicles": {
-                    scores: { discontinuity: 1, irreversibility: 2, generative: 2, cognitive: 1 },
-                    classification: "Watch Category",
-                    rationale: "Significant capability but evolutionary rather than revolutionary, extending existing air power concepts",
-                    period: "1990s-present",
-                    evidence: [
-                        "Extended surveillance and strike capabilities but within existing paradigms",
-                        "Required new pilot training, ground control stations, satellite communications",
-                        "Generated autonomous systems, swarm concepts, counter-UAS technologies",
-                        "Limited cognitive impact - remote operations rather than strategic reconceptualization"
-                    ]
-                },
-                "Cyber Warfare": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Created new warfare domain, enables non-kinetic effects, challenges traditional deterrence",
-                    period: "1990s-present",
-                    evidence: [
-                        "Created entirely new attack vectors below threshold of armed conflict",
-                        "Required new organizational structures, cyber commands, defensive systems",
-                        "Generated information warfare, electronic warfare evolution, hybrid conflict",
-                        "Forced reconceptualization of conflict from kinetic to multi-spectrum operations"
-                    ]
-                },
+            const recommendation = useMemo(() => {
+                if (classification === "Genuine Innovation") return "Prioritize funding and doctrine development.";
+                if (classification === "Watch Category") return "Monitor, prototype selectively, collect evidence.";
+                return "Treat as modernization; fund incremental improvements.";
+            }, [classification]);
 
-                // Contemporary Era
-                "Anti-Ship Ballistic Missile": {
-                    scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 2 },
-                    classification: "Genuine Innovation",
-                    rationale: "Conceptual breakthrough challenging naval supremacy, land-based precision strikes against maritime targets",
-                    period: "2000s-present",
-                    evidence: [
-                        "Challenges naval supremacy assumptions, forces carriers outside effective range",
-                        "Requires new missile defenses, naval formations, strike complex integration",
-                        "Limited follow-on effects but significant within anti-access strategies",
-                        "Forces reconceptualization of naval power projection and maritime dominance"
-                    ]
-                },
-                "Laser Weapons": {
-                    scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 1 },
-                    classification: "Watch Category",
-                    rationale: "Paradigm shift potential from kinetic to directed energy but implementation still limited",
-                    period: "2010s-present",
-                    evidence: [
-                        "Represents shift from kinetic to directed energy weapons paradigm",
-                        "Early deployment requires new power systems, cooling, maintenance procedures",
-                        "Limited generativity so far - mainly point defense applications",
-                        "Some tactical thinking changes but strategic impact unclear"
-                    ]
-                },
-                "Military Robotics": {
-                    scores: { discontinuity: 1, irreversibility: 2, generative: 2, cognitive: 1 },
-                    classification: "Watch Category",
-                    rationale: "Significant potential but currently evolutionary, extending human capabilities rather than replacing them",
-                    period: "2000s-present",
-                    evidence: [
-                        "Extends human capabilities in dangerous environments but within existing concepts",
-                        "Requires new logistics, maintenance, human-machine teaming protocols",
-                        "Generating autonomous systems, AI integration, human-machine teaming",
-                        "Limited cognitive impact so far - augmentation rather than replacement paradigm"
-                    ]
-                },
-                "AI Targeting Systems": {
-                    scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 },
-                    classification: "Watch Category",
-                    rationale: "High potential but early implementation, more modernization than innovation currently",
-                    period: "2010s-present",
-                    evidence: [
-                        "Speeds existing targeting processes but doesn't fundamentally change them",
-                        "Early adoption in limited systems, requires new software and training",
-                        "High generative potential across multiple domains and applications",
-                        "Limited cognitive disruption so far - efficiency gains rather than strategic transformation"
-                    ]
-                },
-                "Hypersonic Weapons": {
-                    scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 1 },
-                    classification: "Watch Category",
-                    rationale: "Speed advantage but questionable whether fundamentally different from existing precision strike",
-                    period: "2010s-present",
-                    evidence: [
-                        "Speed and maneuverability advantages but within existing strike paradigms",
-                        "Early deployment requiring new propulsion, guidance, heat management systems",
-                        "Limited follow-on effects beyond speed improvements to existing concepts",
-                        "Tactical advantages but unclear strategic transformation of warfare concepts"
-                    ]
-                }
-            };
+            const updateCharts = () => {
+                // Destroy old chart instances if they exist
+                if (dimChartInstance.current) dimChartInstance.current.destroy();
+                if (indChartInstance.current) indChartInstance.current.destroy();
 
-            const handleScoreChange = (dimension, score) => {
-                setScores(prev => ({ ...prev, [dimension]: parseInt(score) }));
-                setAssessment(null);
-            };
+                const dimLabels = Object.keys(DIMENSIONS).map(key => DIMENSIONS[key].name);
+                const dimData = Object.values(dimensionTotals);
 
-            const calculateAssessment = () => {
-                const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
-                const hasIrreversibility = scores.irreversibility >= 1;
-                const hasCognitive = scores.cognitive >= 1;
-                const meetsThreshold = totalScore >= 6 && (hasIrreversibility || hasCognitive);
+                const indLabels = Object.keys(DIMENSIONS).flatMap(dimKey =>
+                    DIMENSIONS[dimKey].indicators.map(ind => ind.name)
+                );
+                const indData = Object.values(scores).flat();
+                const indColors = Object.values(DIMENSIONS).flatMap(dim =>
+                    dim.indicators.map(ind => ind.color)
+                );
+                const indDatasets = Object.keys(DIMENSIONS).map(dimKey => {
+                    const dim = DIMENSIONS[dimKey];
+                    const data = dim.indicators.map((_, i) => scores[dimKey][i]);
+                    return {
+                        label: dim.name,
+                        data: data,
+                        borderColor: dim.indicators[0].color,
+                        tension: 0.3,
+                        fill: false,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    };
+                });
 
-                let classification, recommendation, confidence;
 
-                if (meetsThreshold) {
-                    classification = "Genuine Innovation";
-                    recommendation = "High priority funding recommended";
-                    confidence = totalScore >= 7 ? "High" : "Medium";
-                } else if (totalScore >= 4) {
-                    classification = "Watch Category";
-                    recommendation = "Monitor development; selective investment";
-                    confidence = "Medium";
-                } else {
-                    classification = "Modernization";
-                    recommendation = "Limited funding; incremental improvements";
-                    confidence = "High";
-                }
+                // Dimension Chart
+                dimChartInstance.current = new Chart(dimChartRef.current, {
+                    type: 'line',
+                    data: {
+                        labels: dimLabels,
+                        datasets: [{
+                            label: 'Total Score per Dimension',
+                            data: dimData,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1,
+                            fill: false,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Dimension Scores' },
+                        },
+                        scales: {
+                            y: { beginAtZero: true, max: 20, ticks: { stepSize: 5 } },
+                        }
+                    }
+                });
 
-                setAssessment({
-                    totalScore,
-                    classification,
-                    recommendation,
-                    confidence,
-                    meetsThreshold
+                // Indicator Chart
+                indChartInstance.current = new Chart(indChartRef.current, {
+                    type: 'line',
+                    data: {
+                        labels: indLabels,
+                        datasets: [{
+                            label: 'Indicator Scores',
+                            data: indData,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                            tension: 0.1,
+                            fill: false,
+                            segment: {
+                                borderColor: ctx => {
+                                    const dim = ['discontinuity', 'irreversibility', 'generative', 'cognitive'];
+                                    const index = ctx.p0DataIndex;
+                                    const dimIndex = index >= 0 && index < 4 ? 0 : index >= 4 && index < 8 ? 1 : index >= 8 && index < 12 ? 2 : 3;
+                                    return DIMENSIONS[dim[dimIndex]].indicators[0].color;
+                                }
+                            }
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: true, text: 'Individual Indicator Scores' },
+                        },
+                        scales: {
+                            y: { beginAtZero: true, max: 5, ticks: { stepSize: 1 } },
+                        }
+                    }
                 });
             };
 
-            const toggleIndicators = (dimension) => {
-                setShowIndicators(prev => ({
-                    ...prev,
-                    [dimension]: !prev[dimension]
-                }));
-            };
+            useEffect(updateCharts, [scores]);
 
-            const getScoreColor = (score) => {
-                if (score >= 2) return "text-green-600 bg-green-50";
-                if (score >= 1) return "text-yellow-600 bg-yellow-50";
-                return "text-red-600 bg-red-50";
-            };
-
-            const getClassificationIcon = () => {
-                if (!assessment) return null;
-                if (assessment.classification === "Genuine Innovation")
-                    return "✓";
-                if (assessment.classification === "Watch Category")
-                    return "⏱";
-                return "⚠";
+            const handleScoreChange = (dimensionKey, indicatorIndex, score) => {
+                setScores(prev => {
+                    const newScores = { ...prev };
+                    newScores[dimensionKey][indicatorIndex] = parseInt(score);
+                    return newScores;
+                });
             };
 
             const loadExample = (example) => {
                 setCapability(example);
                 setSelectedExample(example);
-                const exampleData = historicalExamples[example];
-                setScores(exampleData.scores);
-                setAssessment(null);
-                setResearchText('');
+                setScores(EXAMPLES[example].scores);
             };
 
             const resetTool = () => {
                 setCapability('');
-                setResearchText('');
                 setSelectedExample('');
-                setScores({ discontinuity: 0, irreversibility: 0, generative: 0, cognitive: 0 });
-                setAssessment(null);
-                setShowIndicators({});
+                setScores(INITIAL_SCORES);
             };
 
             return (
                 <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
                     {/* Header */}
-                    <div className="mb-8 text-center">
-                        <h1 className="text-4xl font-bold text-gray-900 mb-3">
-                            Military Innovation Assessment Framework
-                        </h1>
-                        <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-2">
-                            Four-Dimensional Recognition Tool for Distinguishing Genuine Innovation from Modernization
+                    <header className="mb-8 text-center">
+                        <h1 className="text-4xl font-bold text-gray-900">Military Innovation Assessment Framework</h1>
+                        <p className="text-lg text-gray-600 max-w-3xl mx-auto mt-2">
+                            A four-dimensional recognition tool to distinguish genuine innovation from modernization.
                         </p>
-                        <p className="text-sm text-gray-500 italic">
-                            Based on "The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy"
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                        {/* Main Assessment Panel */}
-                        <div className="xl:col-span-2">
-                            {/* Student Assignment Section */}
-                            <div className="mb-6 p-6 bg-white rounded-lg shadow">
-                                <div className="flex items-center space-x-2 mb-4">
-                                    <span className="text-blue-600">🎓</span>
-                                    <h2 className="text-xl font-semibold">Student Assessment Workflow</h2>
-                                </div>
-
-                                <div className="space-y-6">
-                                    {/* Step 1: Capability Input */}
-                                    <div className="border-l-4 border-blue-500 pl-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Step 1: Propose Your Innovation</h3>
-                                        <input
-                                            type="text"
-                                            value={capability}
-                                            onChange={(e) => setCapability(e.target.value)}
-                                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                            placeholder="Enter your proposed military innovation (e.g., 'AI-powered drone swarms', 'Quantum radar systems')"
-                                        />
-                                    </div>
-
-                                    {/* Step 2: Score Dimensions */}
-                                    <div className="border-l-4 border-purple-500 pl-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Step 2: Score Dimensions (0-2)</h3>
-                                        <p className="text-sm text-gray-600 mb-3">
-                                            Rate your proposed innovation on each of the four dimensions below.
-                                        </p>
-                                        <div className="space-y-4">
-                                            {Object.entries(dimensions).map(([key, dimension]) => (
-                                                <div key={key} className="p-4 bg-gray-100 rounded-md border border-gray-200">
-                                                    <div className="flex justify-between items-center">
-                                                        <h4 className="font-semibold text-gray-800">{dimension.name}</h4>
-                                                        <span className={`px-3 py-1 text-xs rounded-full font-bold ${getScoreColor(scores[key])}`}>
-                                                            {scores[key]}/2
-                                                        </span>
-                                                    </div>
-                                                    <p className="text-sm text-gray-600 mt-1">{dimension.description}</p>
-                                                    <input
-                                                        type="range"
-                                                        min="0"
-                                                        max="2"
-                                                        value={scores[key]}
-                                                        onChange={(e) => handleScoreChange(key, e.target.value)}
-                                                        className="w-full h-2 mt-3 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                                                        step="1"
-                                                    />
-                                                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                                        <span>0</span>
-                                                        <span>1</span>
-                                                        <span>2</span>
-                                                    </div>
-                                                    <details className="mt-2 text-sm">
-                                                        <summary className="cursor-pointer text-blue-600 hover:text-blue-800 font-medium">Observable Indicators</summary>
-                                                        <ul className="list-disc list-inside text-gray-700 mt-2 space-y-1">
-                                                            {dimension.indicators.map((indicator, idx) => (
-                                                                <li key={idx}>{indicator}</li>
-                                                            ))}
-                                                        </ul>
-                                                    </details>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <button
-                                            onClick={calculateAssessment}
-                                            className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Calculate Assessment
-                                        </button>
-                                    </div>
-                                </div>
+                    </header>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Left Column: Input and Scoring */}
+                        <div className="space-y-6">
+                            <div className="p-6 bg-white rounded-lg shadow">
+                                <h2 className="text-xl font-semibold mb-4">Step 1: Propose Your Innovation</h2>
+                                <input
+                                    type="text"
+                                    value={capability}
+                                    onChange={(e) => setCapability(e.target.value)}
+                                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                    placeholder="e.g., AI-powered drone swarms"
+                                />
                             </div>
 
-                            {/* Final Assessment */}
-                            {assessment && (
-                                <div className="mb-6 p-6 bg-white rounded-lg shadow">
-                                    <div className="flex items-center space-x-2 mb-4">
-                                        <span className="text-blue-600">✨</span>
-                                        <h2 className="text-xl font-semibold">Final Assessment</h2>
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <p className="text-gray-600">Total Score</p>
-                                            <div className="text-3xl font-bold text-gray-900">{assessment.totalScore}/8</div>
+                            <div className="p-6 bg-white rounded-lg shadow">
+                                <h2 className="text-xl font-semibold mb-4">Step 2: Score Dimensions (0-5)</h2>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    <span className="font-semibold text-red-600">Disclaimer:</span> This is a conceptual tool. Scores are **indicative**, not quantitative, and must be justified by real-world evidence.
+                                </p>
+                                {Object.entries(DIMENSIONS).map(([dimKey, dim]) => (
+                                    <div key={dimKey} className="p-4 mb-4 bg-gray-100 rounded-lg border">
+                                        <div className="flex items-center justify-between mb-2">
+                                            <h3 className="font-semibold text-gray-800">{dim.name}</h3>
+                                            <span className="score-badge bg-blue-100 text-blue-800">{dimensionTotals[dimKey]}/20</span>
                                         </div>
-                                        <div>
-                                            <p className="text-gray-600">Classification</p>
-                                            <div className={`text-xl font-bold ${assessment.classification === 'Genuine Innovation' ? 'text-green-600' : assessment.classification === 'Watch Category' ? 'text-yellow-600' : 'text-slate-600'}`}>
-                                                {assessment.classification}
+                                        <p className="text-sm text-gray-600 mb-4">{dim.description}</p>
+                                        {dim.indicators.map((indicator, indIndex) => (
+                                            <div key={indIndex} className="mb-3">
+                                                <div className="flex justify-between text-sm">
+                                                    <label className="font-medium text-gray-700">{indicator.name}</label>
+                                                    <span className="text-gray-600">{scores[dimKey][indIndex]}/5</span>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="5"
+                                                    value={scores[dimKey][indIndex]}
+                                                    onChange={(e) => handleScoreChange(dimKey, indIndex, e.target.value)}
+                                                    className="w-full h-2 mt-1 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                                    style={{ '--tw-accent-color': indicator.color }}
+                                                />
+                                                <div className="flex justify-between text-xs text-gray-500">
+                                                    <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <p className="text-gray-600">Recommendation</p>
-                                            <div className="text-lg font-semibold text-gray-800">{assessment.recommendation}</div>
-                                        </div>
+                                        ))}
                                     </div>
-                                </div>
-                            )}
-
+                                ))}
+                            </div>
                         </div>
 
-                        {/* Sidebar */}
-                        <div className="xl:col-span-1">
-                            <div className="p-6 bg-white rounded-lg shadow sticky top-6">
-                                <div className="flex items-center space-x-2 mb-4">
-                                    <span className="text-gray-600">⚙️</span>
-                                    <h2 className="text-xl font-semibold">Tool Settings</h2>
-                                </div>
+                        {/* Right Column: Graphs and Assessment */}
+                        <div className="space-y-6 md:sticky md:top-6 md:h-screen md:overflow-y-auto">
+                            <div className="p-6 bg-white rounded-lg shadow">
+                                <h2 className="text-xl font-semibold mb-4">Visual Assessment</h2>
+                                <canvas id="dimensionChart" ref={dimChartRef}></canvas>
+                                <hr className="my-6" />
+                                <canvas id="indicatorChart" ref={indChartRef}></canvas>
+                            </div>
+
+                            <div className="p-6 bg-white rounded-lg shadow">
+                                <h2 className="text-xl font-semibold mb-4">Final Assessment</h2>
                                 <div className="space-y-4">
-                                    <div className="border-b pb-4">
-                                        <h3 className="font-semibold text-gray-800 mb-2">Historical Examples</h3>
-                                        <p className="text-sm text-gray-600 mb-2">Click to load an example:</p>
-                                        <div className="grid grid-cols-2 gap-2">
-                                            {Object.keys(historicalExamples).map(example => (
-                                                <button
-                                                    key={example}
-                                                    onClick={() => loadExample(example)}
-                                                    className={`p-2 rounded text-xs border transition-colors ${
-                                                        selectedExample === example ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200 hover:bg-gray-50'
-                                                    }`}
-                                                >
-                                                    {example}
-                                                </button>
-                                            ))}
+                                    <div>
+                                        <p className="text-gray-600">Total Score</p>
+                                        <div className="text-3xl font-bold text-gray-900">{totalScore}/80</div>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Classification</p>
+                                        <div className={`text-xl font-bold ${classification === 'Genuine Innovation' ? 'text-green-600' : classification === 'Watch Category' ? 'text-yellow-600' : 'text-slate-600'}`}>
+                                            {classification}
                                         </div>
                                     </div>
                                     <div>
-                                        <button
-                                            onClick={resetTool}
-                                            className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-md font-medium"
-                                        >
-                                            Reset All
-                                        </button>
+                                        <p className="text-gray-600">Recommendation</p>
+                                        <div className="text-lg font-semibold text-gray-800">{recommendation}</div>
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="p-6 bg-white rounded-lg shadow">
+                                <h2 className="text-xl font-semibold mb-4">Examples and Reset</h2>
+                                <div className="grid grid-cols-2 gap-2 mb-4">
+                                    {Object.keys(EXAMPLES).map(example => (
+                                        <button
+                                            key={example}
+                                            onClick={() => loadExample(example)}
+                                            className={`p-2 rounded text-xs border transition-colors ${selectedExample === example ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                                        >
+                                            {example}
+                                        </button>
+                                    ))}
+                                </div>
+                                <button
+                                    onClick={resetTool}
+                                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-md font-medium"
+                                >
+                                    Reset All
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <footer className="mt-8 text-center text-xs text-gray-500">
-                        Based on the working paper “The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy”.
-                    </footer>
                 </div>
             );
         };
 
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<MilitaryInnovationTool />);
+        root.render(<App />);
     </script>
 </body>
 </html>
