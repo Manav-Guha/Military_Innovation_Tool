@@ -25,40 +25,40 @@
                 name: "Discontinuity",
                 description: "Breaks existing patterns rather than extending them",
                 indicators: [
-                    { name: "Enemy OODA disruption", color: 'rgba(79, 70, 229, 1)' },
-                    { name: "Doctrinal breakpoints", color: 'rgba(79, 70, 229, 0.8)' },
-                    { name: "Shift in kill-chain topology", color: 'rgba(79, 70, 229, 0.6)' },
-                    { name: "Adversary scrambles to counter", color: 'rgba(79, 70, 229, 0.4)' }
+                    { name: "Enemy OODA disruption", explanation: "The innovation throws off an adversary's observe, orient, decide, act (OODA) loop.", color: 'rgba(79, 70, 229, 1)' },
+                    { name: "Doctrinal breakpoints", explanation: "It makes existing military doctrine obsolete, requiring major revisions.", color: 'rgba(79, 70, 229, 0.8)' },
+                    { name: "Shift in kill-chain topology", explanation: "It fundamentally changes the sequence of finding, fixing, and finishing a target.", color: 'rgba(79, 70, 229, 0.6)' },
+                    { name: "Adversary scrambles to counter", explanation: "It causes adversaries to openly panic or divert significant resources to find a countermeasure.", color: 'rgba(79, 70, 229, 0.4)' }
                 ]
             },
             irreversibility: {
                 name: "Irreversibility",
                 description: "Creates new baseline conditions that cannot be undone",
                 indicators: [
-                    { name: "Sunk training pipelines", color: 'rgba(239, 68, 68, 1)' },
-                    { name: "Logistics/infrastructure path dependence", color: 'rgba(239, 68, 68, 0.8)' },
-                    { name: "Adversary compulsion to mirror", color: 'rgba(239, 68, 68, 0.6)' },
-                    { name: "Force-structure changes", color: 'rgba(239, 68, 68, 0.4)' }
+                    { name: "Sunk training pipelines", explanation: "It requires deep, long-term investments in new training programs and human capital.", color: 'rgba(239, 68, 68, 1)' },
+                    { name: "Logistics/infrastructure path dependence", explanation: "It creates new dependencies on specific logistics, supply chains, or infrastructure.", color: 'rgba(239, 68, 68, 0.8)' },
+                    { name: "Adversary compulsion to mirror", explanation: "It forces adversaries to develop a similar capability at great cost to remain competitive.", color: 'rgba(239, 68, 68, 0.6)' },
+                    { name: "Force-structure changes", explanation: "It leads to permanent changes in the organization of military units or commands.", color: 'rgba(239, 68, 68, 0.4)' }
                 ]
             },
             generative: {
                 name: "Generative Capacity",
                 description: "Spawns further developments across multiple domains",
                 indicators: [
-                    { name: "Follow-on doctrines/capabilities", color: 'rgba(34, 197, 94, 1)' },
-                    { name: "Cross-domain spillovers", color: 'rgba(34, 197, 94, 0.8)' },
-                    { name: "Budget migration", color: 'rgba(34, 197, 94, 0.6)' },
-                    { name: "New capability categories", color: 'rgba(34, 197, 94, 0.4)' }
+                    { name: "Follow-on doctrines/capabilities", explanation: "It serves as a foundation for a range of subsequent military concepts or technologies.", color: 'rgba(34, 197, 94, 1)' },
+                    { name: "Cross-domain spillovers", explanation: "The innovation's effects extend beyond its original domain, such as from land to sea or air.", color: 'rgba(34, 197, 94, 0.8)' },
+                    { name: "Budget migration", explanation: "It causes defense funding to shift away from legacy systems to new areas.", color: 'rgba(34, 197, 94, 0.6)' },
+                    { name: "New capability categories", explanation: "It is so unique that entirely new labels or categories are created to describe it.", color: 'rgba(34, 197, 94, 0.4)' }
                 ]
             },
             cognitive: {
                 name: "Cognitive Disruption",
                 description: "Forces fundamental reconceptualization of problems",
                 indicators: [
-                    { name: "Doctrinal rewrites", color: 'rgba(234, 179, 8, 1)' },
-                    { name: "PME syllabus changes", color: 'rgba(234, 179, 8, 0.8)' },
-                    { name: "Wargame outcome reversals", color: 'rgba(234, 179, 8, 0.6)' },
-                    { name: "Senior guidance reframes metrics", color: 'rgba(234, 179, 8, 0.4)' }
+                    { name: "Doctrinal rewrites", explanation: "It necessitates a complete re-evaluation and rewriting of military doctrine.", color: 'rgba(234, 179, 8, 1)' },
+                    { name: "PME syllabus changes", explanation: "It becomes a core topic in professional military education (PME), requiring new curricula.", color: 'rgba(234, 179, 8, 0.8)' },
+                    { name: "Wargame outcome reversals", explanation: "It changes the expected outcomes of wargames, upending old assumptions.", color: 'rgba(234, 179, 8, 0.6)' },
+                    { name: "Senior guidance reframes metrics", explanation: "Senior leaders introduce new ways of measuring success, making old metrics irrelevant.", color: 'rgba(234, 179, 8, 0.4)' }
                 ]
             }
         };
@@ -122,6 +122,21 @@
                 if (classification === "Watch Category") return "Monitor, prototype selectively, collect evidence.";
                 return "Treat as modernization; fund incremental improvements.";
             }, [classification]);
+            
+            const classificationExplanation = useMemo(() => {
+                if (classification === "Genuine Innovation") {
+                    return `This is classified as a **Genuine Innovation** because it meets two key conditions: 1) It has a total score of 18 or higher (your score is ${totalScore}), and 2) It passes the "gate" by scoring at least 10 in either the Irreversibility or Cognitive Disruption dimension. These two dimensions are considered the most critical for a truly transformative innovation.`;
+                } else if (classification === "Watch Category") {
+                    const meetsGate = (dimensionTotals.irreversibility >= 10 || dimensionTotals.cognitive >= 10);
+                    if (meetsGate) {
+                         return `This is a **Watch Category** innovation. While it passes the "gate" with a score of ${dimensionTotals.irreversibility} or ${dimensionTotals.cognitive} in a key dimension (Irreversibility or Cognitive Disruption), its overall score of ${totalScore} is below the 18-point threshold for a Genuine Innovation. It shows promise but requires further evidence.`;
+                    } else {
+                        return `This is a **Watch Category** innovation. It has a total score of ${totalScore} (which is between 12 and 18), but it did not pass the critical "gate" because its scores in both Irreversibility (${dimensionTotals.irreversibility}) and Cognitive Disruption (${dimensionTotals.cognitive}) are below the required 10-point threshold.`;
+                    }
+                } else {
+                    return `This is classified as **Modernization**. The overall score of ${totalScore} is below the 12-point threshold for a "Watch Category" innovation, and it did not pass the critical "gate" in either the Irreversibility or Cognitive Disruption dimensions (with scores of ${dimensionTotals.irreversibility} and ${dimensionTotals.cognitive} respectively). This suggests it is an important improvement but not a fundamental innovation.`;
+                }
+            }, [classification, totalScore, dimensionTotals]);
 
             const updateCharts = () => {
                 // Destroy old chart instances if they exist
@@ -135,23 +150,6 @@
                     DIMENSIONS[dimKey].indicators.map(ind => ind.name)
                 );
                 const indData = Object.values(scores).flat();
-                const indColors = Object.values(DIMENSIONS).flatMap(dim =>
-                    dim.indicators.map(ind => ind.color)
-                );
-                const indDatasets = Object.keys(DIMENSIONS).map(dimKey => {
-                    const dim = DIMENSIONS[dimKey];
-                    const data = dim.indicators.map((_, i) => scores[dimKey][i]);
-                    return {
-                        label: dim.name,
-                        data: data,
-                        borderColor: dim.indicators[0].color,
-                        tension: 0.3,
-                        fill: false,
-                        pointRadius: 5,
-                        pointHoverRadius: 8
-                    };
-                });
-
 
                 // Dimension Chart
                 dimChartInstance.current = new Chart(dimChartRef.current, {
@@ -244,27 +242,30 @@
                             A four-dimensional recognition tool to distinguish genuine innovation from modernization.
                         </p>
                     </header>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Left Column: Input and Scoring */}
-                        <div className="space-y-6">
-                            <div className="p-6 bg-white rounded-lg shadow">
-                                <h2 className="text-xl font-semibold mb-4">Step 1: Propose Your Innovation</h2>
-                                <input
-                                    type="text"
-                                    value={capability}
-                                    onChange={(e) => setCapability(e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                                    placeholder="e.g., AI-powered drone swarms"
-                                />
-                            </div>
 
-                            <div className="p-6 bg-white rounded-lg shadow">
-                                <h2 className="text-xl font-semibold mb-4">Step 2: Score Dimensions (0-5)</h2>
-                                <p className="text-sm text-gray-600 mb-4">
-                                    <span className="font-semibold text-red-600">Disclaimer:</span> This is a conceptual tool. Scores are **indicative**, not quantitative, and must be justified by real-world evidence.
-                                </p>
+                    {/* Main Content Area */}
+                    <div className="space-y-6">
+                        {/* Innovation Input */}
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Step 1: Propose Your Innovation</h2>
+                            <input
+                                type="text"
+                                value={capability}
+                                onChange={(e) => setCapability(e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                placeholder="e.g., AI-powered drone swarms"
+                            />
+                        </div>
+
+                        {/* Dimension Scoring (Horizontal Layout) */}
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Step 2: Score Dimensions (0-5)</h2>
+                            <p className="text-sm text-gray-600 mb-4">
+                                <span className="font-semibold text-red-600">Disclaimer:</span> This is a conceptual tool. Scores are **indicative**, not quantitative, and must be justified by real-world evidence.
+                            </p>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {Object.entries(DIMENSIONS).map(([dimKey, dim]) => (
-                                    <div key={dimKey} className="p-4 mb-4 bg-gray-100 rounded-lg border">
+                                    <div key={dimKey} className="p-4 bg-gray-100 rounded-lg border">
                                         <div className="flex items-center justify-between mb-2">
                                             <h3 className="font-semibold text-gray-800">{dim.name}</h3>
                                             <span className="score-badge bg-blue-100 text-blue-800">{dimensionTotals[dimKey]}/20</span>
@@ -276,6 +277,7 @@
                                                     <label className="font-medium text-gray-700">{indicator.name}</label>
                                                     <span className="text-gray-600">{scores[dimKey][indIndex]}/5</span>
                                                 </div>
+                                                <p className="text-xs text-gray-500 mt-1 mb-2 italic">{indicator.explanation}</p>
                                                 <input
                                                     type="range"
                                                     min="0"
@@ -295,55 +297,63 @@
                             </div>
                         </div>
 
-                        {/* Right Column: Graphs and Assessment */}
-                        <div className="space-y-6 md:sticky md:top-6 md:h-screen md:overflow-y-auto">
-                            <div className="p-6 bg-white rounded-lg shadow">
-                                <h2 className="text-xl font-semibold mb-4">Visual Assessment</h2>
-                                <canvas id="dimensionChart" ref={dimChartRef}></canvas>
-                                <hr className="my-6" />
-                                <canvas id="indicatorChart" ref={indChartRef}></canvas>
-                            </div>
+                        {/* Graphs */}
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Visual Assessment</h2>
+                            <canvas id="dimensionChart" ref={dimChartRef}></canvas>
+                            <hr className="my-6" />
+                            <canvas id="indicatorChart" ref={indChartRef}></canvas>
+                        </div>
 
-                            <div className="p-6 bg-white rounded-lg shadow">
-                                <h2 className="text-xl font-semibold mb-4">Final Assessment</h2>
-                                <div className="space-y-4">
-                                    <div>
-                                        <p className="text-gray-600">Total Score</p>
-                                        <div className="text-3xl font-bold text-gray-900">{totalScore}/80</div>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-600">Classification</p>
-                                        <div className={`text-xl font-bold ${classification === 'Genuine Innovation' ? 'text-green-600' : classification === 'Watch Category' ? 'text-yellow-600' : 'text-slate-600'}`}>
-                                            {classification}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <p className="text-gray-600">Recommendation</p>
-                                        <div className="text-lg font-semibold text-gray-800">{recommendation}</div>
+                        {/* Final Assessment and Explanation */}
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Final Assessment</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <p className="text-gray-600">Total Score</p>
+                                    <div className="text-3xl font-bold text-gray-900">{totalScore}/80</div>
+                                </div>
+                                <div>
+                                    <p className="text-gray-600">Classification</p>
+                                    <div className={`text-xl font-bold ${classification === 'Genuine Innovation' ? 'text-green-600' : classification === 'Watch Category' ? 'text-yellow-600' : 'text-slate-600'}`}>
+                                        {classification}
                                     </div>
                                 </div>
-                            </div>
-
-                            <div className="p-6 bg-white rounded-lg shadow">
-                                <h2 className="text-xl font-semibold mb-4">Examples and Reset</h2>
-                                <div className="grid grid-cols-2 gap-2 mb-4">
-                                    {Object.keys(EXAMPLES).map(example => (
-                                        <button
-                                            key={example}
-                                            onClick={() => loadExample(example)}
-                                            className={`p-2 rounded text-xs border transition-colors ${selectedExample === example ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
-                                        >
-                                            {example}
-                                        </button>
-                                    ))}
+                                <div>
+                                    <p className="text-gray-600">Recommendation</p>
+                                    <div className="text-lg font-semibold text-gray-800">{recommendation}</div>
                                 </div>
-                                <button
-                                    onClick={resetTool}
-                                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-md font-medium"
-                                >
-                                    Reset All
-                                </button>
                             </div>
+                            <hr className="my-6" />
+                            <div className="prose max-w-none">
+                                <h3 className="font-semibold text-gray-800">Classification Explanation</h3>
+                                <p dangerouslySetInnerHTML={{ __html: classificationExplanation }}></p>
+                            </div>
+                        </div>
+
+                        {/* Examples and Reset */}
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Historical Examples and Reset</h2>
+                            <p className="text-sm text-gray-600 mb-4">
+                                Click any example below to see how the framework has been applied. The graphical representation of the analysis is available in the graphs above.
+                            </p>
+                            <div className="grid grid-cols-2 gap-2 mb-4">
+                                {Object.keys(EXAMPLES).map(example => (
+                                    <button
+                                        key={example}
+                                        onClick={() => loadExample(example)}
+                                        className={`p-2 rounded text-xs border transition-colors ${selectedExample === example ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200 hover:bg-gray-50'}`}
+                                    >
+                                        {example}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={resetTool}
+                                className="w-full bg-gray-200 hover:bg-gray-300 text-gray-800 py-2 rounded-md font-medium"
+                            >
+                                Reset All
+                            </button>
                         </div>
                     </div>
                 </div>
