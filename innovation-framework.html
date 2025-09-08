@@ -24,6 +24,15 @@
       overflow: hidden;
       transition: max-height 0.3s ease-in-out;
     }
+    .example-btn {
+      @apply w-full p-2 text-xs font-semibold rounded-md border text-center transition-colors;
+    }
+    .example-btn.active {
+      @apply bg-blue-100 border-blue-500 text-blue-700;
+    }
+    .example-btn.inactive {
+      @apply bg-gray-50 border-gray-300 text-gray-800 hover:bg-gray-100;
+    }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -466,11 +475,11 @@
                           <p className="text-sm text-gray-600 mb-3">
                               Click any example below to load its pre-configured scores, justification, and sources.
                           </p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs mb-4">
                               {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
                                   <button key={name}
                                       onClick={() => loadExample(name)}
-                                      className={`p-2 rounded border text-left hover:bg-gray-100 transition-colors ${selectedExample === name ? 'bg-gray-200 border-gray-400' : 'bg-white border-gray-200'}`}>
+                                      className={`example-btn ${selectedExample === name ? 'active' : 'inactive'}`}>
                                       {name}
                                   </button>
                               ))}
