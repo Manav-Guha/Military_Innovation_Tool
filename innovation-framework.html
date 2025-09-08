@@ -1,419 +1,612 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Military Innovation Assessment Framework</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js" data-presets="react"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    .card { @apply bg-white rounded-lg shadow border border-gray-200; }
-    .card-header { @apply px-4 py-3 border-b border-gray-200 flex items-center justify-between; }
-    .card-title { @apply font-semibold text-gray-900; }
-    .card-content { @apply p-4; }
-    .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium; }
-    .btn-secondary { @apply bg-gray-100 text-gray-900 hover:bg-gray-200; }
-    .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Military Innovation Assessment Framework</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media print { .no-print { display: none; } }
+        .score-badge { border-radius: 9999px; padding: 0.25rem 0.75rem; font-weight: 700; font-size: 0.85rem; }
+        .slider-thumb::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #4a5568;
+          cursor: pointer;
+        }
+        .slider-thumb::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 50%;
+          background: #4a5568;
+          cursor: pointer;
+        }
+    </style>
 </head>
 <body class="bg-gray-50">
-  <div id="root" class="max-w-7xl mx-auto p-6"></div>
+    <div id="root"></div>
 
-  <script type="text/babel">
-    const { useMemo, useState } = React;
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
 
-    // ========= Header (exact text) =========
-    function Header() {
-      return (
-        <header className="text-center space-y-1 mb-4">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
-            Military Innovation Assessment Framework
-          </h1>
-          <div className="text-lg text-gray-700">A Four-Dimensional Recognition Tool</div>
-          <div className="italic text-sm text-gray-600">
-            Based on "The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy"
-          </div>
-        </header>
-      );
-    }
+        const DIMENSIONS = {
+            discontinuity: {
+                name: "Discontinuity",
+                description: "Breaks existing patterns rather than extending them",
+                indicators: [
+                    { id: "d1", label: "Enemy OODA disruption" },
+                    { id: "d2", label: "Doctrinal break points" },
+                    { id: "d3", label: "Kill-chain topology shift" },
+                    { id: "d4", label: "Adversary scrambling to counter" }
+                ]
+            },
+            irreversibility: {
+                name: "Irreversibility",
+                description: "Creates path dependence, making reversal difficult",
+                indicators: [
+                    { id: "i1", label: "Training/institutional restructuring" },
+                    { id: "i2", label: "Logistics/infrastructure path dependence" },
+                    { id: "i3", label: "Adversary compulsion to mirror at scale" },
+                    { id: "i4", label: "Persistent force structure changes" }
+                ]
+            },
+            generative: {
+                name: "Generative",
+                description: "Enables new systems and doctrines",
+                indicators: [
+                    { id: "g1", label: "Follow-on doctrines/capabilities (5–10y)" },
+                    { id: "g2", label: "Cross-domain spillovers" },
+                    { id: "g3", label: "Budget share migration" },
+                    { id: "g4", label: "New capability categories emerge" }
+                ]
+            },
+            cognitive: {
+                name: "Cognitive",
+                description: "Shifts mental models and beliefs",
+                indicators: [
+                    { id: "c1", label: "Doctrinal rewrites" },
+                    { id: "c2", label: "PME syllabus changes" },
+                    { id: "c3", label: "Wargame outcome reversals" },
+                    { id: "c4", label: "Leadership reframes success metrics" }
+                ]
+            }
+        };
 
-    // ========= Indicator model =========
-    const INDICATORS = {
-      discontinuity: [
-        { id: "d1", label: "Enemy OODA disruption", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "d2", label: "Doctrinal break points", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "d3", label: "Kill-chain topology shift", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "d4", label: "Adversary scrambling to counter", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-      irreversibility: [
-        { id: "i1", label: "Training/institutional restructuring", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "i2", label: "Logistics/infrastructure path dependence", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "i3", label: "Adversary compulsion to mirror at scale", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "i4", label: "Persistent force structure changes", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-      generative: [
-        { id: "g1", label: "Follow-on doctrines/capabilities (5–10y)", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "g2", label: "Cross-domain spillovers", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "g3", label: "Budget share migration", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "g4", label: "New capability categories emerge", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-      cognitive: [
-        { id: "c1", label: "Doctrinal rewrites", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "c2", label: "PME syllabus changes", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "c3", label: "Wargame outcome reversals", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "c4", label: "Leadership reframes success metrics", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-    };
-    const DIM_KEYS = ["discontinuity","irreversibility","generative","cognitive"];
+        const DIM_KEYS = Object.keys(DIMENSIONS);
 
-    function makeDefaultScores() {
-      const s = {};
-      DIM_KEYS.forEach(dim => INDICATORS[dim].forEach(ind => s[ind.id] = 0));
-      return s;
-    }
+        const EXAMPLES = {
+          "AI-Targeting": {
+              discontinuity:1, irreversibility:1, generative:2, cognitive:1,
+              justification: "Automated targeting enhances kill chains but doesn't fundamentally rewrite them yet. It creates new capabilities but isn't forcing a complete institutional overhaul.",
+              sources: ["USAF Mad Scientist Initial Research"]
+          },
+          "AIP Submarine": {
+              discontinuity:1, irreversibility:1, generative:1, cognitive:0,
+              justification: "AIP is an improvement, not a radical break. It extends diesel-electric capabilities but doesn't fundamentally change naval warfare doctrine. It is an evolutionary change.",
+              sources: ["Naval Institute Journal", "RAND Report on Submarine Warfare"]
+          },
+          "ASBM": {
+              discontinuity:2, irreversibility:2, generative:1, cognitive:2,
+              justification: "Anti-Ship Ballistic Missiles challenge the core assumption of US naval power (uncontested carrier presence). This forces a rethink of force structure and operational concepts, but it's a specific counter-weapon, not a universally generative capability.",
+              sources: ["CSBA Report", "War on the Rocks"]
+          },
+          "Barbed Wire": {
+              discontinuity:1, irreversibility:2, generative:1, cognitive:1,
+              justification: "Barbed wire changed tactics (leading to trench warfare) but was an incremental technology. The real innovation was the tactical and operational shift, which happened over time. It created path dependence in trench systems.",
+              sources: ["A History of Warfare by John Keegan"]
+          },
+          "Blitzkrieg": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "Blitzkrieg was a total system innovation, combining tanks, close air support, and radio communication into a new way of war. It forced adversaries to rethink everything, leading to deep doctrinal and institutional changes.",
+              sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"]
+          },
+          "Carrier Aviation": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "Carrier aviation completely transformed naval warfare, replacing the battleship as the capital ship. It created a new domain of combat, new doctrines, and massive institutional and infrastructure changes that were irreversible.",
+              sources: ["The Command of the Air by Giulio Douhet", "A History of Naval Power"]
+          },
+          "Cyber Warfare": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "Cyber warfare introduced an entirely new, contested domain of conflict. It is generative, creating new offensive and defensive capabilities. It is irreversible because all modern militaries are dependent on digital infrastructure.",
+              sources: ["Cyber Operations by Paul Rosenzweig", "Strategic Studies Quarterly"]
+          },
+          "Deep Battle/Reconnaissance Strike Complex": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "Soviet Deep Battle was a truly transformative doctrine that integrated air power, armor, and artillery to strike deep into enemy territory. It required massive, persistent force structure changes and led to new generative concepts.",
+              sources: ["Red Army Studies", "The Soviet Military Experience"]
+          },
+          "F-16 Block D": {
+              discontinuity:0, irreversibility:1, generative:1, cognitive:0,
+              justification: "An F-16 Block D is an upgrade, not an innovation. It improves an existing system but doesn't create new doctrinal concepts. It's a standard modernization process. Its irreversibility is limited to the logistics and training required for a slightly modified platform.",
+              sources: ["Janes Fighting Aircraft"]
+          },
+          "Hypersonics": {
+              discontinuity:1, irreversibility:1, generative:1, cognitive:1,
+              justification: "Hypersonics are a technical evolution. While they challenge missile defense, they don't yet fundamentally change the nature of warfare in the same way as, say, nuclear weapons. Their full cognitive and generative impact is still unfolding.",
+              sources: ["Center for Strategic and International Studies"]
+          },
+          "Information Warfare": {
+              discontinuity:1, irreversibility:1, generative:2, cognitive:2,
+              justification: "Information warfare is a powerful, generative capability that is forcing militaries to re-examine how they operate. It has a high cognitive score because it changes how commanders think about the battlespace, but it doesn't force the same kind of irreversible institutional changes as, for example, aircraft carriers.",
+              sources: ["The Information War by David A. Fulgham", "Military Review"]
+          },
+          "Lasers": {
+              discontinuity:2, irreversibility:1, generative:1, cognitive:1,
+              justification: "Lasers represent a significant technical discontinuity. They can be very effective for specific tasks. However, they don't yet have the same level of generative or irreversible impact on the broader military force structure as other examples.",
+              sources: ["DARPA research papers", "Air Force Magazine"]
+          },
+          "Machine Gun": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "The machine gun's introduction created a total discontinuity in infantry tactics, forcing armies into defensive trench warfare. It was a completely generative weapon, enabling a new style of combat. It required irreversible changes to doctrine and force structure.",
+              sources: ["The First World War by John Keegan", "The Machine Gun: A History"]
+          },
+          "Military Robotics": {
+              discontinuity:1, irreversibility:2, generative:2, cognitive:1,
+              justification: "Robotics are a highly generative capability. They enable new ways of doing things, like reconnaissance or bomb disposal, but their full impact on doctrine is still being explored. They require significant irreversible changes to logistics and training.",
+              sources: ["Drone Warfare by Peter W. Singer", "Naval War College Review"]
+          },
+          "Minie Ball/Connoidal Bullet": {
+              discontinuity:2, irreversibility:2, generative:1, cognitive:1,
+              justification: "The Minie ball gave a rifle the range of a smoothbore musket, making close-order tactics obsolete. This forced a massive doctrinal shift to skirmish lines and trench warfare. It was a technical discontinuity that caused irreversible doctrinal changes.",
+              sources: ["The Civil War by Bruce Catton"]
+          },
+          "Multi-Domain Battle Concept": {
+              discontinuity:1, irreversibility:1, generative:2, cognitive:2,
+              justification: "Multi-Domain Battle is a highly cognitive and generative concept that is in its early stages. It attempts to link disparate capabilities across domains (land, sea, air, space, cyber). While it hasn't yet led to major irreversible force structure changes, it is a significant doctrinal shift.",
+              sources: ["US Army and Marine Corps documents"]
+          },
+          "Network-Centric Warfare": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:1,
+              justification: "Network-Centric Warfare was a major discontinuity in how military forces operated. It was highly generative, enabling new capabilities through information sharing. It was irreversible as it required a fundamental rewiring of command and control. The cognitive shift was significant, but not as profound as some of the others.",
+              sources: ["Network-Centric Warfare by Arthur Cebrowski", "Proceedings of the US Naval Institute"]
+          },
+          "Nuclear Weapons": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "The ultimate military innovation. It created a total discontinuity, made previous models of total war obsolete, was completely generative of new doctrines (MAD), was irreversible, and forced a complete cognitive shift in military and political thinking.",
+              sources: ["The Making of the Atomic Bomb by Richard Rhodes", "On Thermonuclear War by Herman Kahn"]
+          },
+          "PGMs": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:1,
+              justification: "Precision-Guided Munitions created a discontinuity by making direct hits possible and changing the economics of warfare. It was highly generative and irreversible due to the training and infrastructure required. The cognitive shift was less profound because it was an enhancement to an existing system, rather than a whole new way of war.",
+              sources: ["Gulf War Air Power Survey", "The Revolution in Military Affairs by Eliot Cohen"]
+          },
+          "Radar": {
+              discontinuity:2, irreversibility:2, generative:1, cognitive:1,
+              justification: "Radar fundamentally changed naval and air warfare by giving commanders a new form of battlefield awareness. It was a major discontinuity that led to irreversible changes in how air defense and naval battles were fought. It was less generative than other innovations, but its cognitive impact was significant.",
+              sources: ["The Radar War by Michael J. Neufeld"]
+          },
+          "Stealth": {
+              discontinuity:2, irreversibility:2, generative:1, cognitive:0,
+              justification: "Stealth technology created a major discontinuity by making platforms nearly invisible to radar, rendering existing air defense systems obsolete. This was irreversible due to the massive investment in R&D and manufacturing. It's a technical evolution of existing platforms, thus less generative and cognitive.",
+              sources: ["Janes Fighting Aircraft", "Lockheed Martin Reports"]
+          },
+          "Stirrups": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "The stirrup allowed a cavalry rider to absorb the shock of a lance charge, making the mounted knight a super-heavy shock trooper. This created a new force (knighthood) and led to irreversible changes in society and warfare. It was a total system innovation.",
+              sources: ["Technology and War by Martin van Creveld", "A History of the Cavalry"]
+          },
+          "Stosstrupp Tactics": {
+              discontinuity:2, irreversibility:1, generative:1, cognitive:1,
+              justification: "Stosstrupp (Stormtrooper) tactics broke the stalemate of trench warfare, allowing for rapid breakthroughs. It was a significant discontinuity. Its generative and irreversible impacts were limited, however, as the tactics did not fundamentally change the strategic outcome of the war.",
+              sources: ["The First World War by John Keegan"]
+          },
+          "T-72B3M Main Battle Tank": {
+              discontinuity:0, irreversibility:1, generative:1, cognitive:0,
+              justification: "This is a simple upgrade of an existing platform. It improves armor and fire control but doesn't fundamentally change the tank's role on the battlefield. It is an example of an 'upgradation'.",
+              sources: ["Janes Armoured Fighting Vehicles"]
+          },
+          "Tank": {
+              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              justification: "The tank was a revolutionary innovation that created an entirely new form of mobile land warfare, rendering previous infantry-centric tactics obsolete. It was highly generative, irreversible, and forced a total cognitive shift.",
+              sources: ["The Tank: A History by Kenneth Macksey"]
+          },
+          "Telegraph": {
+              discontinuity:1, irreversibility:2, generative:2, cognitive:1,
+              justification: "The telegraph changed the speed of command and control, which was a significant discontinuity in communications. It was highly generative of new operational concepts, but its cognitive impact was less profound because it did not change the fundamental nature of war.",
+              sources: ["The Victorian Internet by Tom Standage"]
+          },
+          "UAVs": {
+              discontinuity:1, irreversibility:2, generative:2, cognitive:1,
+              justification: "Unmanned Aerial Vehicles are a highly generative technology that enable new types of missions. They have caused significant, irreversible changes in logistics and force structure, but their full cognitive impact on warfare is still unfolding.",
+              sources: ["Drone Warfare by Peter W. Singer"]
+          },
+        };
 
-    // ========= Palette =========
-    function colorForIndicator(v) {
-      if (v >= 3) return "bg-teal-500";   // high
-      if (v >= 1) return "bg-amber-500";  // medium
-      return "bg-gray-400";               // low
-    }
-    function colorForRatio(ratio) {
-      if (ratio >= 0.75) return "bg-teal-500";
-      if (ratio >= 0.5)  return "bg-amber-500";
-      return "bg-gray-400";
-    }
+        const RUBRICS = {
+          0: "No evidence",
+          1: "Prototype/lab only",
+          2: "Field trials/limited ops",
+          3: "Adversary response or institutional change",
+          4: "Doctrinal/strategic transformation"
+        };
+        
+        // ========= Propagation Model from New_Innovation_Tool.html =========
+        const EDGES = [
+          { source: "generative",     target: "irreversibility", w: 0.6 },
+          { source: "generative",     target: "discontinuity",  w: 0.4 },
+          { source: "discontinuity",  target: "cognitive",      w: 0.6 },
+          { source: "discontinuity",  target: "irreversibility",w: 0.3 },
+          { source: "irreversibility",target: "generative",     w: 0.4 },
+          { source: "cognitive",      target: "irreversibility",w: 0.3 },
+          { source: "cognitive",      target: "generative",     w: 0.3 },
+        ];
+        const ALPHA = 1.0;
 
-    // ========= Aggregation =========
-    function dimensionSum(scores, dim) {
-      return INDICATORS[dim].reduce((acc, ind) => acc + (scores[ind.id] || 0), 0); // 0..16
-    }
-    function totalSum(scores) {
-      return DIM_KEYS.reduce((acc, dim) => acc + dimensionSum(scores, dim), 0); // 0..64
-    }
+        function propagate(scores) {
+          const out = { ...scores };
 
-    // ========= Classification =========
-    function classify(scores) {
-      const d = dimensionSum(scores, "discontinuity");
-      const i = dimensionSum(scores, "irreversibility");
-      const g = dimensionSum(scores, "generative");
-      const c = dimensionSum(scores, "cognitive");
-      const total = d + i + g + c;
+          const avg = {
+            discontinuity: DIMENSIONS.discontinuity.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
+            irreversibility: DIMENSIONS.irreversibility.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
+            generative: DIMENSIONS.generative.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
+            cognitive: DIMENSIONS.cognitive.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
+          };
 
-      if (total === 0) return { bucket: "None of the Above", total, d,i,g,c };
-      if (total >= 15 && (i >= 9 || c >= 9)) return { bucket: "Genuine Innovation", total, d,i,g,c };
-      if (d >= 1 && i === 0 && g === 0) return { bucket: "Adaptation", total, d,i,g,c };
-      if (total >= 4) return { bucket: "Modernization", total, d,i,g,c };
-      return { bucket: "Upgradation", total, d,i,g,c };
-    }
+          EDGES.forEach(({ source, target, w }) => {
+            const norm = avg[source] / 4;
+            const contrib = Math.ceil(ALPHA * w * norm);
+            if (contrib < 1) return;
 
-    // ========= Propagation =========
-    const EDGES = [
-      { source: "generative",     target: "irreversibility", w: 0.6 },
-      { source: "generative",     target: "discontinuity",  w: 0.4 },
-      { source: "discontinuity",  target: "cognitive",      w: 0.6 },
-      { source: "discontinuity",  target: "irreversibility",w: 0.3 },
-      { source: "irreversibility",target: "generative",     w: 0.4 },
-      { source: "cognitive",      target: "irreversibility",w: 0.3 },
-      { source: "cognitive",      target: "generative",     w: 0.3 },
-    ];
-    const ALPHA = 1.0;
+            DIMENSIONS[target].indicators.forEach(ind => {
+              const base = scores[ind.id] || 0;
+              const current = out[ind.id] || 0;
+              if (current > base) return;
+              const delta = Math.min(contrib, 4 - base);
+              out[ind.id] = base + delta;
+            });
+          });
 
-    function propagate(scores) {
-      const out = { ...scores };
+          return out;
+        }
 
-      const avg = {
-        discontinuity: dimensionSum(scores, "discontinuity") / 4, // 0..4
-        irreversibility: dimensionSum(scores, "irreversibility") / 4,
-        generative: dimensionSum(scores, "generative") / 4,
-        cognitive: dimensionSum(scores, "cognitive") / 4,
-      };
+        // ====================================================================
 
-      EDGES.forEach(({ source, target, w }) => {
-        const norm = avg[source] / 4;                 // 0..1
-        const contrib = Math.ceil(ALPHA * w * norm);  // 0 or 1
-        if (contrib < 1) return;
+        const classify = (scores) => {
+            const d = DIMENSIONS.discontinuity.indicators.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const i = DIMENSIONS.irreversibility.indicators.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const g = DIMENSIONS.generative.indicators.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const c = DIMENSIONS.cognitive.indicators.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const total = d + i + g + c;
 
-        INDICATORS[target].forEach(ind => {
-          const base = scores[ind.id] || 0;
-          const current = out[ind.id] || 0;
-          if (current > base) return;                 // already bumped by another edge
-          const delta = Math.min(1, 4 - base);        // max +1 over base, cap 4
-          out[ind.id] = base + delta;
-        });
-      });
+            if (total === 0) return { bucket: "None of the Above", total, d, i, g, c, classificationText: "No innovation has been scored. Please use the sliders to begin your assessment." };
+            if (total >= 15 && (i >= 9 || c >= 9)) return { bucket: "Genuine Innovation", total, d, i, g, c, classificationText: "This qualifies as a 'Genuine Innovation.' Genuine Innovations are rare and difficult to achieve. They fundamentally redefine military power, requiring deep doctrinal and institutional changes that are often irreversible. The high scores in Irreversibility and/or Cognitive Disruption signal a transformative, rather than merely technical, effect." };
+            if (d >= 1 && i === 0 && g === 0 && c === 0) return { bucket: "Adaptation", total, d, i, g, c, classificationText: "This is an 'Adaptation.' It is a reactive change to a new threat or circumstance. It is characterized by a high Discontinuity score but low scores in the other dimensions, indicating that it does not fundamentally change the system. Think of it as a tactical or operational tweak rather than a strategic transformation."};
+            if (total >= 10 && d > 0 && i >= 1) return { bucket: "Modernization", total, d, i, g, c, classificationText: "This qualifies as 'Modernization.' Modernization improves upon existing systems and doctrines, making them more efficient and effective. It often involves upgrades that are irreversible and can create new capabilities, but it does not fundamentally change the nature of war. The scores indicate a significant, but not revolutionary, change." };
+            return { bucket: "Upgradation", total, d, i, g, c, classificationText: "This is an 'Upgradation.' It is a simple improvement to an existing system, such as a new sensor or a software update. It has a low total score and does not significantly change any of the four dimensions. It is an example of an evolutionary, not revolutionary, change." };
+        };
 
-      return out;
-    }
+        const makeDefaultScores = () => {
+          const s = {};
+          DIM_KEYS.forEach(dim => DIMENSIONS[dim].indicators.forEach(ind => s[ind.id] = 0));
+          return s;
+        };
 
-    // ========= Bars =========
-    function Bar({ value, max, title }) {
-      const ratio = Math.max(0, Math.min(1, value / max));
-      const color = colorForRatio(ratio);
-      return (
-        <div className="w-full bg-gray-100 rounded h-3 overflow-hidden" title={title}>
-          <div className={`h-3 ${color}`} style={{ width: `${ratio * 100}%` }} />
-        </div>
-      );
-    }
+        const App = () => {
+            const [label, setLabel] = useState("");
+            const [scores, setScores] = useState(makeDefaultScores());
+            const [showRubrics, setShowRubrics] = useState(false);
+            const [selectedExample, setSelectedExample] = useState(null);
+            const dimensionChartRef = useRef(null);
+            const indicatorChartRef = useRef(null);
 
-    // Overlay fix: render only the delta
-    function IndicatorBar({ base, integrated, title }) {
-      const max = 4;
-      const baseRatio = Math.max(0, Math.min(1, base / max));
-      const integRatio = Math.max(0, Math.min(1, integrated / max));
-      const deltaRatio = Math.max(0, integRatio - baseRatio);
-      const baseColor = colorForIndicator(base);
-      return (
-        <div className="w-full bg-gray-100 rounded h-3 relative overflow-hidden" title={title}>
-          <div className={`h-3 ${baseColor}`} style={{ width: `${baseRatio * 100}%` }} />
-          {deltaRatio > 0 && (
-            <div
-              className="h-3 absolute top-0 bg-teal-300/60"
-              style={{ left: `${baseRatio * 100}%`, width: `${deltaRatio * 100}%` }}
-            />
-          )}
-        </div>
-      );
-    }
+            const integratedScores = useMemo(() => propagate(scores), [scores]);
 
-    // ========= Historical Examples (neutral selectors) =========
-    // Each example stores original 0–2 dimension scores. On load we map:
-    // indicator score = 2 * dimScore  (0/2/4) for all 4 indicators of that dimension.
-    const EXAMPLES_DIM = {
-      "AI-Targeting":              { discontinuity:1, irreversibility:1, generative:2, cognitive:1 },
-      "AIP Submarine":             { discontinuity:1, irreversibility:1, generative:1, cognitive:0 },
-      "ASBM":                      { discontinuity:2, irreversibility:2, generative:1, cognitive:2 },
-      "Barbed Wire":               { discontinuity:1, irreversibility:2, generative:1, cognitive:1 },
-      "Blitzkrieg":                { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "Carrier Aviation":          { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "Cyber Warfare":             { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "Deep Battle/Reconnaissance Strike Complex": { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "F-16 Block D":              { discontinuity:0, irreversibility:1, generative:1, cognitive:0 },
-      "Hypersonics":               { discontinuity:1, irreversibility:1, generative:1, cognitive:1 },
-      "Information Warfare":       { discontinuity:1, irreversibility:1, generative:2, cognitive:2 },
-      "Lasers":                    { discontinuity:2, irreversibility:1, generative:1, cognitive:1 },
-      "Machine Gun":               { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "Military Robotics":         { discontinuity:1, irreversibility:2, generative:2, cognitive:1 },
-      "Minie Ball/Connoidal Bullet": { discontinuity:2, irreversibility:2, generative:1, cognitive:1 },
-      "Multi-Domain Battle Concept": { discontinuity:1, irreversibility:1, generative:2, cognitive:2 },
-      "Network-Centric Warfare":   { discontinuity:2, irreversibility:2, generative:2, cognitive:1 },
-      "Nuclear Weapons":           { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "PGMs":                      { discontinuity:2, irreversibility:2, generative:2, cognitive:1 },
-      "Radar":                     { discontinuity:2, irreversibility:2, generative:1, cognitive:1 },
-      "Stealth":                   { discontinuity:2, irreversibility:2, generative:1, cognitive:0 },
-      "Stirrups":                  { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "Stosstrupp Tactics":        { discontinuity:2, irreversibility:1, generative:1, cognitive:1 },
-      "T-72B3M Main Battle Tank":  { discontinuity:0, irreversibility:1, generative:1, cognitive:0 },
-      "Tank":                      { discontinuity:2, irreversibility:2, generative:2, cognitive:2 },
-      "Telegraph":                 { discontinuity:1, irreversibility:2, generative:2, cognitive:1 },
-      "UAVs":                      { discontinuity:1, irreversibility:2, generative:2, cognitive:1 },
-    };
+            const conservativeClassification = useMemo(() => classify(scores), [scores]);
+            const integratedClassification = useMemo(() => classify(integratedScores), [integratedScores]);
 
-    const EXAMPLE_LIST = [
-      "AI-Targeting","AIP Submarine","ASBM","Barbed Wire",
-      "Blitzkrieg","Carrier Aviation","Cyber Warfare","Deep Battle/Reconnaissance Strike Complex",
-      "F-16 Block D","Hypersonics","Information Warfare","Lasers",
-      "Machine Gun","Military Robotics","Minie Ball/Connoidal Bullet","Multi-Domain Battle Concept",
-      "Network-Centric Warfare","Nuclear Weapons","PGMs","Radar",
-      "Stealth","Stirrups","Stosstrupp Tactics","T-72B3M Main Battle Tank",
-      "Tank","Telegraph","UAVs"
-    ];
+            const calculateDimensionScores = (currentScores) => {
+              return DIM_KEYS.reduce((acc, key) => ({
+                ...acc,
+                [key]: DIMENSIONS[key].indicators.reduce((sum, ind) => sum + (currentScores[ind.id] || 0), 0)
+              }), {});
+            };
 
-    function dimToIndicators(dimScores) {
-      // map 0–2 to 0/2/4 across each dimension's 4 indicators
-      const out = {};
-      DIM_KEYS.forEach(dim => {
-        const s = (dimScores[dim] ?? 0) * 2; // 0,2,4
-        INDICATORS[dim].forEach(ind => { out[ind.id] = s; });
-      });
-      return out;
-    }
+            const conservativeDimensionScores = useMemo(() => calculateDimensionScores(scores), [scores]);
+            const integratedDimensionScores = useMemo(() => calculateDimensionScores(integratedScores), [integratedScores]);
 
-    // ========= App =========
-    function App() {
-      const [label, setLabel] = useState("");
-      const [showRubrics, setShowRubrics] = useState(false);
-      const [scores, setScores] = useState(() => makeDefaultScores());
+            const updateCharts = () => {
+                if (dimensionChartRef.current) {
+                    const dimensionChart = dimensionChartRef.current;
+                    dimensionChart.data.datasets[0].data = Object.values(conservativeDimensionScores);
+                    dimensionChart.data.datasets[1].data = Object.values(integratedDimensionScores);
+                    dimensionChart.update();
+                }
 
-      // Conservative
-      const consDims = useMemo(() => ({
-        d: dimensionSum(scores, "discontinuity"),
-        i: dimensionSum(scores, "irreversibility"),
-        g: dimensionSum(scores, "generative"),
-        c: dimensionSum(scores, "cognitive"),
-        total: totalSum(scores),
-      }), [scores]);
-      const consClass = useMemo(() => classify(scores), [scores]);
+                if (indicatorChartRef.current) {
+                    const indicatorChart = indicatorChartRef.current;
+                    indicatorChart.data.datasets[0].data = Object.values(scores);
+                    indicatorChart.data.datasets[1].data = Object.values(integratedScores);
+                    indicatorChart.update();
+                }
+            };
 
-      // Integrated
-      const integratedScores = useMemo(() => propagate(scores), [scores]);
-      const intDims = useMemo(() => ({
-        d: dimensionSum(integratedScores, "discontinuity"),
-        i: dimensionSum(integratedScores, "irreversibility"),
-        g: dimensionSum(integratedScores, "generative"),
-        c: dimensionSum(integratedScores, "cognitive"),
-        total: totalSum(integratedScores),
-      }), [integratedScores]);
-      const intClass = useMemo(() => classify(integratedScores), [integratedScores]);
+            useEffect(() => {
+                const dimensionChartCtx = document.getElementById('dimension-chart').getContext('2d');
+                if (dimensionChartRef.current) {
+                    dimensionChartRef.current.destroy();
+                }
+                dimensionChartRef.current = new Chart(dimensionChartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: DIM_KEYS.map(key => DIMENSIONS[key].name),
+                        datasets: [
+                            {
+                                label: 'Conservative',
+                                data: Object.values(conservativeDimensionScores),
+                                backgroundColor: ['#FCA5A5', '#FDBA74', '#FCD34D', '#FDE047'],
+                                borderColor: ['#EF4444', '#F97316', '#F59E0B', '#FACC15'],
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Integrated',
+                                data: Object.values(integratedDimensionScores),
+                                backgroundColor: 'rgba(52, 211, 153, 0.6)',
+                                borderColor: '#10B981',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 16
+                            }
+                        }
+                    }
+                });
+                
+                const indicatorChartCtx = document.getElementById('indicator-chart').getContext('2d');
+                if (indicatorChartRef.current) {
+                    indicatorChartRef.current.destroy();
+                }
+                indicatorChartRef.current = new Chart(indicatorChartCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.values(DIMENSIONS).flatMap(d => d.indicators.map(i => i.label)),
+                        datasets: [
+                            {
+                                label: 'Conservative',
+                                data: Object.values(scores),
+                                backgroundColor: 'rgba(251, 191, 36, 0.6)',
+                                borderColor: '#F59E0B',
+                                borderWidth: 1
+                            },
+                            {
+                                label: 'Integrated',
+                                data: Object.values(integratedScores),
+                                backgroundColor: 'rgba(52, 211, 153, 0.6)',
+                                borderColor: '#10B981',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        indexAxis: 'y',
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                max: 4
+                            }
+                        }
+                    }
+                });
 
-      function setIndicator(id, v) { setScores(s => ({ ...s, [id]: v })); }
-      function resetAll() { setLabel(""); setScores(makeDefaultScores()); }
-      function loadExample(name) {
-        const dimScores = EXAMPLES_DIM[name];
-        if (!dimScores) return;
-        setLabel(name);
-        setScores(dimToIndicators(dimScores));
-      }
+            }, [scores, integratedScores]);
+            
+            useEffect(() => {
+                updateCharts();
+            }, [scores, integratedScores]);
 
-      return (
-        <div className="space-y-6">
-          <Header />
 
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Case Setup</div>
-              <button className="btn btn-secondary" onClick={resetAll}>Reset</button>
-            </div>
-            <div className="card-content space-y-3">
-              <div>
-                <div className="text-sm font-medium">Case Label</div>
-                <input className="input" placeholder="e.g., Fiber optics (dual-use substrate)" value={label} onChange={e => setLabel(e.target.value)} />
-              </div>
-              <label className="inline-flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={showRubrics} onChange={e => setShowRubrics(e.target.checked)} />
-                <span>Show scoring rubric tooltips</span>
-              </label>
-            </div>
-          </div>
+            const setIndicator = (id, value) => {
+                setScores(prevScores => ({ ...prevScores, [id]: value }));
+                setSelectedExample(null);
+            };
 
-          {/* Two panels */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Conservative */}
-            <div className="card">
-              <div className="card-header"><div className="card-title">Conservative (evidence-only)</div></div>
-              <div className="card-content space-y-4">
-                {/* Total */}
-                <div>
-                  <div className="text-sm text-gray-700 mb-1">Total {consDims.total}/64 · {consClass.bucket}</div>
-                  <Bar value={consDims.total} max={64} title={`Total: ${consDims.total}/64`} />
-                </div>
-                {/* Dimensions */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div><div className="text-xs mb-1">Discontinuity {consDims.d}/16</div><Bar value={consDims.d} max={16} title={`Discontinuity: ${consDims.d}/16`} /></div>
-                  <div><div className="text-xs mb-1">Irreversibility {consDims.i}/16</div><Bar value={consDims.i} max={16} title={`Irreversibility: ${consDims.i}/16`} /></div>
-                  <div><div className="text-xs mb-1">Generative {consDims.g}/16</div><Bar value={consDims.g} max={16} title={`Generative: ${consDims.g}/16`} /></div>
-                  <div><div className="text-xs mb-1">Cognitive {consDims.c}/16</div><Bar value={consDims.c} max={16} title={`Cognitive: ${consDims.c}/16`} /></div>
-                </div>
-                {/* Indicators */}
-                {DIM_KEYS.map(dim => (
-                  <div key={dim} className="rounded border p-3">
-                    <div className="text-sm font-semibold capitalize mb-2">{dim}</div>
-                    <div className="space-y-2">
-                      {INDICATORS[dim].map(ind => (
-                        <div key={ind.id} className="grid grid-cols-12 items-center gap-3">
-                          <div className="col-span-6 text-xs"
-                               title={showRubrics ? `0: ${ind.ladder[0]} | 1: ${ind.ladder[1]} | 2: ${ind.ladder[2]} | 3: ${ind.ladder[3]} | 4: ${ind.ladder[4]}` : undefined}>
-                            {ind.label}
-                          </div>
-                          <div className="col-span-4">
-                            <IndicatorBar base={scores[ind.id] || 0} integrated={scores[ind.id] || 0} title={`${ind.label}: ${scores[ind.id] || 0}/4`} />
-                          </div>
-                          <div className="col-span-2 flex gap-1 justify-end">
-                            {[0,1,2,3,4].map(v => (
-                              <button key={v}
-                                      className={`w-6 h-6 text-xs rounded ${ (scores[ind.id]||0)===v ? "bg-gray-800 text-white" : "bg-gray-200 text-gray-800" }`}
-                                      onClick={() => setIndicator(ind.id, v)}>{v}</button>
-                            ))}
-                          </div>
+            const resetAll = () => {
+                setLabel("");
+                setScores(makeDefaultScores());
+                setSelectedExample(null);
+            };
+
+            const loadExample = (name) => {
+                const dimScores = EXAMPLES[name];
+                const out = {};
+                DIM_KEYS.forEach(dim => {
+                    const s = (dimScores[dim] ?? 0) * 2;
+                    DIMENSIONS[dim].indicators.forEach(ind => { out[ind.id] = s; });
+                });
+                setLabel(name);
+                setScores(out);
+                setSelectedExample(name);
+            };
+
+            return (
+                <div className="max-w-7xl mx-auto p-6 space-y-8">
+                    <header className="text-center space-y-1">
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
+                            Military Innovation Assessment Framework
+                        </h1>
+                        <p className="text-lg text-gray-700">A Four-Dimensional Recognition Tool</p>
+                        <p className="italic text-sm text-gray-600">
+                            Based on "The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy"
+                        </p>
+                    </header>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="md:col-span-2 p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Case Setup</h2>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Case Label</label>
+                                    <input
+                                        type="text"
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                                        placeholder="e.g., Fiber optics (dual-use substrate)"
+                                        value={label}
+                                        onChange={(e) => setLabel(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        checked={showRubrics}
+                                        onChange={(e) => setShowRubrics(e.target.checked)}
+                                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                                    />
+                                    <span className="text-sm text-gray-700">Show scoring rubric tooltips</span>
+                                </div>
+                                <button
+                                    onClick={resetAll}
+                                    className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 no-print"
+                                >
+                                    Reset All
+                                </button>
+                            </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
-            {/* Integrated */}
-            <div className="card">
-              <div className="card-header"><div className="card-title">Integrated (with interconnected effects)</div></div>
-              <div className="card-content space-y-4">
-                {/* Total */}
-                <div>
-                  <div className="text-sm text-gray-700 mb-1">Total {intDims.total}/64 · {intClass.bucket}</div>
-                  <Bar value={intDims.total} max={64} title={`Total: ${intDims.total}/64`} />
-                </div>
-                {/* Dimensions */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div><div className="text-xs mb-1">Discontinuity {intDims.d}/16</div><Bar value={intDims.d} max={16} title={`Discontinuity: ${intDims.d}/16`} /></div>
-                  <div><div className="text-xs mb-1">Irreversibility {intDims.i}/16</div><Bar value={intDims.i} max={16} title={`Irreversibility: ${intDims.i}/16`} /></div>
-                  <div><div className="text-xs mb-1">Generative {intDims.g}/16</div><Bar value={intDims.g} max={16} title={`Generative: ${intDims.g}/16`} /></div>
-                  <div><div className="text-xs mb-1">Cognitive {intDims.c}/16</div><Bar value={intDims.c} max={16} title={`Cognitive: ${intDims.c}/16`} /></div>
-                </div>
-                {/* Indicators with overlays */}
-                {DIM_KEYS.map(dim => (
-                  <div key={dim} className="rounded border p-3">
-                    <div className="text-sm font-semibold capitalize mb-2">{dim}</div>
-                    <div className="space-y-2">
-                      {INDICATORS[dim].map(ind => (
-                        <div key={ind.id} className="grid grid-cols-12 items-center gap-3">
-                          <div className="col-span-6 text-xs"
-                               title={showRubrics ? `0: ${ind.ladder[0]} | 1: ${ind.ladder[1]} | 2: ${ind.ladder[2]} | 3: ${ind.ladder[3]} | 4: ${ind.ladder[4]}` : undefined}>
-                            {ind.label}
-                          </div>
-                          <div className="col-span-4">
-                            <IndicatorBar
-                              base={scores[ind.id] || 0}
-                              integrated={integratedScores[ind.id] || 0}
-                              title={`${ind.label}: ${integratedScores[ind.id] || 0}/4 (after propagation)`}
-                            />
-                          </div>
-                          <div className="col-span-2 text-right text-xs text-gray-600">
-                            +{Math.max(0, (integratedScores[ind.id]||0) - (scores[ind.id]||0))}
-                          </div>
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Classification</h2>
+                            <div className="mb-4">
+                                <h3 className="text-lg font-medium text-gray-900">Conservative</h3>
+                                <p className="text-sm text-gray-500">Based on your direct input.</p>
+                                <div className="mt-2">
+                                    <span className={`score-badge ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                                        {conservativeClassification.bucket}
+                                    </span>
+                                </div>
+                                <p className="mt-2 text-sm text-gray-600">{conservativeClassification.classificationText}</p>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900">Integrated</h3>
+                                <p className="text-sm text-gray-500">With interconnected effects.</p>
+                                <div className="mt-2">
+                                    <span className={`score-badge ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                                        {integratedClassification.bucket}
+                                    </span>
+                                </div>
+                                <p className="mt-2 text-sm text-gray-600">
+                                  {integratedClassification.classificationText}
+                                </p>
+                            </div>
                         </div>
-                      ))}
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          {/* Historical Examples and Reset */}
-          <div className="card">
-            <div className="card-header">
-              <div className="card-title">Historical Examples and Reset</div>
-            </div>
-            <div className="card-content">
-              <p className="text-sm text-gray-600 mb-3">
-                Click any example below to load how the framework can be applied. The graphical representation will update above.
-              </p>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                {EXAMPLE_LIST.map(name => (
-                  <button key={name}
-                          onClick={() => loadExample(name)}
-                          className="p-2 rounded border text-left hover:bg-gray-100 transition-colors bg-white border-gray-200">
-                    {name}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-4">
-                <button className="w-full btn btn-secondary" onClick={resetAll}>Reset All</button>
-              </div>
-            </div>
-          </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Dimension Scores</h2>
+                            <div className="h-64">
+                                <canvas id="dimension-chart"></canvas>
+                            </div>
+                        </div>
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Indicator Scores</h2>
+                            <div className="h-64">
+                                <canvas id="indicator-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
 
-          <div className="text-xs text-gray-500">
-            Recognition heuristic. It does not define innovation; it evaluates observed effects across four dimensions. Conservative vs Integrated are shown for transparency.
-          </div>
-        </div>
-      );
-    }
+                    <div className="p-6 bg-white rounded-lg shadow">
+                        <h2 className="text-xl font-semibold mb-4">Scoring</h2>
+                        <p className="text-sm text-gray-600 mb-4">Use the sliders to score the innovation across each indicator from 0-4.</p>
+                        {DIM_KEYS.map(dimKey => (
+                            <div key={dimKey} className="mb-6 p-4 border rounded-lg bg-gray-50">
+                                <h3 className="text-lg font-medium text-gray-800 flex items-center mb-2">
+                                    {DIMENSIONS[dimKey].name}
+                                    <span className="ml-2 text-sm text-gray-500 font-normal">({DIMENSIONS[dimKey].description})</span>
+                                </h3>
+                                <ul className="space-y-4">
+                                    {DIMENSIONS[dimKey].indicators.map(indicator => (
+                                        <li key={indicator.id}>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-medium text-gray-700" title={showRubrics ? RUBRICS[scores[indicator.id]] : ""}>
+                                                    {indicator.label}
+                                                </span>
+                                                <span className="ml-2 text-sm font-bold text-gray-900">
+                                                  {scores[indicator.id] || 0}
+                                                  {integratedScores[indicator.id] > (scores[indicator.id] || 0) && (
+                                                    <span className="text-green-500 ml-1">
+                                                      (+{integratedScores[indicator.id] - (scores[indicator.id] || 0)})
+                                                    </span>
+                                                  )}
+                                                </span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="0"
+                                                max="4"
+                                                value={scores[indicator.id] || 0}
+                                                onChange={(e) => setIndicator(indicator.id, parseInt(e.target.value))}
+                                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-1"
+                                                style={{ WebkitAppearance: 'none' }}
+                                            />
+                                            {showRubrics && (
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    {RUBRICS[scores[indicator.id] || 0]}
+                                                </div>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Historical Examples</h2>
+                            <p className="text-sm text-gray-600 mb-4">Click an example to load its pre-configured scores and analysis.</p>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                {Object.keys(EXAMPLES).map(name => (
+                                    <button
+                                        key={name}
+                                        onClick={() => loadExample(name)}
+                                        className={`py-2 px-4 rounded-md text-sm font-medium text-gray-700 border transition-colors ${selectedExample === name ? 'bg-indigo-100 border-indigo-500' : 'bg-gray-100 hover:bg-gray-200'}`}
+                                    >
+                                        {name}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Detailed Analysis</h2>
+                            {selectedExample ? (
+                                <div>
+                                    <h3 className="text-lg font-semibold mb-2">{selectedExample} Justification</h3>
+                                    <p className="mb-4 text-sm text-gray-700">{EXAMPLES[selectedExample].justification}</p>
+                                    <h3 className="text-lg font-semibold mb-2">Indicative Sources</h3>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                                        {EXAMPLES[selectedExample].sources.map((source, index) => (
+                                            <li key={index}>{source}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : (
+                                <p className="text-sm text-gray-600">Select a historical example above to see its detailed justification and indicative sources.</p>
+                            )}
+                        </div>
+                    </div>
 
-    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-  </script>
+                    <footer className="text-center text-xs text-gray-500 mt-8">
+                        Recognition heuristic. It does not define innovation; it evaluates observed effects across four dimensions.
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
