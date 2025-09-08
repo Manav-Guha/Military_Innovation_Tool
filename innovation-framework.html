@@ -82,11 +82,31 @@
     }
 
     // ========= Causal Chain Logic =========
-    // The core pre-defined causal prompts
     const PROMPTS = [
-      { id: 'prompt1', question: "Does this budget shift or cross-domain growth you observed compel adversaries to mirror or adapt?", source: "g3", target: "i3", bump: 1, explanation: "Budget share migration (Generative) creates pressure for adversaries to acquire a similar capability (Irreversibility)." },
-      { id: 'prompt2', question: "Do shortened OODA loops, doctrinal break points, or topology shifts force militaries to reconceptualize doctrine?", source: "d2", target: "c1", bump: 1, explanation: "A high score in 'Doctrinal break points' (Discontinuity) causes 'Doctrinal rewrites' (Cognitive)." },
-      { id: 'prompt3', question: "Has institutional restructuring or sunk investments changed how success is defined?", source: "i1", target: "c4", bump: 1, explanation: "Institutional restructuring (Irreversibility) has changed how success is defined (Cognitive)." },
+      {
+        id: 'prompt1',
+        question: "Does the development of new capabilities or a shift in budget compel an adversary to acquire a similar system?",
+        source: "g3",
+        target: "i3",
+        bump: 1,
+        explanation: "This link captures how a strong Generative effect (like budget migration) can drive a direct and irreversible response from an adversary (Irreversibility)."
+      },
+      {
+        id: 'prompt2',
+        question: "Does this innovation's tactical break from the past force a complete doctrinal rewrite?",
+        source: "d2",
+        target: "c1",
+        bump: 1,
+        explanation: "This link demonstrates how a significant Discontinuity (doctrinal break points) can directly cause a fundamental change in military thinking (Cognitive Disruption)."
+      },
+      {
+        id: 'prompt3',
+        question: "Have irreversible institutional changes (e.g., training, force structure) forced a new way to define mission success?",
+        source: "i1",
+        target: "c4",
+        bump: 1,
+        explanation: "This link shows how a major Irreversible change can lead to a shift in how military leaders conceptualize success and failure (Cognitive Disruption)."
+      },
     ];
 
     function applyCausalChains(baseScores, chains) {
@@ -369,7 +389,7 @@
               </div>
           </div>
 
-          <div className="card">
+          <div className="card md:w-3/4 md:mx-auto">
               <div className="card-header">
                 <div className="card-title">Apply the Principle of Interconnected Effects</div>
               </div>
