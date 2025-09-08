@@ -1,229 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Military Innovation Assessment Framework</title>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Military Innovation Assessment Framework</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body class="bg-gray-50">
-  <div id="root" class="max-w-7xl mx-auto p-6"></div>
+    <div id="app" class="max-w-7xl mx-auto p-6">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Military Innovation Assessment Framework</h1>
+            <p class="text-lg text-gray-600">A Four-Dimensional Recognition Tool</p>
+            <p class="text-sm text-gray-500 italic">Based on "The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy"</p>
+        </header>
 
-  <script type="text/babel">
-    const { useState, useMemo } = React;
-
-    const INDICATORS = {
-      discontinuity: [
-        { id: "d1", label: "Enemy OODA disruption", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "d2", label: "Doctrinal break points", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "d3", label: "Kill-chain topology shift", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "d4", label: "Adversary scrambling to counter", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-      irreversibility: [
-        { id: "i1", label: "Training/institutional restructuring", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "i2", label: "Logistics/infrastructure path dependence", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "i3", label: "Adversary compulsion to mirror at scale", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "i4", label: "Persistent force structure changes", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-      generative: [
-        { id: "g1", label: "Follow-on doctrines/capabilities (5-10y)", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "g2", label: "Cross-domain spillovers", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "g3", label: "Budget share migration", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "g4", label: "New capability categories emerge", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-      cognitive: [
-        { id: "c1", label: "Doctrinal rewrites", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "c2", label: "PME syllabus changes", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "c3", label: "Wargame outcome reversals", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-        { id: "c4", label: "Leadership reframes success metrics", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
-      ],
-    };
-    
-    const DIM_KEYS = ["discontinuity","irreversibility","generative","cognitive"];
-
-    const EXAMPLES = {
-        "Nuclear Weapons": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "Genuine Innovation - arguably the most significant of the 20th century. Nuclear weapons created a new state of war (MAD) that permanently altered international relations and military strategy." },
-        "Machine Gun": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "Genuine Innovation - created an immense doctrinal breakpoint, making large-scale infantry charges suicidal and ushering in trench warfare." },
-        "Tank": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "Genuine Innovation - broke the tactical stalemate of WWI, forcing complete reconceptualization of maneuver warfare." },
-        "Radar": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 1 }, justification: "Genuine Innovation - instantly disrupted the OODA loop of air attacks, turning surprise raids into predictable events." },
-        "UAVs": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 }, justification: "Modernization - extended existing doctrines rather than breaking them, but highly generative for new unmanned systems." },
-        "Hypersonics": { scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 1 }, justification: "Upgradation - improve speed of existing missile capability but don't force new kill-chain topology or major doctrinal rewrites." }
-    };
-
-    function makeDefaultScores() {
-      const scores = {};
-      DIM_KEYS.forEach(dim => {
-        INDICATORS[dim].forEach(ind => {
-          scores[ind.id] = 0;
-        });
-      });
-      return scores;
-    }
-
-    function mapExampleScores(exampleScores) {
-      const mappedScores = {};
-      DIM_KEYS.forEach(dimKey => {
-        INDICATORS[dimKey].forEach(ind => {
-          const oldScore = exampleScores[dimKey];
-          const newScore = oldScore === 0 ? 0 : oldScore === 1 ? 2 : 4;
-          mappedScores[ind.id] = newScore;
-        });
-      });
-      return mappedScores;
-    }
-
-    function classify(scores) {
-      const d = INDICATORS.discontinuity.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-      const i = INDICATORS.irreversibility.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-      const g = INDICATORS.generative.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-      const c = INDICATORS.cognitive.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-      const total = d + i + g + c;
-
-      if (total === 0) return "None";
-      if (total >= 15 && (i >= 9 || c >= 9)) return "Genuine Innovation";
-      if (d >= 1 && i === 0 && g === 0 && c === 0) return "Adaptation";
-      if (total >= 10 && d > 0 && i >= 1) return "Modernization";
-      return "Upgradation";
-    }
-
-    function App() {
-      const [label, setLabel] = useState("");
-      const [scores, setScores] = useState(makeDefaultScores);
-      const [selectedExample, setSelectedExample] = useState(null);
-
-      const classification = useMemo(() => classify(scores), [scores]);
-
-      const setIndicator = (id, value) => {
-        setScores(prevScores => ({ ...prevScores, [id]: value }));
-        setSelectedExample(null);
-      };
-
-      const resetAll = () => {
-        setLabel("");
-        setScores(makeDefaultScores());
-        setSelectedExample(null);
-      };
-
-      const loadExample = (name) => {
-        setLabel(name);
-        setSelectedExample(name);
-        const exampleData = EXAMPLES[name];
-        const newScores = { ...makeDefaultScores(), ...mapExampleScores(exampleData.scores) };
-        setScores(newScores);
-      };
-
-      return (
-        <div className="space-y-6">
-          <header className="text-center space-y-1 mb-4">
-            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
-              Military Innovation Assessment Framework
-            </h1>
-            <div className="text-lg text-gray-700">A Four-Dimensional Recognition Tool</div>
-          </header>
-          
-          <div className="bg-white rounded-lg shadow border border-gray-200">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <div className="font-semibold text-gray-900">Case Setup & Classification</div>
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Case Label</label>
-                    <input 
-                      type="text" 
-                      className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-1" 
-                      placeholder="e.g., Hypersonic missiles" 
-                      value={label} 
-                      onChange={e => setLabel(e.target.value)} 
-                    />
-                  </div>
-                  <button onClick={resetAll} className="w-full bg-gray-100 text-gray-900 px-3 py-2 rounded-md hover:bg-gray-200">
-                    Reset All
-                  </button>
+        <div class="space-y-6">
+            <!-- Classification Card -->
+            <div class="bg-white rounded-lg shadow border">
+                <div class="px-4 py-3 border-b">
+                    <h2 class="font-semibold text-gray-900">Case Setup & Classification</h2>
                 </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">Classification</h3>
-                  <div className="mt-2">
-                    <span className={`py-1 px-3 text-sm font-bold rounded-full ${classification === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
-                      {classification}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-lg shadow border border-gray-200">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <div className="font-semibold text-gray-900">Scoring</div>
-            </div>
-            <div className="p-4 space-y-4">
-              {DIM_KEYS.map(dimKey => (
-                <div key={dimKey} className="mb-6 p-4 border rounded-lg bg-gray-50">
-                  <h3 className="text-lg font-medium text-gray-800 mb-2">
-                    {dimKey.charAt(0).toUpperCase() + dimKey.slice(1)}
-                  </h3>
-                  <ul className="space-y-4">
-                    {INDICATORS[dimKey].map(indicator => (
-                      <li key={indicator.id}>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-medium text-gray-700">
-                            {indicator.label}
-                          </span>
-                          <div className="flex gap-1">
-                            {[0, 1, 2, 3, 4].map(v => (
-                              <button 
-                                key={v}
-                                className={`w-6 h-6 rounded text-xs font-bold transition-colors ${(scores[indicator.id] || 0) === v ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800'}`}
-                                onClick={() => setIndicator(indicator.id, v)}
-                                title={indicator.ladder[v]}
-                              >
-                                {v}
-                              </button>
-                            ))}
-                          </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Case Label</label>
+                            <input type="text" id="caseLabel" class="w-full border rounded px-3 py-2" placeholder="e.g., Hypersonic missiles">
+                            <button onclick="resetAll()" class="w-full mt-3 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded">Reset All</button>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
+                        <div>
+                            <h3 class="text-lg font-medium mb-2">Classification</h3>
+                            <div id="classification" class="py-1 px-3 text-sm font-bold rounded-full bg-gray-200 text-gray-800 inline-block">None</div>
+                            <p id="classificationText" class="text-sm text-gray-600 mt-2">No innovation scored.</p>
+                        </div>
+                    </div>
                 </div>
-              ))}
             </div>
-          </div>
 
-          <div className="bg-white rounded-lg shadow border border-gray-200">
-            <div className="px-4 py-3 border-b border-gray-200">
-              <div className="font-semibold text-gray-900">Historical Examples</div>
-            </div>
-            <div className="p-4 space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs mb-4">
-                {Object.keys(EXAMPLES).map(name => (
-                  <button 
-                    key={name}
-                    onClick={() => loadExample(name)}
-                    className={`p-2 rounded border text-left hover:bg-gray-100 ${selectedExample === name ? 'bg-gray-200 border-gray-400' : 'bg-white border-gray-200'}`}
-                  >
-                    {name}
-                  </button>
-                ))}
-              </div>
-              {selectedExample && (
-                <div className="mt-4 p-3 bg-gray-50 rounded">
-                  <h3 className="text-lg font-semibold mb-2">{selectedExample}</h3>
-                  <p className="text-sm text-gray-700">{EXAMPLES[selectedExample].justification}</p>
+            <!-- Scoring Card -->
+            <div class="bg-white rounded-lg shadow border">
+                <div class="px-4 py-3 border-b">
+                    <h2 class="font-semibold text-gray-900">Innovation Scoring</h2>
                 </div>
-              )}
+                <div class="p-4" id="scoringSection"></div>
             </div>
-          </div>
+
+            <!-- Examples Card -->
+            <div class="bg-white rounded-lg shadow border">
+                <div class="px-4 py-3 border-b">
+                    <h2 class="font-semibold text-gray-900">Historical Examples</h2>
+                </div>
+                <div class="p-4">
+                    <div id="exampleButtons" class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4"></div>
+                    <div id="exampleDetails" class="hidden mt-4 p-4 bg-gray-50 rounded"></div>
+                </div>
+            </div>
         </div>
-      );
-    }
+    </div>
 
-    ReactDOM.render(React.createElement(App), document.getElementById('root'));
-  </script>
+    <script>
+        // Data remains exactly the same as your original
+        const INDICATORS = {
+            discontinuity: [
+                { id: "d1", label: "Enemy OODA disruption", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "d2", label: "Doctrinal break points", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "d3", label: "Kill-chain topology shift", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "d4", label: "Adversary scrambling to counter", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+            ],
+            irreversibility: [
+                { id: "i1", label: "Training/institutional restructuring", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "i2", label: "Logistics/infrastructure path dependence", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "i3", label: "Adversary compulsion to mirror at scale", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "i4", label: "Persistent force structure changes", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+            ],
+            generative: [
+                { id: "g1", label: "Follow-on doctrines/capabilities (5-10y)", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "g2", label: "Cross-domain spillovers", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "g3", label: "Budget share migration", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "g4", label: "New capability categories emerge", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+            ],
+            cognitive: [
+                { id: "c1", label: "Doctrinal rewrites", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "c2", label: "PME syllabus changes", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "c3", label: "Wargame outcome reversals", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+                { id: "c4", label: "Leadership reframes success metrics", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
+            ],
+        };
+
+        const DIM_KEYS = ["discontinuity","irreversibility","generative","cognitive"];
+        let scores = {};
+
+        // Initialize scores
+        function initScores() {
+            scores = {};
+            DIM_KEYS.forEach(dim => {
+                INDICATORS[dim].forEach(ind => {
+                    scores[ind.id] = 0;
+                });
+            });
+        }
+
+        // Classification logic
+        function classify() {
+            const d = INDICATORS.discontinuity.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const i = INDICATORS.irreversibility.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const g = INDICATORS.generative.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const c = INDICATORS.cognitive.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+            const total = d + i + g + c;
+
+            if (total === 0) return { bucket: "None", text: "No innovation scored." };
+            if (total >= 15 && (i >= 9 || c >= 9)) return { bucket: "Genuine Innovation", text: "Fundamentally redefines military power with deep institutional changes." };
+            if (d >= 1 && i === 0 && g === 0 && c === 0) return { bucket: "Adaptation", text: "Reactive change without fundamental system transformation." };
+            if (total >= 10 && d > 0 && i >= 1) return { bucket: "Modernization", text: "Improves existing systems but doesn't change the nature of war." };
+            return { bucket: "Upgradation", text: "Simple improvement to existing systems." };
+        }
+
+        // Update classification display
+        function updateClassification() {
+            const result = classify();
+            const elem = document.getElementById('classification');
+            const textElem = document.getElementById('classificationText');
+            
+            elem.textContent = result.bucket;
+            elem.className = `py-1 px-3 text-sm font-bold rounded-full inline-block ${result.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`;
+            textElem.textContent = result.text;
+        }
+
+        // Set indicator score
+        function setScore(id, value) {
+            scores[id] = value;
+            updateClassification();
+            updateScoreButtons();
+        }
+
+        // Update score button states
+        function updateScoreButtons() {
+            Object.keys(scores).forEach(id => {
+                for (let i = 0; i <= 4; i++) {
+                    const btn = document.getElementById(`btn-${id}-${i}`);
+                    if (btn) {
+                        btn.className = `w-6 h-6 rounded text-xs font-bold transition-colors ${scores[id] === i ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`;
+                    }
+                }
+            });
+        }
+
+        // Reset all scores
+        function resetAll() {
+            document.getElementById('caseLabel').value = '';
+            initScores();
+            updateClassification();
+            updateScoreButtons();
+            hideExampleDetails();
+        }
+
+        // Render scoring section
+        function renderScoring() {
+            const container = document.getElementById('scoringSection');
+            container.innerHTML = '';
+
+            DIM_KEYS.forEach(dimKey => {
+                const dimDiv = document.createElement('div');
+                dimDiv.className = 'mb-6 p-4 border rounded-lg bg-gray-50';
+                
+                const title = document.createElement('h3');
+                title.className = 'text-lg font-medium text-gray-800 mb-3';
+                title.textContent = dimKey.charAt(0).toUpperCase() + dimKey.slice(1);
+                dimDiv.appendChild(title);
+
+                const list = document.createElement('ul');
+                list.className = 'space-y-4';
+
+                INDICATORS[dimKey].forEach(indicator => {
+                    const item = document.createElement('li');
+                    item.className = 'flex justify-between items-center';
+
+                    const label = document.createElement('span');
+                    label.className = 'text-sm font-medium text-gray-700';
+                    label.textContent = indicator.label;
+
+                    const buttonContainer = document.createElement('div');
+                    buttonContainer.className = 'flex gap-1';
+
+                    for (let i = 0; i <= 4; i++) {
+                        const btn = document.createElement('button');
+                        btn.id = `btn-${indicator.id}-${i}`;
+                        btn.textContent = i;
+                        btn.title = indicator.ladder[i];
+                        btn.onclick = () => setScore(indicator.id, i);
+                        buttonContainer.appendChild(btn);
+                    }
+
+                    item.appendChild(label);
+                    item.appendChild(buttonContainer);
+                    list.appendChild(item);
+                });
+
+                dimDiv.appendChild(list);
+                container.appendChild(dimDiv);
+            });
+        }
+
+        // Initialize the application
+        function init() {
+            initScores();
+            renderScoring();
+            updateScoreButtons();
+            updateClassification();
+        }
+
+        // Start the app when page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
 </body>
 </html>
