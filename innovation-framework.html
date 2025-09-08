@@ -17,6 +17,9 @@
     .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium; }
     .btn-secondary { @apply bg-gray-100 text-gray-900 hover:bg-gray-200; }
     .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500; }
+    .tab-btn { @apply flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors; }
+    .tab-btn.active { @apply bg-white border-b-2 border-blue-600 text-blue-600; }
+    .tab-btn.inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200; }
     .collapsible-content {
       overflow: hidden;
       transition: max-height 0.3s ease-in-out;
@@ -211,13 +214,10 @@
       const [showRubrics, setShowRubrics] = useState(false);
       const [selectedExample, setSelectedExample] = useState(null);
       const [promptsOpen, setPromptsOpen] = useState(false);
-      const [chartsOpen, setChartsOpen] = useState(false);
-      const [examplesOpen, setExamplesOpen] = useState(false);
       const [promptAnswers, setPromptAnswers] = useState(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
+      const [activeTab, setActiveTab] = useState('scoring'); // Default to scoring tab
       
       const promptsRef = useRef(null);
-      const chartsRef = useRef(null);
-      const examplesRef = useRef(null);
       const dimensionChartRef = useRef(null);
       const indicatorChartRef = useRef(null);
       
@@ -285,7 +285,11 @@
         }
       };
 
-      useEffect(() => { updateCharts(); }, [scores, integratedScores]);
+      useEffect(() => { 
+        if (activeTab === 'charts') {
+          updateCharts();
+        }
+      }, [scores, integratedScores, activeTab]);
       
       const setIndicator = (id, value) => {
         setScores(prevScores => ({ ...prevScores, [id]: value }));
@@ -307,9 +311,7 @@
         const newScores = { ...makeDefaultScores(), ...exampleData.scores };
         setScores(newScores);
         setPromptAnswers(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
-        setPromptsOpen(false);
-        setChartsOpen(false);
-        setExamplesOpen(true);
+        setActiveTab('examples');
       };
       
       const handlePromptChange = (id, value) => {
@@ -397,114 +399,94 @@
 
           <div className="card">
               <div className="card-header">
-                <div className="card-title">Apply the Principle of Interconnected Effects</div>
+                  <div className="card-title">Analysis & Examples</div>
               </div>
-              <div className="card-content">
-                  <p className="text-sm text-gray-600 italic mb-4">
-                      This option allows you to capture the reality that a strong score in one area may spill over and justify a score in another. It’s not automatic — you decide if the evidence warrants it.
-                  </p>
-                  <button
-                      className="w-full btn bg-blue-600 text-white hover:bg-blue-700"
-                      onClick={() => setPromptsOpen(!promptsOpen)}
-                  >
-                      {promptsOpen ? "Hide Options" : "Apply Interconnected Effects"}
-                      <span className={`ml-2 transition-transform duration-300 ${promptsOpen ? 'rotate-90' : 'rotate-0'}`}>▸</span>
+              <div className="bg-gray-100 border-b border-gray-200 flex">
+                  <button onClick={() => setActiveTab('scoring')}
+                          className={`tab-btn ${activeTab === 'scoring' ? 'active' : 'inactive'}`}>
+                      Interconnected Effects
                   </button>
-                  <div
-                      ref={promptsRef}
-                      className="collapsible-content"
-                      style={{ maxHeight: promptsOpen ? `${promptsRef.current.scrollHeight}px` : '0px' }}
-                  >
-                      <ul className="mt-4 space-y-4">
-                        {PROMPTS.map(prompt => (
-                          <li key={prompt.id} className="bg-gray-100 p-3 rounded-md border border-gray-200">
-                            <div className="text-sm font-semibold text-gray-800 mb-2">{prompt.question}</div>
-                            <div className="flex gap-2">
-                              <button
-                                className={`w-16 h-8 rounded-full text-xs font-bold transition-colors ${promptAnswers[prompt.id] ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-                                onClick={() => handlePromptChange(prompt.id, true)}
-                              >
-                                Yes
-                              </button>
-                              <button
-                                className={`w-16 h-8 rounded-full text-xs font-bold transition-colors ${!promptAnswers[prompt.id] ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800'}`}
-                                onClick={() => handlePromptChange(prompt.id, false)}
-                              >
-                                No
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                  </div>
-              </div>
-          </div>
-          
-          <div className="card">
-              <div className="card-header">
-                  <div className="card-title">
+                  <button onClick={() => setActiveTab('charts')}
+                          className={`tab-btn ${activeTab === 'charts' ? 'active' : 'inactive'}`}>
                       Charts
-                  </div>
-                  <button onClick={() => setChartsOpen(!chartsOpen)} className="btn btn-secondary">
-                      {chartsOpen ? "Hide" : "Show"}
+                  </button>
+                  <button onClick={() => setActiveTab('examples')}
+                          className={`tab-btn ${activeTab === 'examples' ? 'active' : 'inactive'}`}>
+                      Historical Examples
                   </button>
               </div>
-              <div
-                  ref={chartsRef}
-                  className="collapsible-content"
-                  style={{ maxHeight: chartsOpen ? `${chartsRef.current.scrollHeight}px` : '0px' }}
-              >
-                  <div className="card-content grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">Dimension Scores</h3>
-                          <canvas ref={dimensionChartRef} id="dimension-chart" className="h-64"></canvas>
+
+              <div className="card-content">
+                  {activeTab === 'scoring' && (
+                      <div className="space-y-4">
+                          <p className="text-sm text-gray-600 italic">
+                              This option allows you to capture the reality that a strong score in one area may spill over and justify a score in another. It’s not automatic — you decide if the evidence warrants it.
+                          </p>
+                          <ul className="mt-4 space-y-4">
+                              {PROMPTS.map(prompt => (
+                                <li key={prompt.id} className="bg-white p-3 rounded-md border border-gray-200">
+                                  <div className="text-sm font-semibold text-gray-800 mb-2">{prompt.question}</div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      className={`w-16 h-8 rounded-full text-xs font-bold transition-colors ${promptAnswers[prompt.id] ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                                      onClick={() => handlePromptChange(prompt.id, true)}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      className={`w-16 h-8 rounded-full text-xs font-bold transition-colors ${!promptAnswers[prompt.id] ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                                      onClick={() => handlePromptChange(prompt.id, false)}
+                                    >
+                                      No
+                                    </button>
+                                  </div>
+                                </li>
+                              ))}
+                          </ul>
                       </div>
-                      <div>
-                          <h3 className="text-lg font-medium text-gray-900 mb-2">Indicator Scores</h3>
-                          <canvas ref={indicatorChartRef} id="indicator-chart" className="h-64"></canvas>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          
-          <div className="card">
-              <div className="card-header">
-                  <div className="card-title">
-                      Historical Examples and Justification
-                  </div>
-                  <button onClick={() => setExamplesOpen(!examplesOpen)} className="btn btn-secondary">
-                      {examplesOpen ? "Hide" : "Show"}
-                  </button>
-              </div>
-              <div
-                  ref={examplesRef}
-                  className="collapsible-content"
-                  style={{ maxHeight: examplesOpen ? `${examplesRef.current.scrollHeight}px` : '0px' }}
-              >
-                  <div className="card-content">
-                      <p className="text-sm text-gray-600 mb-3">
-                          Click any example below to load its pre-configured scores, justification, and sources.
-                      </p>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
-                          {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
-                              <button key={name}
-                                  onClick={() => loadExample(name)}
-                                  className={`p-2 rounded border text-left hover:bg-gray-100 transition-colors ${selectedExample === name ? 'bg-gray-200 border-gray-400' : 'bg-white border-gray-200'}`}>
-                                  {name}
-                              </button>
-                          ))}
-                      </div>
-                      {selectedExample && (
-                          <div className="mt-4">
-                              <h3 className="text-lg font-semibold mb-2">{selectedExample} Justification</h3>
-                              <p className="mb-4 text-sm text-gray-700">{MAPPED_EXAMPLES[selectedExample].justification}</p>
-                              <h3 className="text-lg font-semibold mb-2">Indicative Sources</h3>
-                              <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                                  {MAPPED_EXAMPLES[selectedExample].sources.map((source, index) => (<li key={index}>{source}</li>))}
-                              </ul>
+                  )}
+
+                  {activeTab === 'charts' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">Dimension Scores</h3>
+                              <p className="text-sm text-gray-600 mb-3">This chart shows the total score for each of the four dimensions. The **Conservative** score is the raw sum of your inputs, while the **Integrated** score includes any additional points from the "Interconnected Effects" section.</p>
+                              <canvas ref={dimensionChartRef} id="dimension-chart" className="h-64"></canvas>
                           </div>
-                      )}
-                  </div>
+                          <div>
+                              <h3 className="text-lg font-medium text-gray-900 mb-2">Indicator Scores</h3>
+                              <p className="text-sm text-gray-600 mb-3">This chart provides a detailed breakdown of your scores for each individual indicator. This view is helpful for understanding where a specific innovation has the most impact.</p>
+                              <canvas ref={indicatorChartRef} id="indicator-chart" className="h-64"></canvas>
+                          </div>
+                      </div>
+                  )}
+
+                  {activeTab === 'examples' && (
+                      <div className="space-y-4">
+                          <p className="text-sm text-gray-600 mb-3">
+                              Click any example below to load its pre-configured scores, justification, and sources.
+                          </p>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
+                              {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
+                                  <button key={name}
+                                      onClick={() => loadExample(name)}
+                                      className={`p-2 rounded border text-left hover:bg-gray-100 transition-colors ${selectedExample === name ? 'bg-gray-200 border-gray-400' : 'bg-white border-gray-200'}`}>
+                                      {name}
+                                  </button>
+                              ))}
+                          </div>
+                          {selectedExample && (
+                              <div className="mt-4">
+                                  <h3 className="text-lg font-semibold mb-2">{selectedExample} Justification</h3>
+                                  <p className="mb-4 text-sm text-gray-700">{MAPPED_EXAMPLES[selectedExample].justification}</p>
+                                  <h3 className="text-lg font-semibold mb-2">Indicative Sources</h3>
+                                  <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                                      {MAPPED_EXAMPLES[selectedExample].sources.map((source, index) => (<li key={index}>{source}</li>))}
+                                  </ul>
+                              </div>
+                          )}
+                      </div>
+                  )}
               </div>
           </div>
           
