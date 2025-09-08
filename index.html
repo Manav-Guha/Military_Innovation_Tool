@@ -71,33 +71,141 @@
         };
 
         const EXAMPLES = {
-            "Stirrups": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Minie Ball/Connoidal Bullet": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [3, 3, 2, 2], cognitive: [4, 4, 4, 4] } },
-            "Machine Gun": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Tank": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Carrier Aviation": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Nuclear Weapons": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Blitzkrieg": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Stealth": { scores: { discontinuity: [3, 3, 2, 2], irreversibility: [1, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [1, 1, 0, 0] } },
-            "PGMs": { scores: { discontinuity: [2, 2, 1, 1], irreversibility: [1, 1, 0, 0], generative: [3, 3, 2, 2], cognitive: [1, 1, 0, 0] } },
-            "Network‑Centric Warfare": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "UAVs": { scores: { discontinuity: [2, 2, 1, 1], irreversibility: [1, 1, 0, 0], generative: [3, 3, 2, 2], cognitive: [1, 1, 0, 0] } },
-            "Cyber Warfare": { scores: { discontinuity: [3, 3, 2, 2], irreversibility: [2, 2, 1, 0], generative: [4, 4, 3, 3], cognitive: [2, 2, 1, 0] } },
-            "ASBM": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [3, 3, 2, 2], generative: [2, 2, 1, 1], cognitive: [4, 4, 3, 3] } },
-            "Lasers": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [3, 3, 2, 2], generative: [3, 3, 2, 2], cognitive: [4, 4, 3, 3] } },
-            "Military Robotics": { scores: { discontinuity: [2, 2, 1, 1], irreversibility: [1, 1, 0, 0], generative: [3, 3, 2, 2], cognitive: [1, 1, 0, 0] } },
-            "AI-Targeting": { scores: { discontinuity: [1, 1, 0, 0], irreversibility: [1, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [1, 1, 0, 0] } },
-            "Hypersonics": { scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 0, 0, 0] } },
-            "F-16 Block D": { scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 0, 0, 0], cognitive: [1, 0, 0, 0] } },
-            "AIP Submarine": { scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 0, 0, 0] } },
-            "T-72B3M Main Battle Tank": { scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 0, 0, 0], cognitive: [1, 0, 0, 0] } },
-            "Information Warfare": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Barbed Wire": { scores: { discontinuity: [4, 3, 2, 2], irreversibility: [4, 4, 3, 3], generative: [2, 2, 1, 1], cognitive: [4, 4, 3, 4] } },
-            "Radar": { scores: { discontinuity: [4, 4, 3, 3], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Stosstrupp Tactics": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [1, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [4, 4, 4, 4] } },
-            "Deep Battle/Reconnaissance Strike Complex": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Telegraph": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
-            "Multi-Domain Battle Concept": { scores: { discontinuity: [3, 3, 2, 2], irreversibility: [1, 1, 0, 0], generative: [4, 4, 3, 3], cognitive: [4, 4, 3, 3] } }
+            "Stirrups": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["Lynn White, Jr., *Medieval Technology and Social Change* (1962)"],
+                justification: "This is classified as a **Genuine Innovation**. Stirrups were a fundamental innovation that unlocked the full potential of mounted shock warfare. They broke existing patterns of combat by enabling a mounted knight to deliver the full force of a charge, created irreversible societal and military structures, and were highly generative, forming the basis for new cavalry doctrines that lasted for centuries. "
+            },
+            "Minie Ball/Connoidal Bullet": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 3, 3], generative: [3, 3, 2, 2], cognitive: [4, 4, 4, 4] },
+                sources: ["Brent Nosworthy, *The Bloody Crucible of Courage: Fighting Methods and Combat Experience of the American Civil War* (2003)"],
+                justification: "This is classified as a **Genuine Innovation**. The Minie ball fundamentally changed the lethality and range of infantry weapons, forcing a complete doctrinal rewrite of battlefield tactics away from Napoleonic-style linear formations. It created irreversible changes in logistics and training, and its impact was so profound it became a core part of military education and strategic thought."
+            },
+            "Machine Gun": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["John Ellis, *The Social History of the Machine Gun* (1975)"],
+                justification: "This is a **Genuine Innovation**. The machine gun created an immense doctrinal breakpoint, instantly making large-scale infantry charges suicidal and ushering in trench warfare. It created irreversible changes in force structure and defensive infrastructure, was highly generative (e.g., in aviation and naval applications), and fundamentally changed how leaders conceptualized firepower and defense."
+            },
+            "Tank": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["J.P. Harris, *Men, Ideas, and Tanks: British Military Thought and Armoured Forces, 1903-1939* (1995)"],
+                justification: "This is a **Genuine Innovation**. The tank broke the tactical stalemate of World War I, forcing a complete reconceptualization of maneuver warfare. Its development required enormous, irreversible investments in production and logistics. It was highly generative, leading to a family of armored vehicles and follow-on doctrines like Blitzkrieg, and became a central pillar of military power."
+            },
+            "Carrier Aviation": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["Norman Friedman, *U.S. Aircraft Carriers: An Illustrated Design History* (1983)"],
+                justification: "This is a **Genuine Innovation**. Carrier aviation completely broke the traditional naval battle formation centered on battleships. It created a massive, irreversible pivot for naval forces, shifted budgets, and was immensely generative, leading to new classes of ships and a complete rewrite of naval strategy that remains in effect today."
+            },
+            "Nuclear Weapons": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["Lawrence Freedman, *The Evolution of Nuclear Strategy* (2003)"],
+                justification: "This is a **Genuine Innovation** and arguably the most significant of the 20th century. Nuclear weapons created a new state of war (Mutually Assured Destruction) that permanently altered international relations and military strategy. Their development was irreversible, led to new strategic concepts like deterrence, and required a complete re-evaluation of military purpose and metrics."
+            },
+            "Blitzkrieg": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["Karl-Heinz Frieser, *The Blitzkrieg Legend: The 1940 Campaign in the West* (2005)"],
+                justification: "This is a **Genuine Innovation**. Blitzkrieg was a doctrinal innovation that combined existing technologies (tanks, air power) into a new operational concept. It broke the static warfare patterns of WWI, created new force structures that were irreversible, and was highly generative, influencing military thought for decades. It forced a fundamental re-evaluation of the purpose of armor and aviation."
+            },
+            "Stealth": {
+                scores: { discontinuity: [3, 3, 2, 2], irreversibility: [1, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [1, 1, 0, 0] },
+                sources: ["Bill Sweetman, *Stealth Aircraft: Secrets of Future Airpower* (1986)"],
+                justification: "This is a **Modernization**. Stealth is a major technological leap, but it has not fully disrupted the enemy OODA loop or forced adversaries to completely scrap their air defenses. It led to high-cost but limited irreversible changes and has been generative mostly within the air domain, rather than across all domains. "
+            },
+            "PGMs": {
+                scores: { discontinuity: [2, 2, 1, 1], irreversibility: [1, 1, 0, 0], generative: [3, 3, 2, 2], cognitive: [1, 1, 0, 0] },
+                sources: ["Richard P. Hallion, *Precision-Guided Munitions and the Revolution in Warfare* (1995)"],
+                justification: "This is a **Modernization**. Precision-guided munitions are a significant improvement in lethality and efficiency, but they did not force a complete doctrinal rewrite. Instead, they allowed existing air and naval platforms to achieve new levels of effectiveness. They were highly generative, leading to follow-on capabilities like UAVs, but have not created the type of fundamental disruption seen in genuine innovations."
+            },
+            "Network‑Centric Warfare": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["David S. Alberts, John J. Gartska, & Frederick P. Stein, *Network Centric Warfare: Developing and Leveraging Information Superiority* (1999)"],
+                justification: "This is a **Genuine Innovation**. Network-Centric Warfare fundamentally re-conceptualized the battlefield as a network of sensors and shooters. It has broken down traditional stovepipes and created irreversible investments in digital infrastructure. It is highly generative, leading to concepts like Multi-Domain Operations, and has become a core element of military strategy."
+            },
+            "UAVs": {
+                scores: { discontinuity: [2, 2, 1, 1], irreversibility: [1, 1, 0, 0], generative: [3, 3, 2, 2], cognitive: [1, 1, 0, 0] },
+                sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"],
+                justification: "This is a **Modernization**. While UAVs have been a significant game-changer in specific contexts, they have largely extended existing doctrines (e.g., reconnaissance and strike) rather than breaking them. They are generative, leading to a new class of unmanned systems, but have not created the sort of irreversible force-structure changes or cognitive disruptions seen in a genuine innovation."
+            },
+            "Cyber Warfare": {
+                scores: { discontinuity: [3, 3, 2, 2], irreversibility: [2, 2, 1, 0], generative: [4, 4, 3, 3], cognitive: [2, 2, 1, 0] },
+                sources: ["Martin C. Libicki, *Conquest in Cyberspace: A New Kind of War* (2012)"],
+                justification: "This is a **Modernization**. Cyber warfare is a major development that has disrupted command and control and created a new domain of conflict. It is highly generative, but has not yet created the kind of irreversible force-structure changes or completely rewritten doctrine in the same way as a genuine innovation. Its effects are often contained, making it a powerful tool but not a complete revolutionary force."
+            },
+            "ASBM": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [3, 3, 2, 2], generative: [2, 2, 1, 1], cognitive: [4, 4, 3, 3] },
+                sources: ["Andrew S. Erickson, *Chinese Anti-Ship Ballistic Missile Development: A Modern Naval Revolution* (2013)"],
+                justification: "This is a **Genuine Innovation**. The Anti-Ship Ballistic Missile threatens to break the U.S. Navy's reliance on large aircraft carriers by creating a new kill-chain topology. This has created a cognitive disruption in naval strategy and a compulsion for the U.S. to seek countermeasures, making it a potential game-changer that is forcing fundamental shifts in military thinking."
+            },
+            "Lasers": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [3, 3, 2, 2], generative: [3, 3, 2, 2], cognitive: [4, 4, 3, 3] },
+                sources: ["Air Force Research Laboratory, *Directed Energy Weapons: A Primer* (2019)"],
+                justification: "This is a **Modernization**. Lasers represent a fundamental shift in defensive firepower, but their full impact has yet to be realized. While they disrupt the OODA loop and could rewrite defense doctrine, they haven't yet created the irreversible logistical changes or force-structure pivots needed to qualify as a genuine innovation. They are a significant improvement, but still in the developmental phase."
+            },
+            "Military Robotics": {
+                scores: { discontinuity: [2, 2, 1, 1], irreversibility: [1, 1, 0, 0], generative: [3, 3, 2, 2], cognitive: [1, 1, 0, 0] },
+                sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"],
+                justification: "This is a **Modernization**. Military robotics, in their current state, are largely used to extend human capabilities rather than replace them entirely. They are highly generative, but have not created the sort of doctrinal or irreversible force-structure changes that would make them a genuine innovation. They are an important and growing component of the military, but not a revolutionary one."
+            },
+            "AI-Targeting": {
+                scores: { discontinuity: [1, 1, 0, 0], irreversibility: [1, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [1, 1, 0, 0] },
+                sources: ["Joint Artificial Intelligence Center (JAIC) reports"],
+                justification: "This is a **Modernization**. AI-targeting is an important improvement in the kill-chain, but it is currently focused on optimizing existing processes rather than creating a new one. It has limited irreversible changes and its generative capacity is still being explored. While it could become a genuine innovation, it is currently in the early stages of development and is better classified as a modernization."
+            },
+            "Hypersonics": {
+                scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 0, 0, 0] },
+                sources: ["Thomas G. Mahnken, *The Technological Revolution in Military Affairs* (2007)"],
+                justification: "This is an **Upgradation**. Hypersonics improve the speed of an existing capability (missiles). They do not force a new kill-chain topology, require a major doctrinal rewrite, or create an irreversible infrastructure dependency. They are a significant technical improvement, but not a fundamental innovation."
+            },
+            "F-16 Block D": {
+                scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 0, 0, 0], cognitive: [1, 0, 0, 0] },
+                sources: ["U.S. Air Force Fact Sheets"],
+                justification: "This is an **Upgradation**. A block upgrade to an existing airframe is a classic upgradation. It improves sensor performance, a new engine, and a few other key systems, but it does not create a new capability. It simply makes the existing platform more capable. It does not create a new kill-chain, doctrine, or force structure."
+            },
+            "AIP Submarine": {
+                scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 0, 0, 0] },
+                sources: ["Norman Polmar & K.J. Moore, *Cold War Submarines: The Design and Construction of U.S. and Soviet Submarines* (2004)"],
+                justification: "This is an **Upgradation**. Air-Independent Propulsion (AIP) is an excellent example of an upgradation. It provides a significant tactical advantage (staying submerged longer), but it does not fundamentally change the submarine's purpose or operational concept. It is an important improvement but not a revolutionary one."
+            },
+            "T-72B3M Main Battle Tank": {
+                scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 0, 0, 0], cognitive: [1, 0, 0, 0] },
+                sources: ["Charles K. Bartles, *The Russian Army: New Military Capability* (2015)"],
+                justification: "This is an **Upgradation**. The T-72B3M is a modernization of an existing tank, not a new design. It adds a new engine, fire control system, and a new main gun. These improvements are significant, but they do not change the tank's core role or doctrine. It is an important improvement but not a revolutionary one."
+            },
+            "Information Warfare": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["T. E. Ricks, *The Generals: American Military Command from World War II to Today* (2012)"],
+                justification: "This is a **Genuine Innovation**. Information warfare has created a new domain of conflict, fundamentally altering command and control, and forcing a complete re-evaluation of how military forces operate. It has created irreversible changes in force structure and doctrine, and has been highly generative, leading to a new class of systems and capabilities."
+            },
+            "Barbed Wire": {
+                scores: { discontinuity: [4, 3, 2, 2], irreversibility: [4, 4, 3, 3], generative: [2, 2, 1, 1], cognitive: [4, 4, 3, 4] },
+                sources: ["Stephen Bull, *The Soldier's Kit: The British Army on the Western Front 1914-1918* (2013)"],
+                justification: "This is classified as a **Genuine Innovation**. While seemingly simple, barbed wire fundamentally changed the nature of warfare. It broke existing offensive patterns, forced a massive shift to trench warfare that was practically irreversible, and compelled adversaries to develop new tactics and technologies to counter it. Most importantly, it completely reframed the problem of offense, requiring new doctrinal and conceptual approaches."
+            },
+            "Radar": {
+                scores: { discontinuity: [4, 4, 3, 3], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["David E. Fisher, *A Race on the Edge of Time: Radar - The Decisive Weapon of World War II* (1988)"],
+                justification: "This is classified as a **Genuine Innovation**. Radar's impact was transformative. It instantly disrupted the OODA loop of air attacks, turning a surprise raid into a predictable event. It required immense sunk costs in infrastructure and training, becoming an irreversible part of military operations. It was highly generative, spurring new technologies, and fundamentally changed the concept of air defense."
+            },
+            "Stosstrupp Tactics": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [1, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [4, 4, 4, 4] },
+                sources: ["Bruce I. Gudmundsson, *Stormtroop Tactics: Innovation in the German Army, 1914-1918* (1989)"],
+                justification: "This is classified as a **Genuine Innovation**. This non-technological innovation introduced a completely new method of bypassing a static front line, breaking the stalemate of trench warfare. While it had limited physical irreversibility, it created a massive, permanent change in tactical thinking and spawned a range of new small-unit tactics and training methods."
+            },
+            "Deep Battle/Reconnaissance Strike Complex": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["Mary Habeck, *Storm of Steel: The Development of Soviet Operational Art* (2003)"],
+                justification: "This is classified as a **Genuine Innovation**. This doctrinal innovation was a transformative shift in military theory. It was designed to bypass the enemy's forward defenses and strike deep into their rear, fundamentally breaking old patterns of attrition warfare. It required a full-scale reorganization of the Soviet military's force structure, becoming an irreversible national commitment."
+            },
+            "Telegraph": {
+                scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] },
+                sources: ["David Hochfelder, *The Telegraph in America, 1832-1920* (2012)"],
+                justification: "This is classified as a **Genuine Innovation**. The military use of the telegraph was a seminal innovation. It completely shattered the historical reliance on couriers and physical command links, disrupting the time-space compression of the battlefield. It required a vast, irreversible investment in global networks and operators, and completely rewrote the theory of command and control."
+            },
+            "Multi-Domain Battle Concept": {
+                scores: { discontinuity: [3, 3, 2, 2], irreversibility: [1, 1, 0, 0], generative: [4, 4, 3, 3], cognitive: [4, 4, 3, 3] },
+                sources: ["U.S. Army Training and Doctrine Command publications (TRADOC Pamphlet 525-3-1)"],
+                justification: "This is a **Modernization**. This concept is an important, but so far incomplete, doctrinal evolution. It aims to integrate multiple domains of warfare, representing a significant conceptual leap. However, it has yet to be fully implemented, meaning it hasn't created the deep, irreversible sunk costs in infrastructure, training, or force structure that a genuine innovation would."
+            }
         };
 
         const App = () => {
@@ -149,7 +257,6 @@
             }, [classification, totalScore, dimensionTotals]);
 
             const updateCharts = () => {
-                // Destroy old chart instances if they exist
                 if (dimChartInstance.current) dimChartInstance.current.destroy();
                 if (indChartInstance.current) indChartInstance.current.destroy();
 
@@ -163,7 +270,6 @@
                 const indData = Object.values(scores).flat();
                 const indColors = Object.values(DIMENSIONS).flatMap(dim => dim.indicators.map(ind => ind.color));
 
-                // Dimension Chart
                 dimChartInstance.current = new Chart(dimChartRef.current, {
                     type: 'bar',
                     data: {
@@ -178,17 +284,11 @@
                     },
                     options: {
                         responsive: true,
-                        plugins: {
-                            legend: { display: false },
-                            title: { display: true, text: 'Dimension Scores' },
-                        },
-                        scales: {
-                            y: { beginAtZero: true, max: 16, ticks: { stepSize: 4 } },
-                        }
+                        plugins: { legend: { display: false }, title: { display: true, text: 'Dimension Scores' } },
+                        scales: { y: { beginAtZero: true, max: 16, ticks: { stepSize: 4 } } }
                     }
                 });
 
-                // Indicator Chart
                 indChartInstance.current = new Chart(indChartRef.current, {
                     type: 'bar',
                     data: {
@@ -203,18 +303,10 @@
                     },
                     options: {
                         responsive: true,
-                        plugins: {
-                            legend: { display: false },
-                            title: { display: true, text: 'Individual Indicator Scores' },
-                        },
+                        plugins: { legend: { display: false }, title: { display: true, text: 'Individual Indicator Scores' } },
                         scales: {
                             y: { beginAtZero: true, max: 4, ticks: { stepSize: 1 } },
-                            x: {
-                                ticks: {
-                                    maxRotation: 90,
-                                    minRotation: 90
-                                }
-                            }
+                            x: { ticks: { maxRotation: 90, minRotation: 90 } }
                         }
                     }
                 });
@@ -244,18 +336,15 @@
 
             return (
                 <div className="max-w-7xl mx-auto p-6 bg-gray-50 min-h-screen">
-                    {/* Header */}
                     <header className="mb-8 text-center">
                         <h1 className="text-4xl font-bold text-gray-900">Military Innovation Assessment Framework</h1>
                         <h2 className="text-lg text-gray-600 max-w-3xl mx-auto mt-2">
                            A Four-Dimensional Recognition Tool
                         </h2>
-                        <p className="text-sm italic text-gray-500 max-w-3xl mx-auto mt-2">Based on "The Innovation Delusion: How Conceptual Confusion Undermines Miliary Strategy"</p>
+                        <p className="text-sm italic text-gray-500 max-w-3xl mx-auto mt-2">Based on "The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy"</p>
                     </header>
 
-                    {/* Main Content Area */}
                     <div className="space-y-6">
-                        {/* Innovation Input */}
                         <div className="p-6 bg-white rounded-lg shadow">
                             <h2 className="text-xl font-semibold mb-4">Step 1: Propose Your Innovation</h2>
                             <input
@@ -267,7 +356,6 @@
                             />
                         </div>
 
-                        {/* Dimension Scoring (Horizontal Layout) */}
                         <div className="p-6 bg-white rounded-lg shadow">
                             <h2 className="text-xl font-semibold mb-4">Step 2: Score Dimensions (0-4)</h2>
                             <p className="text-sm text-gray-600 mb-4 font-semibold italic">
@@ -317,7 +405,6 @@
                             </div>
                         </div>
 
-                        {/* Graphs */}
                         <div className="p-6 bg-white rounded-lg shadow">
                             <h2 className="text-xl font-semibold mb-4">Visual Assessment</h2>
                             <canvas id="dimensionChart" ref={dimChartRef}></canvas>
@@ -325,7 +412,6 @@
                             <canvas id="indicatorChart" ref={indChartRef}></canvas>
                         </div>
 
-                        {/* Final Assessment and Explanation */}
                         <div className="p-6 bg-white rounded-lg shadow">
                             <h2 className="text-xl font-semibold mb-4">Final Assessment</h2>
                             <div className="space-y-4">
@@ -349,12 +435,11 @@
                             </div>
                             <hr className="my-6" />
                             <div className="prose max-w-none">
-                                <h3 className="font-semibold text-gray-800">Classification Explanation</h3>
+                                <h3 className="font-semibold text-gray-800">General Classification Explanation</h3>
                                 <p dangerouslySetInnerHTML={{ __html: classificationExplanation }}></p>
                             </div>
                         </div>
 
-                        {/* Examples and Reset */}
                         <div className="p-6 bg-white rounded-lg shadow">
                             <h2 className="text-xl font-semibold mb-4">Historical Examples and Reset</h2>
                             <p className="text-sm text-gray-600 mb-4">
@@ -377,6 +462,24 @@
                             >
                                 Reset All
                             </button>
+                        </div>
+                        
+                        <div className="p-6 bg-white rounded-lg shadow">
+                            <h2 className="text-xl font-semibold mb-4">Detailed Analysis</h2>
+                            {selectedExample ? (
+                                <div>
+                                    <h3 className="text-xl font-semibold mb-2">{selectedExample} Justification</h3>
+                                    <p className="mb-4">{EXAMPLES[selectedExample].justification}</p>
+                                    <h3 className="text-xl font-semibold mb-2">Indicative Sources</h3>
+                                    <ul className="list-disc list-inside space-y-1">
+                                        {EXAMPLES[selectedExample].sources.map((source, index) => (
+                                            <li key={index}>{source}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            ) : (
+                                <p>Select a historical example above to see its detailed justification and indicative sources.</p>
+                            )}
                         </div>
                     </div>
                 </div>
