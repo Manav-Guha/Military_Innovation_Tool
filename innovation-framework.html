@@ -80,141 +80,35 @@
 
         const DIM_KEYS = Object.keys(DIMENSIONS);
 
+        const ALL_INDICATORS = DIM_KEYS.flatMap(dimKey => DIMENSIONS[dimKey].indicators.map(ind => ({ ...ind, dim: dimKey })));
+
         const EXAMPLES = {
           "AI-Targeting": {
-              discontinuity:1, irreversibility:1, generative:2, cognitive:1,
+              conservativeScores: { d1:1, d2:1, d3:1, d4:1, i1:1, i2:1, i3:1, i4:1, g1:2, g2:2, g3:2, g4:2, c1:1, c2:1, c3:1, c4:1 },
               justification: "Automated targeting enhances kill chains but doesn't fundamentally rewrite them yet. It creates new capabilities but isn't forcing a complete institutional overhaul.",
-              sources: ["USAF Mad Scientist Initial Research"]
-          },
-          "AIP Submarine": {
-              discontinuity:1, irreversibility:1, generative:1, cognitive:0,
-              justification: "AIP is an improvement, not a radical break. It extends diesel-electric capabilities but doesn't fundamentally change naval warfare doctrine. It is an evolutionary change.",
-              sources: ["Naval Institute Journal", "RAND Report on Submarine Warfare"]
-          },
-          "ASBM": {
-              discontinuity:2, irreversibility:2, generative:1, cognitive:2,
-              justification: "Anti-Ship Ballistic Missiles challenge the core assumption of US naval power (uncontested carrier presence). This forces a rethink of force structure and operational concepts, but it's a specific counter-weapon, not a universally generative capability.",
-              sources: ["CSBA Report", "War on the Rocks"]
-          },
-          "Barbed Wire": {
-              discontinuity:1, irreversibility:2, generative:1, cognitive:1,
-              justification: "Barbed wire changed tactics (leading to trench warfare) but was an incremental technology. The real innovation was the tactical and operational shift, which happened over time. It created path dependence in trench systems.",
-              sources: ["A History of Warfare by John Keegan"]
+              sources: ["USAF Mad Scientist Initial Research"],
+              causalChain: [
+                { source: "g3", target: "i3", bump: 1, explanation: "A shift in budget toward AI creates pressure for adversaries to acquire a similar capability (Irreversibility)." },
+                { source: "d1", target: "c3", bump: 1, explanation: "AI's ability to shorten the targeting cycle (Discontinuity) directly leads to new outcomes in wargames (Cognitive)." },
+              ]
           },
           "Blitzkrieg": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              conservativeScores: { d1:2, d2:2, d3:2, d4:2, i1:2, i2:2, i3:2, i4:2, g1:2, g2:2, g3:2, g4:2, c1:2, c2:2, c3:2, c4:2 },
               justification: "Blitzkrieg was a total system innovation, combining tanks, close air support, and radio communication into a new way of war. It forced adversaries to rethink everything, leading to deep doctrinal and institutional changes.",
-              sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"]
-          },
-          "Carrier Aviation": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
-              justification: "Carrier aviation completely transformed naval warfare, replacing the battleship as the capital ship. It created a new domain of combat, new doctrines, and massive institutional and infrastructure changes that were irreversible.",
-              sources: ["The Command of the Air by Giulio Douhet", "A History of Naval Power"]
-          },
-          "Cyber Warfare": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
-              justification: "Cyber warfare introduced an entirely new, contested domain of conflict. It is generative, creating new offensive and defensive capabilities. It is irreversible because all modern militaries are dependent on digital infrastructure.",
-              sources: ["Cyber Operations by Paul Rosenzweig", "Strategic Studies Quarterly"]
-          },
-          "Deep Battle/Reconnaissance Strike Complex": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
-              justification: "Soviet Deep Battle was a truly transformative doctrine that integrated air power, armor, and artillery to strike deep into enemy territory. It required massive, persistent force structure changes and led to new generative concepts.",
-              sources: ["Red Army Studies", "The Soviet Military Experience"]
-          },
-          "F-16 Block D": {
-              discontinuity:0, irreversibility:1, generative:1, cognitive:0,
-              justification: "An F-16 Block D is an upgrade, not an innovation. It improves an existing system but doesn't create new doctrinal concepts. It's a standard modernization process. Its irreversibility is limited to the logistics and training required for a slightly modified platform.",
-              sources: ["Janes Fighting Aircraft"]
-          },
-          "Hypersonics": {
-              discontinuity:1, irreversibility:1, generative:1, cognitive:1,
-              justification: "Hypersonics are a technical evolution. While they challenge missile defense, they don't yet fundamentally change the nature of warfare in the same way as, say, nuclear weapons. Their full cognitive and generative impact is still unfolding.",
-              sources: ["Center for Strategic and International Studies"]
-          },
-          "Information Warfare": {
-              discontinuity:1, irreversibility:1, generative:2, cognitive:2,
-              justification: "Information warfare is a powerful, generative capability that is forcing militaries to re-examine how they operate. It has a high cognitive score because it changes how commanders think about the battlespace, but it doesn't force the same kind of irreversible institutional changes as, for example, aircraft carriers.",
-              sources: ["The Information War by David A. Fulgham", "Military Review"]
-          },
-          "Lasers": {
-              discontinuity:2, irreversibility:1, generative:1, cognitive:1,
-              justification: "Lasers represent a significant technical discontinuity. They can be very effective for specific tasks. However, they don't yet have the same level of generative or irreversible impact on the broader military force structure as other examples.",
-              sources: ["DARPA research papers", "Air Force Magazine"]
-          },
-          "Machine Gun": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
-              justification: "The machine gun's introduction created a total discontinuity in infantry tactics, forcing armies into defensive trench warfare. It was a completely generative weapon, enabling a new style of combat. It required irreversible changes to doctrine and force structure.",
-              sources: ["The First World War by John Keegan", "The Machine Gun: A History"]
-          },
-          "Military Robotics": {
-              discontinuity:1, irreversibility:2, generative:2, cognitive:1,
-              justification: "Robotics are a highly generative capability. They enable new ways of doing things, like reconnaissance or bomb disposal, but their full impact on doctrine is still being explored. They require significant irreversible changes to logistics and training.",
-              sources: ["Drone Warfare by Peter W. Singer", "Naval War College Review"]
-          },
-          "Minie Ball/Connoidal Bullet": {
-              discontinuity:2, irreversibility:2, generative:1, cognitive:1,
-              justification: "The Minie ball gave a rifle the range of a smoothbore musket, making close-order tactics obsolete. This forced a massive doctrinal shift to skirmish lines and trench warfare. It was a technical discontinuity that caused irreversible doctrinal changes.",
-              sources: ["The Civil War by Bruce Catton"]
-          },
-          "Multi-Domain Battle Concept": {
-              discontinuity:1, irreversibility:1, generative:2, cognitive:2,
-              justification: "Multi-Domain Battle is a highly cognitive and generative concept that is in its early stages. It attempts to link disparate capabilities across domains (land, sea, air, space, cyber). While it hasn't yet led to major irreversible force structure changes, it is a significant doctrinal shift.",
-              sources: ["US Army and Marine Corps documents"]
-          },
-          "Network-Centric Warfare": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:1,
-              justification: "Network-Centric Warfare was a major discontinuity in how military forces operated. It was highly generative, enabling new capabilities through information sharing. It was irreversible as it required a fundamental rewiring of command and control. The cognitive shift was significant, but not as profound as some of the others.",
-              sources: ["Network-Centric Warfare by Arthur Cebrowski", "Proceedings of the US Naval Institute"]
+              sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"],
+              causalChain: [
+                { source: "d2", target: "c1", bump: 1, explanation: "High score in 'Doctrinal break points' (Discontinuity) caused 'Doctrinal rewrites' (Cognitive)." },
+                { source: "g1", target: "i4", bump: 1, explanation: "Follow-on doctrines enabled by Blitzkrieg led to permanent force structure changes." }
+              ]
           },
           "Nuclear Weapons": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
+              conservativeScores: { d1:3, d2:3, d3:3, d4:3, i1:3, i2:3, i3:3, i4:3, g1:3, g2:3, g3:3, g4:3, c1:3, c2:3, c3:3, c4:3 },
               justification: "The ultimate military innovation. It created a total discontinuity, made previous models of total war obsolete, was completely generative of new doctrines (MAD), was irreversible, and forced a complete cognitive shift in military and political thinking.",
-              sources: ["The Making of the Atomic Bomb by Richard Rhodes", "On Thermonuclear War by Herman Kahn"]
-          },
-          "PGMs": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:1,
-              justification: "Precision-Guided Munitions created a discontinuity by making direct hits possible and changing the economics of warfare. It was highly generative and irreversible due to the training and infrastructure required. The cognitive shift was less profound because it was an enhancement to an existing system, rather than a whole new way of war.",
-              sources: ["Gulf War Air Power Survey", "The Revolution in Military Affairs by Eliot Cohen"]
-          },
-          "Radar": {
-              discontinuity:2, irreversibility:2, generative:1, cognitive:1,
-              justification: "Radar fundamentally changed naval and air warfare by giving commanders a new form of battlefield awareness. It was a major discontinuity that led to irreversible changes in how air defense and naval battles were fought. It was less generative than other innovations, but its cognitive impact was significant.",
-              sources: ["The Radar War by Michael J. Neufeld"]
-          },
-          "Stealth": {
-              discontinuity:2, irreversibility:2, generative:1, cognitive:0,
-              justification: "Stealth technology created a major discontinuity by making platforms nearly invisible to radar, rendering existing air defense systems obsolete. This was irreversible due to the massive investment in R&D and manufacturing. It's a technical evolution of existing platforms, thus less generative and cognitive.",
-              sources: ["Janes Fighting Aircraft", "Lockheed Martin Reports"]
-          },
-          "Stirrups": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
-              justification: "The stirrup allowed a cavalry rider to absorb the shock of a lance charge, making the mounted knight a super-heavy shock trooper. This created a new force (knighthood) and led to irreversible changes in society and warfare. It was a total system innovation.",
-              sources: ["Technology and War by Martin van Creveld", "A History of the Cavalry"]
-          },
-          "Stosstrupp Tactics": {
-              discontinuity:2, irreversibility:1, generative:1, cognitive:1,
-              justification: "Stosstrupp (Stormtrooper) tactics broke the stalemate of trench warfare, allowing for rapid breakthroughs. It was a significant discontinuity. Its generative and irreversible impacts were limited, however, as the tactics did not fundamentally change the strategic outcome of the war.",
-              sources: ["The First World War by John Keegan"]
-          },
-          "T-72B3M Main Battle Tank": {
-              discontinuity:0, irreversibility:1, generative:1, cognitive:0,
-              justification: "This is a simple upgrade of an existing platform. It improves armor and fire control but doesn't fundamentally change the tank's role on the battlefield. It is an example of an 'upgradation'.",
-              sources: ["Janes Armoured Fighting Vehicles"]
-          },
-          "Tank": {
-              discontinuity:2, irreversibility:2, generative:2, cognitive:2,
-              justification: "The tank was a revolutionary innovation that created an entirely new form of mobile land warfare, rendering previous infantry-centric tactics obsolete. It was highly generative, irreversible, and forced a total cognitive shift.",
-              sources: ["The Tank: A History by Kenneth Macksey"]
-          },
-          "Telegraph": {
-              discontinuity:1, irreversibility:2, generative:2, cognitive:1,
-              justification: "The telegraph changed the speed of command and control, which was a significant discontinuity in communications. It was highly generative of new operational concepts, but its cognitive impact was less profound because it did not change the fundamental nature of war.",
-              sources: ["The Victorian Internet by Tom Standage"]
-          },
-          "UAVs": {
-              discontinuity:1, irreversibility:2, generative:2, cognitive:1,
-              justification: "Unmanned Aerial Vehicles are a highly generative technology that enable new types of missions. They have caused significant, irreversible changes in logistics and force structure, but their full cognitive impact on warfare is still unfolding.",
-              sources: ["Drone Warfare by Peter W. Singer"]
+              sources: ["The Making of the Atomic Bomb by Richard Rhodes", "On Thermonuclear War by Herman Kahn"],
+              causalChain: [
+                { source: "d3", target: "c4", bump: 1, explanation: "The new kill-chain topology (a Discontinuity effect) forced leadership to adopt new metrics for success (Cognitive)." },
+                { source: "g4", target: "i1", bump: 1, explanation: "The emergence of new capability categories led to a massive and irreversible restructuring of military training and institutions." }
+              ]
           },
         };
 
@@ -225,47 +119,6 @@
           3: "Adversary response or institutional change",
           4: "Doctrinal/strategic transformation"
         };
-        
-        // ========= Propagation Model from New_Innovation_Tool.html =========
-        const EDGES = [
-          { source: "generative",     target: "irreversibility", w: 0.6 },
-          { source: "generative",     target: "discontinuity",  w: 0.4 },
-          { source: "discontinuity",  target: "cognitive",      w: 0.6 },
-          { source: "discontinuity",  target: "irreversibility",w: 0.3 },
-          { source: "irreversibility",target: "generative",     w: 0.4 },
-          { source: "cognitive",      target: "irreversibility",w: 0.3 },
-          { source: "cognitive",      target: "generative",     w: 0.3 },
-        ];
-        const ALPHA = 1.0;
-
-        function propagate(scores) {
-          const out = { ...scores };
-
-          const avg = {
-            discontinuity: DIMENSIONS.discontinuity.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
-            irreversibility: DIMENSIONS.irreversibility.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
-            generative: DIMENSIONS.generative.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
-            cognitive: DIMENSIONS.cognitive.indicators.reduce((acc, ind) => acc + (scores[ind.id] || 0), 0) / 4,
-          };
-
-          EDGES.forEach(({ source, target, w }) => {
-            const norm = avg[source] / 4;
-            const contrib = Math.ceil(ALPHA * w * norm);
-            if (contrib < 1) return;
-
-            DIMENSIONS[target].indicators.forEach(ind => {
-              const base = scores[ind.id] || 0;
-              const current = out[ind.id] || 0;
-              if (current > base) return;
-              const delta = Math.min(contrib, 4 - base);
-              out[ind.id] = base + delta;
-            });
-          });
-
-          return out;
-        }
-
-        // ====================================================================
 
         const classify = (scores) => {
             const d = DIMENSIONS.discontinuity.indicators.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
@@ -286,16 +139,38 @@
           DIM_KEYS.forEach(dim => DIMENSIONS[dim].indicators.forEach(ind => s[ind.id] = 0));
           return s;
         };
+        
+        // This function applies the causal chains to the base scores
+        const applyCausalChains = (baseScores, chains) => {
+          const integratedScores = { ...baseScores };
+          chains.forEach(chain => {
+            const { source, target, bump } = chain;
+            if (integratedScores[source] > 0) {
+                const currentScore = integratedScores[target] || 0;
+                integratedScores[target] = Math.min(4, currentScore + bump);
+            }
+          });
+          return integratedScores;
+        };
+
 
         const App = () => {
             const [label, setLabel] = useState("");
             const [scores, setScores] = useState(makeDefaultScores());
             const [showRubrics, setShowRubrics] = useState(false);
             const [selectedExample, setSelectedExample] = useState(null);
+            const [userCausalChains, setUserCausalChains] = useState([]);
+            const [newChain, setNewChain] = useState({ source: "", target: "", bump: 1 });
+
             const dimensionChartRef = useRef(null);
             const indicatorChartRef = useRef(null);
 
-            const integratedScores = useMemo(() => propagate(scores), [scores]);
+            const allCausalChains = useMemo(() => {
+                const exampleChains = selectedExample ? EXAMPLES[selectedExample].causalChain : [];
+                return [...exampleChains, ...userCausalChains];
+            }, [selectedExample, userCausalChains]);
+
+            const integratedScores = useMemo(() => applyCausalChains(scores, allCausalChains), [scores, allCausalChains]);
 
             const conservativeClassification = useMemo(() => classify(scores), [scores]);
             const integratedClassification = useMemo(() => classify(integratedScores), [integratedScores]);
@@ -312,123 +187,102 @@
 
             const updateCharts = () => {
                 if (dimensionChartRef.current) {
-                    const dimensionChart = dimensionChartRef.current;
-                    dimensionChart.data.datasets[0].data = Object.values(conservativeDimensionScores);
-                    dimensionChart.data.datasets[1].data = Object.values(integratedDimensionScores);
-                    dimensionChart.update();
+                    dimensionChartRef.current.data.datasets[0].data = Object.values(conservativeDimensionScores);
+                    dimensionChartRef.current.data.datasets[1].data = Object.values(integratedDimensionScores);
+                    dimensionChartRef.current.update();
                 }
 
                 if (indicatorChartRef.current) {
-                    const indicatorChart = indicatorChartRef.current;
-                    indicatorChart.data.datasets[0].data = Object.values(scores);
-                    indicatorChart.data.datasets[1].data = Object.values(integratedScores);
-                    indicatorChart.update();
+                    indicatorChartRef.current.data.datasets[0].data = Object.values(scores);
+                    indicatorChartRef.current.data.datasets[1].data = Object.values(integratedScores);
+                    indicatorChartRef.current.update();
                 }
             };
 
             useEffect(() => {
                 const dimensionChartCtx = document.getElementById('dimension-chart').getContext('2d');
-                if (dimensionChartRef.current) {
-                    dimensionChartRef.current.destroy();
-                }
+                if (dimensionChartRef.current) { dimensionChartRef.current.destroy(); }
                 dimensionChartRef.current = new Chart(dimensionChartCtx, {
                     type: 'bar',
                     data: {
                         labels: DIM_KEYS.map(key => DIMENSIONS[key].name),
                         datasets: [
-                            {
-                                label: 'Conservative',
-                                data: Object.values(conservativeDimensionScores),
-                                backgroundColor: ['#FCA5A5', '#FDBA74', '#FCD34D', '#FDE047'],
-                                borderColor: ['#EF4444', '#F97316', '#F59E0B', '#FACC15'],
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Integrated',
-                                data: Object.values(integratedDimensionScores),
-                                backgroundColor: 'rgba(52, 211, 153, 0.6)',
-                                borderColor: '#10B981',
-                                borderWidth: 1
-                            }
+                            { label: 'Conservative', data: Object.values(conservativeDimensionScores), backgroundColor: ['#FCA5A5', '#FDBA74', '#FCD34D', '#FDE047'], borderColor: ['#EF4444', '#F97316', '#F59E0B', '#FACC15'], borderWidth: 1 },
+                            { label: 'Integrated', data: Object.values(integratedDimensionScores), backgroundColor: 'rgba(52, 211, 153, 0.6)', borderColor: '#10B981', borderWidth: 1 }
                         ]
                     },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 16
-                            }
-                        }
-                    }
+                    options: { responsive: true, scales: { y: { beginAtZero: true, max: 16 } } }
                 });
                 
                 const indicatorChartCtx = document.getElementById('indicator-chart').getContext('2d');
-                if (indicatorChartRef.current) {
-                    indicatorChartRef.current.destroy();
-                }
+                if (indicatorChartRef.current) { indicatorChartRef.current.destroy(); }
                 indicatorChartRef.current = new Chart(indicatorChartCtx, {
                     type: 'bar',
                     data: {
-                        labels: Object.values(DIMENSIONS).flatMap(d => d.indicators.map(i => i.label)),
+                        labels: ALL_INDICATORS.map(i => i.label),
                         datasets: [
-                            {
-                                label: 'Conservative',
-                                data: Object.values(scores),
-                                backgroundColor: 'rgba(251, 191, 36, 0.6)',
-                                borderColor: '#F59E0B',
-                                borderWidth: 1
-                            },
-                            {
-                                label: 'Integrated',
-                                data: Object.values(integratedScores),
-                                backgroundColor: 'rgba(52, 211, 153, 0.6)',
-                                borderColor: '#10B981',
-                                borderWidth: 1
-                            }
+                            { label: 'Conservative', data: Object.values(scores), backgroundColor: 'rgba(251, 191, 36, 0.6)', borderColor: '#F59E0B', borderWidth: 1 },
+                            { label: 'Integrated', data: Object.values(integratedScores), backgroundColor: 'rgba(52, 211, 153, 0.6)', borderColor: '#10B981', borderWidth: 1 }
                         ]
                     },
-                    options: {
-                        responsive: true,
-                        indexAxis: 'y',
-                        scales: {
-                            x: {
-                                beginAtZero: true,
-                                max: 4
-                            }
-                        }
-                    }
+                    options: { responsive: true, indexAxis: 'y', scales: { x: { beginAtZero: true, max: 4 } } }
                 });
 
             }, [scores, integratedScores]);
             
-            useEffect(() => {
-                updateCharts();
-            }, [scores, integratedScores]);
+            useEffect(() => { updateCharts(); }, [scores, integratedScores]);
 
 
             const setIndicator = (id, value) => {
                 setScores(prevScores => ({ ...prevScores, [id]: value }));
                 setSelectedExample(null);
+                setUserCausalChains([]);
             };
 
             const resetAll = () => {
                 setLabel("");
                 setScores(makeDefaultScores());
                 setSelectedExample(null);
+                setUserCausalChains([]);
             };
 
             const loadExample = (name) => {
-                const dimScores = EXAMPLES[name];
-                const out = {};
-                DIM_KEYS.forEach(dim => {
-                    const s = (dimScores[dim] ?? 0) * 2;
-                    DIMENSIONS[dim].indicators.forEach(ind => { out[ind.id] = s; });
-                });
                 setLabel(name);
-                setScores(out);
+                setScores(EXAMPLES[name].conservativeScores);
                 setSelectedExample(name);
+                setUserCausalChains([]);
             };
+
+            const handleAddChain = (e) => {
+                e.preventDefault();
+                if (newChain.source && newChain.target) {
+                    const sourceDim = ALL_INDICATORS.find(ind => ind.id === newChain.source).dim;
+                    const targetDim = ALL_INDICATORS.find(ind => ind.id === newChain.target).dim;
+                    const explanation = `User-defined link from ${DIMENSIONS[sourceDim].name} to ${DIMENSIONS[targetDim].name}`;
+                    setUserCausalChains(prev => [...prev, { ...newChain, explanation }]);
+                    setNewChain({ source: "", target: "", bump: 1 });
+                }
+            };
+            
+            const CausalChainDisplay = ({ chains }) => {
+                if (chains.length === 0) {
+                    return <p className="text-sm text-gray-600">No causal chains defined for this innovation.</p>;
+                }
+                return (
+                    <ul className="list-disc list-inside space-y-2">
+                        {chains.map((chain, index) => (
+                            <li key={index} className="text-sm text-gray-700">
+                                <span className="font-semibold">{ALL_INDICATORS.find(ind => ind.id === chain.source).label}</span>
+                                <span className="text-xs text-gray-500 ml-1">(+{chain.bump})</span>
+                                <span className="mx-2 font-bold">→</span>
+                                <span className="font-semibold">{ALL_INDICATORS.find(ind => ind.id === chain.target).label}</span>
+                                {chain.explanation && <p className="text-xs text-gray-500 mt-1">{chain.explanation}</p>}
+                            </li>
+                        ))}
+                    </ul>
+                );
+            };
+
 
             return (
                 <div className="max-w-7xl mx-auto p-6 space-y-8">
@@ -441,7 +295,6 @@
                             Based on "The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy"
                         </p>
                     </header>
-
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-2 p-6 bg-white rounded-lg shadow">
                             <h2 className="text-xl font-semibold mb-4">Case Setup</h2>
@@ -595,6 +448,68 @@
                             ) : (
                                 <p className="text-sm text-gray-600">Select a historical example above to see its detailed justification and indicative sources.</p>
                             )}
+                        </div>
+                    </div>
+                    
+                    <div className="p-6 bg-white rounded-lg shadow">
+                        <h2 className="text-xl font-semibold mb-4">The Principle of Interconnected Effects</h2>
+                        <p className="text-sm text-gray-600 mb-4">
+                            Define your own causal chains to apply the principle that a score in one dimension can justify a score in another.
+                        </p>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Source Indicator</label>
+                                    <select
+                                        value={newChain.source}
+                                        onChange={(e) => setNewChain(prev => ({ ...prev, source: e.target.value }))}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                                    >
+                                        <option value="">Select...</option>
+                                        {ALL_INDICATORS.map(ind => (
+                                            <option key={ind.id} value={ind.id}>
+                                                {DIMENSIONS[ind.dim].name}: {ind.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Target Indicator</label>
+                                    <select
+                                        value={newChain.target}
+                                        onChange={(e) => setNewChain(prev => ({ ...prev, target: e.target.value }))}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                                    >
+                                        <option value="">Select...</option>
+                                        {ALL_INDICATORS.map(ind => (
+                                            <option key={ind.id} value={ind.id}>
+                                                {DIMENSIONS[ind.dim].name}: {ind.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Score Bump</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="4"
+                                        value={newChain.bump}
+                                        onChange={(e) => setNewChain(prev => ({ ...prev, bump: parseInt(e.target.value) }))}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                                    />
+                                </div>
+                            </div>
+                            <button
+                                onClick={handleAddChain}
+                                className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            >
+                                Add Causal Link
+                            </button>
+                        </div>
+                        <div className="mt-6">
+                            <h3 className="text-lg font-semibold mb-2">Active Causal Chains</h3>
+                            <CausalChainDisplay chains={allCausalChains} />
                         </div>
                     </div>
 
