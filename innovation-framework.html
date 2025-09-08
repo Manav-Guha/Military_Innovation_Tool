@@ -17,8 +17,8 @@
     .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium; }
     .btn-secondary { @apply bg-gray-100 text-gray-900 hover:bg-gray-200; }
     .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500; }
-    .tab-btn { @apply flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors; }
-    .tab-btn.active { @apply bg-white border-b-2 border-blue-600 text-blue-600; }
+    .tab-btn { @apply px-6 py-3 font-semibold rounded-lg transition-colors border border-gray-300; }
+    .tab-btn.active { @apply bg-white text-blue-600 border-blue-600 shadow; }
     .tab-btn.inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200; }
     .collapsible-content {
       overflow: hidden;
@@ -401,7 +401,7 @@
               <div className="card-header">
                   <div className="card-title">Analysis & Examples</div>
               </div>
-              <div className="bg-gray-100 border-b border-gray-200 flex justify-center items-center gap-2 px-4">
+              <div className="bg-gray-100 border-b border-gray-200 flex justify-center items-center gap-4 p-2">
                   <button onClick={() => setActiveTab('scoring')}
                           className={`tab-btn ${activeTab === 'scoring' ? 'active' : 'inactive'}`}>
                       Interconnected Effects
