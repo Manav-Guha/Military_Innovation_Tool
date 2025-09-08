@@ -91,7 +91,13 @@
             "F-16 Block D": { scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 0, 0, 0], cognitive: [1, 0, 0, 0] } },
             "AIP Submarine": { scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 1, 0, 0], cognitive: [1, 0, 0, 0] } },
             "T-72B3M Main Battle Tank": { scores: { discontinuity: [1, 0, 0, 0], irreversibility: [1, 0, 0, 0], generative: [1, 0, 0, 0], cognitive: [1, 0, 0, 0] } },
-            "Information Warfare": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } }
+            "Information Warfare": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
+            "Barbed Wire": { scores: { discontinuity: [4, 3, 2, 2], irreversibility: [4, 4, 3, 3], generative: [2, 2, 1, 1], cognitive: [4, 4, 3, 4] } },
+            "Radar": { scores: { discontinuity: [4, 4, 3, 3], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
+            "Stosstrupp Tactics": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [1, 1, 0, 0], generative: [2, 2, 1, 1], cognitive: [4, 4, 4, 4] } },
+            "Deep Battle/Reconnaissance Strike Complex": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
+            "Telegraph": { scores: { discontinuity: [4, 4, 4, 4], irreversibility: [4, 4, 4, 4], generative: [4, 4, 4, 4], cognitive: [4, 4, 4, 4] } },
+            "Multi-Domain Battle Concept": { scores: { discontinuity: [3, 3, 2, 2], irreversibility: [1, 1, 0, 0], generative: [4, 4, 3, 3], cognitive: [4, 4, 3, 3] } }
         };
 
         const App = () => {
@@ -354,8 +360,8 @@
                             <p className="text-sm text-gray-600 mb-4">
                                 Click any example below to see how the framework has been applied. The graphical representation of the analysis is available in the graphs above.
                             </p>
-                            <div className="grid grid-cols-2 gap-2 mb-4">
-                                {Object.keys(EXAMPLES).map(example => (
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mb-4">
+                                {Object.keys(EXAMPLES).sort().map(example => (
                                     <button
                                         key={example}
                                         onClick={() => loadExample(example)}
