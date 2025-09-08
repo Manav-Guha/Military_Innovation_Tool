@@ -450,10 +450,12 @@
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
                               <h3 className="text-lg font-medium text-gray-900 mb-2">Dimension Scores</h3>
+                              <p className="text-sm text-gray-600 mb-3">This chart shows the total score for each of the four dimensions. The **Conservative** score is the raw sum of your inputs, while the **Integrated** score includes any additional points from the "Interconnected Effects" section.</p>
                               <canvas ref={dimensionChartRef} id="dimension-chart" className="h-64"></canvas>
                           </div>
                           <div>
                               <h3 className="text-lg font-medium text-gray-900 mb-2">Indicator Scores</h3>
+                              <p className="text-sm text-gray-600 mb-3">This chart provides a detailed breakdown of your scores for each individual indicator. This view is helpful for understanding where a specific innovation has the most impact.</p>
                               <canvas ref={indicatorChartRef} id="indicator-chart" className="h-64"></canvas>
                           </div>
                       </div>
