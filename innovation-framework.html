@@ -211,9 +211,13 @@
       const [showRubrics, setShowRubrics] = useState(false);
       const [selectedExample, setSelectedExample] = useState(null);
       const [promptsOpen, setPromptsOpen] = useState(false);
+      const [chartsOpen, setChartsOpen] = useState(false);
+      const [examplesOpen, setExamplesOpen] = useState(false);
       const [promptAnswers, setPromptAnswers] = useState(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
       
       const promptsRef = useRef(null);
+      const chartsRef = useRef(null);
+      const examplesRef = useRef(null);
       const dimensionChartRef = useRef(null);
       const indicatorChartRef = useRef(null);
       
@@ -304,6 +308,8 @@
         setScores(newScores);
         setPromptAnswers(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
         setPromptsOpen(false);
+        setChartsOpen(false);
+        setExamplesOpen(true);
       };
       
       const handlePromptChange = (id, value) => {
@@ -315,40 +321,40 @@
         <div className="space-y-6">
           <Header />
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="md:col-span-2 card">
-                  <div className="card-header"><div className="card-title">Case Setup</div></div>
-                  <div className="card-content space-y-3">
-                      <div>
-                          <label className="block text-sm font-medium text-gray-700">Case Label</label>
-                          <input type="text" className="input mt-1" placeholder="e.g., Fiber optics (dual-use substrate)" value={label} onChange={e => setLabel(e.target.value)} />
-                      </div>
-                      <label className="inline-flex items-center gap-2 text-sm">
-                          <input type="checkbox" checked={showRubrics} onChange={e => setShowRubrics(e.target.checked)} />
-                          <span>Show scoring rubric tooltips</span>
-                      </label>
-                      <button onClick={resetAll} className="w-full btn btn-secondary">Reset All</button>
-                  </div>
+          <div className="card">
+              <div className="card-header">
+                <div className="card-title">Case Setup & Classification</div>
               </div>
-              
-              <div className="card">
-                  <div className="card-header"><div className="card-title">Classification</div></div>
-                  <div className="card-content space-y-4">
-                      <div>
-                          <h3 className="text-lg font-medium text-gray-900">Conservative</h3>
-                          <p className="text-sm text-gray-500">Based on your direct input.</p>
-                          <div className="mt-2">
-                              <span className={`py-1 px-3 text-sm font-bold rounded-full ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>{conservativeClassification.bucket}</span>
+              <div className="card-content">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                          <div>
+                              <label className="block text-sm font-medium text-gray-700">Case Label</label>
+                              <input type="text" className="input mt-1" placeholder="e.g., Fiber optics (dual-use substrate)" value={label} onChange={e => setLabel(e.target.value)} />
                           </div>
-                          <p className="mt-2 text-sm text-gray-600">{conservativeClassification.classificationText}</p>
+                          <label className="inline-flex items-center gap-2 text-sm">
+                              <input type="checkbox" checked={showRubrics} onChange={e => setShowRubrics(e.target.checked)} />
+                              <span>Show scoring rubric tooltips</span>
+                          </label>
+                          <button onClick={resetAll} className="w-full btn btn-secondary">Reset All</button>
                       </div>
-                      <div>
-                          <h3 className="text-lg font-medium text-gray-900">Integrated</h3>
-                          <p className="text-sm text-gray-500">With interconnected effects.</p>
-                          <div className="mt-2">
-                              <span className={`py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>{integratedClassification.bucket}</span>
+                      <div className="space-y-4">
+                          <div>
+                              <h3 className="text-lg font-medium text-gray-900">Conservative</h3>
+                              <p className="text-sm text-gray-500">Based on your direct input.</p>
+                              <div className="mt-2">
+                                  <span className={`py-1 px-3 text-sm font-bold rounded-full ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>{conservativeClassification.bucket}</span>
+                              </div>
+                              <p className="mt-2 text-sm text-gray-600">{conservativeClassification.classificationText}</p>
                           </div>
-                          <p className="mt-2 text-sm text-gray-600">{integratedClassification.classificationText}</p>
+                          <div>
+                              <h3 className="text-lg font-medium text-gray-900">Integrated</h3>
+                              <p className="text-sm text-gray-500">With interconnected effects.</p>
+                              <div className="mt-2">
+                                  <span className={`py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>{integratedClassification.bucket}</span>
+                              </div>
+                              <p className="mt-2 text-sm text-gray-600">{integratedClassification.classificationText}</p>
+                          </div>
                       </div>
                   </div>
               </div>
@@ -373,7 +379,7 @@
                                           <div className="flex gap-1">
                                               {[0, 1, 2, 3, 4].map(v => (
                                                   <button key={v}
-                                                      className={`w-8 h-8 rounded text-xs font-bold transition-colors ${(scores[indicator.id] || 0) === v ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800'}`}
+                                                      className={`w-6 h-6 rounded text-xs font-bold transition-colors ${(scores[indicator.id] || 0) === v ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800'}`}
                                                       onClick={() => setIndicator(indicator.id, v)}
                                                       title={indicator.ladder[v]}>
                                                       {v}
@@ -389,7 +395,7 @@
               </div>
           </div>
 
-          <div className="card md:w-3/4 md:mx-auto">
+          <div className="card">
               <div className="card-header">
                 <div className="card-title">Apply the Principle of Interconnected Effects</div>
               </div>
@@ -434,48 +440,71 @@
               </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="card">
-                  <div className="card-header"><div className="card-title">Dimension Scores</div></div>
-                  <div className="card-content">
-                      <canvas ref={dimensionChartRef} id="dimension-chart" className="h-64"></canvas>
+          <div className="card">
+              <div className="card-header">
+                  <div className="card-title">
+                      Charts
                   </div>
+                  <button onClick={() => setChartsOpen(!chartsOpen)} className="btn btn-secondary">
+                      {chartsOpen ? "Hide" : "Show"}
+                  </button>
               </div>
-              <div className="card">
-                  <div className="card-header"><div className="card-title">Indicator Scores</div></div>
-                  <div className="card-content">
-                      <canvas ref={indicatorChartRef} id="indicator-chart" className="h-64"></canvas>
+              <div
+                  ref={chartsRef}
+                  className="collapsible-content"
+                  style={{ maxHeight: chartsOpen ? `${chartsRef.current.scrollHeight}px` : '0px' }}
+              >
+                  <div className="card-content grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">Dimension Scores</h3>
+                          <canvas ref={dimensionChartRef} id="dimension-chart" className="h-64"></canvas>
+                      </div>
+                      <div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">Indicator Scores</h3>
+                          <canvas ref={indicatorChartRef} id="indicator-chart" className="h-64"></canvas>
+                      </div>
                   </div>
               </div>
           </div>
           
           <div className="card">
               <div className="card-header">
-                  <div className="card-title">Historical Examples and Justification</div>
-              </div>
-              <div className="card-content">
-                  <p className="text-sm text-gray-600 mb-3">
-                      Click any example below to load its pre-configured scores, justification, and sources.
-                  </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
-                      {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
-                          <button key={name}
-                              onClick={() => loadExample(name)}
-                              className={`p-2 rounded border text-left hover:bg-gray-100 transition-colors ${selectedExample === name ? 'bg-gray-200 border-gray-400' : 'bg-white border-gray-200'}`}>
-                              {name}
-                          </button>
-                      ))}
+                  <div className="card-title">
+                      Historical Examples and Justification
                   </div>
-                  {selectedExample && (
-                      <div className="mt-4">
-                          <h3 className="text-lg font-semibold mb-2">{selectedExample} Justification</h3>
-                          <p className="mb-4 text-sm text-gray-700">{MAPPED_EXAMPLES[selectedExample].justification}</p>
-                          <h3 className="text-lg font-semibold mb-2">Indicative Sources</h3>
-                          <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
-                              {MAPPED_EXAMPLES[selectedExample].sources.map((source, index) => (<li key={index}>{source}</li>))}
-                          </ul>
+                  <button onClick={() => setExamplesOpen(!examplesOpen)} className="btn btn-secondary">
+                      {examplesOpen ? "Hide" : "Show"}
+                  </button>
+              </div>
+              <div
+                  ref={examplesRef}
+                  className="collapsible-content"
+                  style={{ maxHeight: examplesOpen ? `${examplesRef.current.scrollHeight}px` : '0px' }}
+              >
+                  <div className="card-content">
+                      <p className="text-sm text-gray-600 mb-3">
+                          Click any example below to load its pre-configured scores, justification, and sources.
+                      </p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
+                          {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
+                              <button key={name}
+                                  onClick={() => loadExample(name)}
+                                  className={`p-2 rounded border text-left hover:bg-gray-100 transition-colors ${selectedExample === name ? 'bg-gray-200 border-gray-400' : 'bg-white border-gray-200'}`}>
+                                  {name}
+                              </button>
+                          ))}
                       </div>
-                  )}
+                      {selectedExample && (
+                          <div className="mt-4">
+                              <h3 className="text-lg font-semibold mb-2">{selectedExample} Justification</h3>
+                              <p className="mb-4 text-sm text-gray-700">{MAPPED_EXAMPLES[selectedExample].justification}</p>
+                              <h3 className="text-lg font-semibold mb-2">Indicative Sources</h3>
+                              <ul className="list-disc list-inside space-y-1 text-sm text-gray-700">
+                                  {MAPPED_EXAMPLES[selectedExample].sources.map((source, index) => (<li key={index}>{source}</li>))}
+                              </ul>
+                          </div>
+                      )}
+                  </div>
               </div>
           </div>
           
