@@ -14,7 +14,7 @@
   <div id="root" class="max-w-7xl mx-auto p-6"></div>
 
   <script type="text/babel">
-    const { useState, useEffect, useRef, useMemo } = React;
+    const { useState, useEffect, useRef, useMemo, useCallback } = React;
     const { createRoot } = ReactDOM;
 
     // ========= Data Model =========
@@ -54,6 +54,7 @@
         source: "g3",
         target: "i3",
         bump: 1,
+        explanation: "Budget migration can drive adversary responses, creating irreversible competitive dynamics."
       },
       {
         id: 'prompt2',
@@ -61,6 +62,7 @@
         source: "d2",
         target: "c1",
         bump: 1,
+        explanation: "Doctrinal break points often necessitate fundamental cognitive shifts in military thinking."
       },
       {
         id: 'prompt3',
@@ -68,41 +70,57 @@
         source: "i1",
         target: "c4",
         bump: 1,
+        explanation: "Institutional restructuring typically requires new frameworks for measuring effectiveness."
       },
     ];
 
     const EXAMPLES = {
         "AI-Targeting": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 }, justification: "Automated targeting enhances kill chains but doesn't fundamentally rewrite them yet. It creates new capabilities but isn't forcing a complete institutional overhaul.", sources: ["USAF Mad Scientist Initial Research"] },
-        "AIP Submarine": { scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is an **Upgradation**. Air-Independent Propulsion (AIP) is an excellent example of an upgradation. It provides a significant tactical advantage (staying submerged longer), but it does not fundamentally change the submarine's purpose or operational concept. It is an important improvement but not a revolutionary one.", sources: ["Norman Polmar & K.J. Moore, *Cold War Submarines: The Design and Construction of U.S. and Soviet Submarines* (2004)"] },
-        "ASBM": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 2 }, justification: "This is a **Genuine Innovation**. The Anti-Ship Ballistic Missile threatens to break the U.S. Navy's reliance on large aircraft carriers by creating a new kill-chain topology. This has created a cognitive disruption in naval strategy and a compulsion for the U.S. to seek countermeasures, making it a potential game-changer that is forcing fundamental shifts in military thinking.", sources: ["Andrew S. Erickson, *Chinese Anti-Ship Ballistic Missile Development: A Modern Naval Revolution* (2013)"] },
-        "Barbed Wire": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 2 }, justification: "This is classified as a **Genuine Innovation**. While seemingly simple, barbed wire fundamentally changed the nature of warfare. It broke existing offensive patterns, forced a massive shift to trench warfare that was practically irreversible, and compelled adversaries to develop new tactics and technologies to counter it. Most importantly, it completely reframed the problem of offense, requiring new doctrinal and conceptual approaches.", sources: ["Stephen Bull, *The Soldier's Kit: The British Army on the Western Front 1914-1918* (2013)"] },
+        "AIP Submarine": { scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is an Upgradation. Air-Independent Propulsion (AIP) is an excellent example of an upgradation. It provides a significant tactical advantage (staying submerged longer), but it does not fundamentally change the submarine's purpose or operational concept. It is an important improvement but not a revolutionary one.", sources: ["Norman Polmar & K.J. Moore, Cold War Submarines: The Design and Construction of U.S. and Soviet Submarines (2004)"] },
+        "ASBM": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 2 }, justification: "This is a Genuine Innovation. The Anti-Ship Ballistic Missile threatens to break the U.S. Navy's reliance on large aircraft carriers by creating a new kill-chain topology. This has created a cognitive disruption in naval strategy and a compulsion for the U.S. to seek countermeasures, making it a potential game-changer that is forcing fundamental shifts in military thinking.", sources: ["Andrew S. Erickson, Chinese Anti-Ship Ballistic Missile Development: A Modern Naval Revolution (2013)"] },
+        "Barbed Wire": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 2 }, justification: "This is classified as a Genuine Innovation. While seemingly simple, barbed wire fundamentally changed the nature of warfare. It broke existing offensive patterns, forced a massive shift to trench warfare that was practically irreversible, and compelled adversaries to develop new tactics and technologies to counter it. Most importantly, it completely reframed the problem of offense, requiring new doctrinal and conceptual approaches.", sources: ["Stephen Bull, The Soldier's Kit: The British Army on the Western Front 1914-1918 (2013)"] },
         "Blitzkrieg": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "Blitzkrieg was a total system innovation, combining tanks, close air support, and radio communication into a new way of war. It forced adversaries to rethink everything, leading to deep doctrinal and institutional changes.", sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"] },
-        "Carrier Aviation": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a **Genuine Innovation**. Carrier aviation completely broke the traditional naval battle formation centered on battleships. It created a massive, irreversible pivot for naval forces, shifted budgets, and was immensely generative, leading to new classes of ships and a complete rewrite of naval strategy that remains in effect today.", sources: ["Norman Friedman, *U.S. Aircraft Carriers: An Illustrated Design History* (1983)"] },
-        "Cyber Warfare": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a **Modernization**. Cyber warfare is a major development that has disrupted command and control and created a new domain of conflict. It is highly generative, but has not yet created the kind of irreversible force-structure changes or completely rewritten doctrine in the same way as a genuine innovation. Its effects are often contained, making it a powerful tool but not a complete revolutionary force.", sources: ["Martin C. Libicki, *Conquest in Cyberspace: A New Kind of War* (2012)"] },
-        "Deep Battle/Reconnaissance Strike Complex": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is classified as a **Genuine Innovation**. This doctrinal innovation was a transformative shift in military theory. It was designed to bypass the enemy's forward defenses and strike deep into their rear, fundamentally breaking old patterns of attrition warfare. It required a full-scale reorganization of the Soviet military's force structure, becoming an irreversible national commitment.", sources: ["Mary Habeck, *Storm of Steel: The Development of Soviet Operational Art* (2003)"] },
-        "F-16 Block D": { scores: { discontinuity: 0, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is an **Upgradation**. A block upgrade to an existing airframe is a classic upgradation. It improves sensor performance, a new engine, and a few other key systems, but it does not create a new capability. It simply makes the existing platform more capable. It does not create a new kill-chain, doctrine, or force structure.", sources: ["U.S. Air Force Fact Sheets"] },
-        "Hypersonics": { scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 1 }, justification: "This is an **Upgradation**. Hypersonics improve the speed of an existing capability (missiles). They do not force a new kill-chain topology, require a major doctrinal rewrite, or create an irreversible infrastructure dependency. They are a significant technical improvement, but not a fundamental innovation.", sources: ["Thomas G. Mahnken, *The Technological Revolution in Military Affairs* (2007)"] },
-        "Information Warfare": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a **Genuine Innovation**. Information warfare has created a new domain of conflict, fundamentally altering command and control, and forcing a complete re-evaluation of how military forces operate. It has created irreversible changes in force structure and doctrine, and has been highly generative, leading to a new class of systems and capabilities.", sources: ["T. E. Ricks, *The Generals: American Military Command from World War II to Today* (2012)"] },
-        "Lasers": { scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 1 }, justification: "This is a **Modernization**. Lasers represent a fundamental shift in defensive firepower, but their full impact has yet to be realized. While they disrupt the OODA loop and could rewrite defense doctrine, they haven't yet created the irreversible logistical changes or force-structure pivots needed to qualify as a genuine innovation. They are a significant improvement, but still in the developmental phase.", sources: ["Air Force Research Laboratory, *Directed Energy Weapons: A Primer* (2019)"] },
-        "Machine Gun": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a **Genuine Innovation**. The machine gun created an immense doctrinal breakpoint, instantly making large-scale infantry charges suicidal and ushering in trench warfare. It created irreversible changes in force structure and defensive infrastructure, was highly generative (e.g., in aviation and naval applications), and fundamentally changed how leaders conceptualized firepower and defense.", sources: ["John Ellis, *The Social History of the Machine Gun* (1975)"] },
-        "Military Robotics": { scores: { discontinuity: 1, irreversibility: 2, generative: 2, cognitive: 1 }, justification: "This is a **Modernization**. Military robotics, in their current state, are largely used to extend human capabilities rather than replace them entirely. They are highly generative, but have not created the sort of doctrinal or irreversible force-structure changes that would make them a genuine innovation. They are an important and growing component of the military, but not a revolutionary one.", sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] },
-        "Minie Ball/Connoidal Bullet": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 1 }, justification: "This is a **Genuine Innovation**. The Minie ball fundamentally changed the lethality and range of infantry weapons, forcing a complete doctrinal rewrite of battlefield tactics away from Napoleonic-style linear formations. It created irreversible changes in logistics and training, and its impact was so profound it became a core part of military education and strategic thought.", sources: ["Brent Nosworthy, *The Bloody Crucible of Courage: Fighting Methods and Combat Experience of the American Civil War* (2003)"] },
-        "Multi-Domain Battle Concept": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 2 }, justification: "This is a **Modernization**. This concept is an important, but so far incomplete, doctrinal evolution. It aims to integrate multiple domains of warfare, representing a significant conceptual leap. However, it has yet to be fully implemented, meaning it hasn't created the deep, irreversible sunk costs in infrastructure, training, or force structure that a genuine innovation would.", sources: ["U.S. Army Training and Doctrine Command publications (TRADOC Pamphlet 525-3-1)"] },
-        "Network-Centric Warfare": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 }, justification: "This is a **Genuine Innovation**. Network-Centric Warfare fundamentally re-conceptualized the battlefield as a network of sensors and shooters. It has broken down traditional stovepipes and created irreversible investments in digital infrastructure. It is highly generative, leading to concepts like Multi-Domain Operations, and has become a core element of military strategy.", sources: ["David S. Alberts, John J. Gartska, & Frederick P. Stein, *Network Centric Warfare: Developing and Leveraging Information Superiority* (1999)"] },
-        "Nuclear Weapons": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a **Genuine Innovation** and arguably the most significant of the 20th century. Nuclear weapons created a new state of war (Mutually Assured Destruction) that permanently altered international relations and military strategy. Their development was irreversible, led to new strategic concepts like deterrence, and required a complete re-evaluation of military purpose and metrics.", sources: ["Lawrence Freedman, *The Evolution of Nuclear Strategy* (2003)"] },
-        "PGMs": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 }, justification: "This is a **Modernization**. Precision-guided munitions are a significant improvement in lethality and efficiency, but they did not force a complete doctrinal rewrite. Instead, they allowed existing air and naval platforms to achieve new levels of effectiveness. They were highly generative, leading to follow-on capabilities like UAVs, but have not created the type of fundamental disruption seen in genuine innovations.", sources: ["Richard P. Hallion, *Precision-Guided Munitions and the Revolution in Warfare* (1995)"] },
-        "Radar": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 1 }, justification: "This is classified as a **Genuine Innovation**. Radar's impact was transformative. It instantly disrupted the OODA loop of air attacks, turning a surprise raid into a predictable event. It required immense sunk costs in infrastructure and training, becoming an irreversible part of military operations. It was highly generative, spurring new technologies, and fundamentally changed the concept of air defense.", sources: ["David E. Fisher, *A Race on the Edge of Time: Radar - The Decisive Weapon of World War II* (1988)"] },
-        "Stealth": { scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is a **Modernization**. Stealth is a major technological leap, but it has not fully disrupted the enemy OODA loop or forced adversaries to completely scrap their air defenses. It led to high-cost but limited irreversible changes and has been generative mostly within the air domain, rather than across all domains.", sources: ["Bill Sweetman, *Stealth Aircraft: Secrets of Future Airpower* (1986)"] },
-        "Stirrups": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is classified as a **Genuine Innovation**. Stirrups were a fundamental innovation that unlocked the full potential of mounted shock warfare. They broke existing patterns of combat by enabling a mounted knight to deliver the full force of a charge, created irreversible societal and military structures, and were highly generative, forming the basis for new cavalry doctrines that lasted for centuries.", sources: ["Lynn White, Jr., *Medieval Technology and Social Change* (1962)"] },
-        "Stosstrupp Tactics": { scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 2 }, justification: "This is classified as a **Genuine Innovation**. This non-technological innovation introduced a completely new method of bypassing a static front line, breaking the stalemate of trench warfare. While it had limited physical irreversibility, it created a massive, permanent change in tactical thinking and spawned a range of new small-unit tactics and training methods.", sources: ["Bruce I. Gudmundsson, *Stormtroop Tactics: Innovation in the German Army, 1914-1918* (1989)"] },
-        "T-72B3M Main Battle Tank": { scores: { discontinuity: 0, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is an **Upgradation**. The T-72B3M is a modernization of an existing tank, not a new design. It adds a new engine, fire control system, and a new main gun. These improvements are significant, but they do not change the tank's core role or doctrine. It is an important improvement but not a revolutionary one.", sources: ["Charles K. Bartles, *The Russian Army: New Military Capability* (2015)"] },
-        "Tank": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a **Genuine Innovation**. The tank broke the tactical stalemate of World War I, forcing a complete reconceptualization of maneuver warfare. Its development required enormous, irreversible investments in production and logistics. It was highly generative, leading to a family of armored vehicles and follow-on doctrines like Blitzkrieg, and became a central pillar of military power.", sources: ["J.P. Harris, *Men, Ideas, and Tanks: British Military Thought and Armoured Forces, 1903-1939* (1995)"] },
-        "Telegraph": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is classified as a **Genuine Innovation**. The military use of the telegraph was a seminal innovation. It completely shattered the historical reliance on couriers and physical command links, disrupting the time-space compression of the battlefield. It required a vast, irreversible investment in global networks and operators, and completely rewrote the theory of command and control.", sources: ["David Hochfelder, *The Telegraph in America, 1832-1920* (2012)"] },
-        "UAVs": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 }, justification: "This is a **Modernization**. While UAVs have been a significant game-changer in specific contexts, they have largely extended existing doctrines (e.g., reconnaissance and strike) rather than breaking them. They are generative, leading to a new class of unmanned systems, but have not created the sort of irreversible force-structure changes or cognitive disruptions seen in a genuine innovation.", sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] },
+        "Carrier Aviation": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a Genuine Innovation. Carrier aviation completely broke the traditional naval battle formation centered on battleships. It created a massive, irreversible pivot for naval forces, shifted budgets, and was immensely generative, leading to new classes of ships and a complete rewrite of naval strategy that remains in effect today.", sources: ["Norman Friedman, U.S. Aircraft Carriers: An Illustrated Design History (1983)"] },
+        "Cyber Warfare": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a Modernization. Cyber warfare is a major development that has disrupted command and control and created a new domain of conflict. It is highly generative, but has not yet created the kind of irreversible force-structure changes or completely rewritten doctrine in the same way as a genuine innovation. Its effects are often contained, making it a powerful tool but not a complete revolutionary force.", sources: ["Martin C. Libicki, Conquest in Cyberspace: A New Kind of War (2012)"] },
+        "Deep Battle/Reconnaissance Strike Complex": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is classified as a Genuine Innovation. This doctrinal innovation was a transformative shift in military theory. It was designed to bypass the enemy's forward defenses and strike deep into their rear, fundamentally breaking old patterns of attrition warfare. It required a full-scale reorganization of the Soviet military's force structure, becoming an irreversible national commitment.", sources: ["Mary Habeck, Storm of Steel: The Development of Soviet Operational Art (2003)"] },
+        "F-16 Block D": { scores: { discontinuity: 0, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is an Upgradation. A block upgrade to an existing airframe is a classic upgradation. It improves sensor performance, a new engine, and a few other key systems, but it does not create a new capability. It simply makes the existing platform more capable. It does not create a new kill-chain, doctrine, or force structure.", sources: ["U.S. Air Force Fact Sheets"] },
+        "Hypersonics": { scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 1 }, justification: "This is an Upgradation. Hypersonics improve the speed of an existing capability (missiles). They do not force a new kill-chain topology, require a major doctrinal rewrite, or create an irreversible infrastructure dependency. They are a significant technical improvement, but not a fundamental innovation.", sources: ["Thomas G. Mahnken, The Technological Revolution in Military Affairs (2007)"] },
+        "Information Warfare": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a Genuine Innovation. Information warfare has created a new domain of conflict, fundamentally altering command and control, and forcing a complete re-evaluation of how military forces operate. It has created irreversible changes in force structure and doctrine, and has been highly generative, leading to a new class of systems and capabilities.", sources: ["T. E. Ricks, The Generals: American Military Command from World War II to Today (2012)"] },
+        "Lasers": { scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 1 }, justification: "This is a Modernization. Lasers represent a fundamental shift in defensive firepower, but their full impact has yet to be realized. While they disrupt the OODA loop and could rewrite defense doctrine, they haven't yet created the irreversible logistical changes or force-structure pivots needed to qualify as a genuine innovation. They are a significant improvement, but still in the developmental phase.", sources: ["Air Force Research Laboratory, Directed Energy Weapons: A Primer (2019)"] },
+        "Machine Gun": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a Genuine Innovation. The machine gun created an immense doctrinal breakpoint, instantly making large-scale infantry charges suicidal and ushering in trench warfare. It created irreversible changes in force structure and defensive infrastructure, was highly generative (e.g., in aviation and naval applications), and fundamentally changed how leaders conceptualized firepower and defense.", sources: ["John Ellis, The Social History of the Machine Gun (1975)"] },
+        "Military Robotics": { scores: { discontinuity: 1, irreversibility: 2, generative: 2, cognitive: 1 }, justification: "This is a Modernization. Military robotics, in their current state, are largely used to extend human capabilities rather than replace them entirely. They are highly generative, but have not created the sort of doctrinal or irreversible force-structure changes that would make them a genuine innovation. They are an important and growing component of the military, but not a revolutionary one.", sources: ["Peter W. Singer, Wired for War: The Robotics Revolution and Conflict in the 21st Century (2009)"] },
+        "Minie Ball/Connoidal Bullet": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 1 }, justification: "This is a Genuine Innovation. The Minie ball fundamentally changed the lethality and range of infantry weapons, forcing a complete doctrinal rewrite of battlefield tactics away from Napoleonic-style linear formations. It created irreversible changes in logistics and training, and its impact was so profound it became a core part of military education and strategic thought.", sources: ["Brent Nosworthy, The Bloody Crucible of Courage: Fighting Methods and Combat Experience of the American Civil War (2003)"] },
+        "Multi-Domain Battle Concept": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 2 }, justification: "This is a Modernization. This concept is an important, but so far incomplete, doctrinal evolution. It aims to integrate multiple domains of warfare, representing a significant conceptual leap. However, it has yet to be fully implemented, meaning it hasn't created the deep, irreversible sunk costs in infrastructure, training, or force structure that a genuine innovation would.", sources: ["U.S. Army Training and Doctrine Command publications (TRADOC Pamphlet 525-3-1)"] },
+        "Network-Centric Warfare": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 }, justification: "This is a Genuine Innovation. Network-Centric Warfare fundamentally re-conceptualized the battlefield as a network of sensors and shooters. It has broken down traditional stovepipes and created irreversible investments in digital infrastructure. It is highly generative, leading to concepts like Multi-Domain Operations, and has become a core element of military strategy.", sources: ["David S. Alberts, John J. Gartska, & Frederick P. Stein, Network Centric Warfare: Developing and Leveraging Information Superiority (1999)"] },
+        "Nuclear Weapons": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a Genuine Innovation and arguably the most significant of the 20th century. Nuclear weapons created a new state of war (Mutually Assured Destruction) that permanently altered international relations and military strategy. Their development was irreversible, led to new strategic concepts like deterrence, and required a complete re-evaluation of military purpose and metrics.", sources: ["Lawrence Freedman, The Evolution of Nuclear Strategy (2003)"] },
+        "PGMs": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 1 }, justification: "This is a Modernization. Precision-guided munitions are a significant improvement in lethality and efficiency, but they did not force a complete doctrinal rewrite. Instead, they allowed existing air and naval platforms to achieve new levels of effectiveness. They were highly generative, leading to follow-on capabilities like UAVs, but have not created the type of fundamental disruption seen in genuine innovations.", sources: ["Richard P. Hallion, Precision-Guided Munitions and the Revolution in Warfare (1995)"] },
+        "Radar": { scores: { discontinuity: 2, irreversibility: 2, generative: 1, cognitive: 1 }, justification: "This is classified as a Genuine Innovation. Radar's impact was transformative. It instantly disrupted the OODA loop of air attacks, turning a surprise raid into a predictable event. It required immense sunk costs in infrastructure and training, becoming an irreversible part of military operations. It was highly generative, spurring new technologies, and fundamentally changed the concept of air defense.", sources: ["David E. Fisher, A Race on the Edge of Time: Radar - The Decisive Weapon of World War II (1988)"] },
+        "Stealth": { scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is a Modernization. Stealth is a major technological leap, but it has not fully disrupted the enemy OODA loop or forced adversaries to completely scrap their air defenses. It led to high-cost but limited irreversible changes and has been generative mostly within the air domain, rather than across all domains.", sources: ["Bill Sweetman, Stealth Aircraft: Secrets of Future Airpower (1986)"] },
+        "Stirrups": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is classified as a Genuine Innovation. Stirrups were a fundamental innovation that unlocked the full potential of mounted shock warfare. They broke existing patterns of combat by enabling a mounted knight to deliver the full force of a charge, created irreversible societal and military structures, and were highly generative, forming the basis for new cavalry doctrines that lasted for centuries.", sources: ["Lynn White, Jr., Medieval Technology and Social Change (1962)"] },
+        "Stosstrupp Tactics": { scores: { discontinuity: 2, irreversibility: 1, generative: 1, cognitive: 2 }, justification: "This is classified as a Genuine Innovation. This non-technological innovation introduced a completely new method of bypassing a static front line, breaking the stalemate of trench warfare. While it had limited physical irreversibility, it created a massive, permanent change in tactical thinking and spawned a range of new small-unit tactics and training methods.", sources: ["Bruce I. Gudmundsson, Stormtroop Tactics: Innovation in the German Army, 1914-1918 (1989)"] },
+        "T-72B3M Main Battle Tank": { scores: { discontinuity: 0, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is an Upgradation. The T-72B3M is a modernization of an existing tank, not a new design. It adds a new engine, fire control system, and a new main gun. These improvements are significant, but they do not change the tank's core role or doctrine. It is an important improvement but not a revolutionary one.", sources: ["Charles K. Bartles, The Russian Army: New Military Capability (2015)"] },
+        "Tank": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is a Genuine Innovation. The tank broke the tactical stalemate of World War I, forcing a complete reconceptualization of maneuver warfare. Its development required enormous, irreversible investments in production and logistics. It was highly generative, leading to a family of armored vehicles and follow-on doctrines like Blitzkrieg, and became a central pillar of military power.", sources: ["J.P. Harris, Men, Ideas, and Tanks: British Military Thought and Armoured Forces, 1903-1939 (1995)"] },
+        "Telegraph": { scores: { discontinuity: 2, irreversibility: 2, generative: 2, cognitive: 2 }, justification: "This is classified as a Genuine Innovation. The military use of the telegraph was a seminal innovation. It completely shattered the historical reliance on couriers and physical command links, disrupting the time-space compression of the battlefield. It required a vast, irreversible investment in global networks and operators, and completely rewrote the theory of command and control.", sources: ["David Hochfelder, The Telegraph in America, 1832-1920 (2012)"] },
+        "UAVs": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 }, justification: "This is a Modernization. While UAVs have been a significant game-changer in specific contexts, they have largely extended existing doctrines (e.g., reconnaissance and strike) rather than breaking them. They are generative, leading to a new class of unmanned systems, but have not created the sort of irreversible force-structure changes or cognitive disruptions seen in a genuine innovation.", sources: ["Peter W. Singer, Wired for War: The Robotics Revolution and Conflict in the 21st Century (2009)"] },
+    };
+
+    const EXAMPLES_CAUSAL_CHAINS = {
+      "Nuclear Weapons": [
+        { source: "d3", target: "c4", bump: 1, explanation: "New kill-chain topology forced new success metrics" },
+        { source: "g4", target: "i1", bump: 1, explanation: "New capability categories required institutional restructuring" }
+      ],
+      "Machine Gun": [
+        { source: "d2", target: "c1", bump: 1, explanation: "Doctrinal break points forced doctrinal rewrites" },
+        { source: "i2", target: "g2", bump: 1, explanation: "Infrastructure changes enabled cross-domain spillovers" }
+      ],
+      "Tank": [
+        { source: "d1", target: "c3", bump: 1, explanation: "OODA disruption changed wargame outcomes" },
+        { source: "g1", target: "i4", bump: 1, explanation: "Follow-on capabilities led to force structure changes" }
+      ]
     };
 
     // ========= Helper Functions =========
-    function makeDefaultScores() {
+    const makeDefaultScores = useCallback(() => {
       const scores = {};
       DIM_KEYS.forEach(dim => {
         INDICATORS[dim].forEach(ind => {
@@ -110,9 +128,9 @@
         });
       });
       return scores;
-    }
+    }, []);
 
-    function mapExampleScores(exampleScores) {
+    const mapExampleScores = useCallback((exampleScores) => {
       const mappedScores = {};
       DIM_KEYS.forEach(dimKey => {
         INDICATORS[dimKey].forEach(ind => {
@@ -122,9 +140,9 @@
         });
       });
       return mappedScores;
-    }
+    }, []);
 
-    function applyCausalChains(baseScores, chains) {
+    const applyCausalChains = useCallback((baseScores, chains) => {
       const integratedScores = { ...baseScores };
       chains.forEach(chain => {
         const { source, target, bump } = chain;
@@ -134,9 +152,9 @@
         }
       });
       return integratedScores;
-    }
+    }, []);
 
-    function classify(scores) {
+    const classify = useCallback((scores) => {
       const d = INDICATORS.discontinuity.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
       const i = INDICATORS.irreversibility.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
       const g = INDICATORS.generative.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
@@ -144,24 +162,141 @@
       const total = d + i + g + c;
 
       if (total === 0) {
-        return { bucket: "None", total, classificationText: "No innovation scored." };
+        return { bucket: "None", total, classificationText: "No innovation scored. Please use the buttons to begin your assessment." };
       }
       if (total >= 15 && (i >= 9 || c >= 9)) {
-        return { bucket: "Genuine Innovation", total, classificationText: "Fundamentally redefines military power with deep institutional changes." };
+        return { bucket: "Genuine Innovation", total, classificationText: "Fundamentally redefines military power with deep institutional changes that are often irreversible. High scores in Irreversibility and/or Cognitive Disruption signal transformative effects." };
       }
       if (d >= 1 && i === 0 && g === 0 && c === 0) {
-        return { bucket: "Adaptation", total, classificationText: "Reactive change without fundamental system transformation." };
+        return { bucket: "Adaptation", total, classificationText: "Reactive change to new threats or circumstances. High Discontinuity but low other dimensions indicate tactical adjustments rather than strategic transformation." };
       }
       if (total >= 10 && d > 0 && i >= 1) {
-        return { bucket: "Modernization", total, classificationText: "Improves existing systems but doesn't change the nature of war." };
+        return { bucket: "Modernization", total, classificationText: "Improves existing systems and doctrines, making them more effective. Significant but not revolutionary change that doesn't fundamentally alter the nature of war." };
       }
-      return { bucket: "Upgradation", total, classificationText: "Simple improvement to existing systems." };
-    }
+      return { bucket: "Upgradation", total, classificationText: "Simple improvement to existing systems with low impact across dimensions. Evolutionary rather than revolutionary change." };
+    }, []);
+
+    const calculateDimensionScores = useCallback((currentScores) => {
+      return DIM_KEYS.reduce((acc, key) => ({
+        ...acc,
+        [key]: INDICATORS[key].reduce((sum, ind) => sum + (currentScores[ind.id] || 0), 0)
+      }), {});
+    }, []);
+
+    // ========= Chart Functions =========
+    const createDimensionChart = useCallback((canvasRef, conservativeDimScores, integratedDimScores) => {
+      if (!canvasRef.current) return;
+      
+      if (canvasRef.current.chartInstance) {
+        canvasRef.current.chartInstance.destroy();
+      }
+      
+      const ctx = canvasRef.current.getContext('2d');
+      const dimColors = ['#34d399', '#f87171', '#fbbf24', '#60a5fa'];
+      const dimColorsAlpha = ['rgba(52, 211, 153, 0.6)', 'rgba(248, 113, 113, 0.6)', 'rgba(251, 191, 36, 0.6)', 'rgba(96, 165, 250, 0.6)'];
+      
+      canvasRef.current.chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Discontinuity', 'Irreversibility', 'Generative', 'Cognitive'],
+          datasets: [
+            { 
+              label: 'Conservative', 
+              data: Object.values(conservativeDimScores), 
+              backgroundColor: dimColors,
+              borderColor: dimColors,
+              borderWidth: 2
+            },
+            { 
+              label: 'Integrated', 
+              data: Object.values(integratedDimScores), 
+              backgroundColor: dimColorsAlpha,
+              borderColor: dimColors,
+              borderWidth: 2
+            }
+          ]
+        },
+        options: { 
+          responsive: true, 
+          maintainAspectRatio: false,
+          scales: { 
+            y: { 
+              beginAtZero: true, 
+              max: 16,
+              title: { display: true, text: 'Total Score' }
+            },
+            x: { 
+              title: { display: true, text: 'Innovation Dimensions' }
+            }
+          },
+          plugins: { 
+            legend: { display: true, position: 'top' },
+            title: { display: true, text: 'Innovation Scores by Dimension' }
+          }
+        }
+      });
+    }, []);
+
+    const createIndicatorChart = useCallback((canvasRef, scores, integratedScores) => {
+      if (!canvasRef.current) return;
+      
+      if (canvasRef.current.chartInstance) {
+        canvasRef.current.chartInstance.destroy();
+      }
+      
+      const ctx = canvasRef.current.getContext('2d');
+      const ALL_INDICATORS = DIM_KEYS.flatMap(dimKey => 
+        INDICATORS[dimKey].map(ind => ({ ...ind, dim: dimKey }))
+      );
+      
+      canvasRef.current.chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ALL_INDICATORS.map(i => i.label),
+          datasets: [
+            { 
+              label: 'Conservative', 
+              data: ALL_INDICATORS.map(i => scores[i.id] || 0), 
+              backgroundColor: '#fcd34d', 
+              borderColor: '#f59e0b', 
+              borderWidth: 1 
+            },
+            { 
+              label: 'Integrated', 
+              data: ALL_INDICATORS.map(i => integratedScores[i.id] || 0), 
+              backgroundColor: '#34d399', 
+              borderColor: '#10b981', 
+              borderWidth: 1 
+            }
+          ]
+        },
+        options: { 
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: { 
+            x: { 
+              beginAtZero: true, 
+              max: 4,
+              title: { display: true, text: 'Score (0-4)' }
+            },
+            y: {
+              title: { display: true, text: 'Indicators' }
+            }
+          },
+          plugins: { 
+            legend: { display: true, position: 'top' },
+            title: { display: true, text: 'Detailed Indicator Scores' }
+          }
+        }
+      });
+    }, []);
 
     // ========= Components =========
     function Header() {
       return React.createElement('header', {
-        className: 'text-center space-y-1 mb-4'
+        className: 'text-center space-y-1 mb-4',
+        role: 'banner'
       }, [
         React.createElement('h1', {
           key: 'title',
@@ -180,14 +315,19 @@
 
     function ScoreButton({ value, currentScore, onClick, tooltip }) {
       return React.createElement('button', {
-        className: `w-6 h-6 rounded text-xs font-bold transition-colors ${currentScore === value ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800'}`,
+        className: `w-6 h-6 rounded text-xs font-bold transition-colors ${currentScore === value ? 'bg-gray-800 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`,
         onClick: () => onClick(value),
-        title: tooltip
+        title: tooltip,
+        'aria-label': `Score ${value}: ${tooltip}`,
+        type: 'button'
       }, value);
     }
 
     function IndicatorRow({ indicator, score, setScore }) {
-      return React.createElement('li', { key: indicator.id }, [
+      return React.createElement('li', { 
+        key: indicator.id,
+        className: 'mb-3'
+      }, [
         React.createElement('div', {
           key: 'row',
           className: 'flex justify-between items-center'
@@ -212,313 +352,469 @@
       ]);
     }
 
+    function ErrorBoundary({ children }) {
+      const [hasError, setHasError] = useState(false);
+      
+      if (hasError) {
+        return React.createElement('div', {
+          className: 'text-center py-8 text-red-600'
+        }, [
+          React.createElement('h2', { key: 'title', className: 'text-xl font-bold mb-2' }, 'Something went wrong'),
+          React.createElement('p', { key: 'message' }, 'Please refresh the page and try again.'),
+          React.createElement('button', {
+            key: 'retry',
+            onClick: () => setHasError(false),
+            className: 'mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600'
+          }, 'Try Again')
+        ]);
+      }
+      
+      return children;
+    }
+
     function App() {
       const [label, setLabel] = useState("");
       const [scores, setScores] = useState(makeDefaultScores);
       const [selectedExample, setSelectedExample] = useState(null);
       const [promptAnswers, setPromptAnswers] = useState({});
-      const [activeTab, setActiveTab] = useState('scoring');
+      const [activeTab, setActiveTab] = useState('examples');
+      
+      const dimensionChartRef = useRef(null);
+      const indicatorChartRef = useRef(null);
 
       const allCausalChains = useMemo(() => {
-        return PROMPTS.filter(p => promptAnswers[p.id]).map(({ source, target, bump }) => ({ source, target, bump }));
-      }, [promptAnswers]);
+        const promptChains = PROMPTS.filter(p => promptAnswers[p.id]).map(({ source, target, bump, explanation }) => ({ source, target, bump, explanation }));
+        const exampleChains = selectedExample && EXAMPLES_CAUSAL_CHAINS[selectedExample] ? EXAMPLES_CAUSAL_CHAINS[selectedExample] : [];
+        return [...exampleChains, ...promptChains];
+      }, [promptAnswers, selectedExample]);
 
       const integratedScores = useMemo(() => applyCausalChains(scores, allCausalChains), [scores, allCausalChains]);
       const conservativeClassification = useMemo(() => classify(scores), [scores]);
       const integratedClassification = useMemo(() => classify(integratedScores), [integratedScores]);
+      
+      const conservativeDimensionScores = useMemo(() => calculateDimensionScores(scores), [scores]);
+      const integratedDimensionScores = useMemo(() => calculateDimensionScores(integratedScores), [integratedScores]);
 
-      const setIndicator = (id, value) => {
+      useEffect(() => {
+        if (activeTab === 'charts') {
+          const timer = setTimeout(() => {
+            createDimensionChart(dimensionChartRef, conservativeDimensionScores, integratedDimensionScores);
+            createIndicatorChart(indicatorChartRef, scores, integratedScores);
+          }, 100);
+          return () => clearTimeout(timer);
+        }
+      }, [activeTab, conservativeDimensionScores, integratedDimensionScores, scores, integratedScores]);
+
+      const setIndicator = useCallback((id, value) => {
         setScores(prevScores => ({ ...prevScores, [id]: value }));
         setSelectedExample(null);
-      };
+        setPromptAnswers({});
+      }, []);
 
-      const resetAll = () => {
+      const resetAll = useCallback(() => {
         setLabel("");
         setScores(makeDefaultScores());
         setSelectedExample(null);
         setPromptAnswers({});
-      };
+      }, [makeDefaultScores]);
 
-      const loadExample = (name) => {
-        setLabel(name);
-        setSelectedExample(name);
-        const exampleData = EXAMPLES[name];
-        const newScores = { ...makeDefaultScores(), ...mapExampleScores(exampleData.scores) };
-        setScores(newScores);
-        setActiveTab('examples');
-      };
+      const loadExample = useCallback((name) => {
+        try {
+          setLabel(name);
+          setSelectedExample(name);
+          const exampleData = EXAMPLES[name];
+          if (!exampleData) throw new Error(`Example ${name} not found`);
+          const newScores = { ...makeDefaultScores(), ...mapExampleScores(exampleData.scores) };
+          setScores(newScores);
+          setPromptAnswers({});
+          setActiveTab('examples');
+        } catch (error) {
+          console.error('Error loading example:', error);
+        }
+      }, [makeDefaultScores, mapExampleScores]);
 
-      const handlePromptChange = (id, value) => {
+      const handlePromptChange = useCallback((id, value) => {
         setPromptAnswers(prev => ({ ...prev, [id]: value }));
-      };
+        setSelectedExample(null);
+      }, []);
 
-      return React.createElement('div', { className: 'space-y-6' }, [
-        React.createElement(Header, { key: 'header' }),
-        
-        // Classification Card
-        React.createElement('div', {
-          key: 'classification',
-          className: 'bg-white rounded-lg shadow border border-gray-200'
-        }, [
+      return React.createElement(ErrorBoundary, {}, [
+        React.createElement('div', { key: 'app', className: 'space-y-6' }, [
+          React.createElement(Header, { key: 'header' }),
+          
+          // Classification Card
           React.createElement('div', {
-            key: 'header',
-            className: 'px-4 py-3 border-b border-gray-200'
-          }, React.createElement('div', {
-            className: 'font-semibold text-gray-900'
-          }, 'Case Setup & Classification')),
-          React.createElement('div', {
-            key: 'content',
-            className: 'p-4'
+            key: 'classification',
+            className: 'bg-white rounded-lg shadow border border-gray-200'
           }, [
             React.createElement('div', {
-              key: 'grid',
-              className: 'grid grid-cols-1 md:grid-cols-2 gap-6'
+              key: 'header',
+              className: 'px-4 py-3 border-b border-gray-200'
+            }, React.createElement('div', {
+              className: 'font-semibold text-gray-900'
+            }, 'Case Setup & Classification')),
+            React.createElement('div', {
+              key: 'content',
+              className: 'p-4'
             }, [
               React.createElement('div', {
-                key: 'left',
-                className: 'space-y-3'
+                key: 'grid',
+                className: 'grid grid-cols-1 md:grid-cols-2 gap-6'
               }, [
-                React.createElement('div', { key: 'input' }, [
-                  React.createElement('label', {
-                    key: 'label',
-                    className: 'block text-sm font-medium text-gray-700'
-                  }, 'Case Label'),
-                  React.createElement('input', {
-                    key: 'field',
-                    type: 'text',
-                    className: 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-1',
-                    placeholder: 'e.g., Hypersonic missiles',
-                    value: label,
-                    onChange: e => setLabel(e.target.value)
-                  })
+                React.createElement('div', {
+                  key: 'left',
+                  className: 'space-y-3'
+                }, [
+                  React.createElement('div', { key: 'input' }, [
+                    React.createElement('label', {
+                      key: 'label',
+                      className: 'block text-sm font-medium text-gray-700',
+                      htmlFor: 'case-label'
+                    }, 'Case Label'),
+                    React.createElement('input', {
+                      key: 'field',
+                      id: 'case-label',
+                      type: 'text',
+                      className: 'w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 mt-1',
+                      placeholder: 'e.g., Hypersonic missiles',
+                      value: label,
+                      onChange: e => setLabel(e.target.value),
+                      'aria-describedby': 'case-label-help'
+                    }),
+                    React.createElement('p', {
+                      key: 'help',
+                      id: 'case-label-help',
+                      className: 'text-xs text-gray-500 mt-1'
+                    }, 'Enter the name of the military innovation you want to assess')
+                  ]),
+                  React.createElement('button', {
+                    key: 'reset',
+                    onClick: resetAll,
+                    className: 'w-full inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500',
+                    type: 'button',
+                    'aria-label': 'Reset all scores and selections'
+                  }, 'Reset All')
                 ]),
-                React.createElement('button', {
-                  key: 'reset',
-                  onClick: resetAll,
-                  className: 'w-full inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium bg-gray-100 text-gray-900 hover:bg-gray-200'
-                }, 'Reset All')
-              ]),
-              React.createElement('div', {
-                key: 'right',
-                className: 'space-y-4'
-              }, [
-                React.createElement('div', { key: 'conservative' }, [
-                  React.createElement('h3', {
-                    key: 'title',
-                    className: 'text-lg font-medium text-gray-900'
-                  }, 'Conservative'),
-                  React.createElement('div', {
-                    key: 'badge',
-                    className: 'mt-2'
-                  }, React.createElement('span', {
-                    className: `py-1 px-3 text-sm font-bold rounded-full ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`
-                  }, conservativeClassification.bucket)),
-                  React.createElement('p', {
-                    key: 'text',
-                    className: 'mt-2 text-sm text-gray-600'
-                  }, conservativeClassification.classificationText)
-                ]),
-                React.createElement('div', { key: 'integrated' }, [
-                  React.createElement('h3', {
-                    key: 'title',
-                    className: 'text-lg font-medium text-gray-900'
-                  }, 'Integrated'),
-                  React.createElement('div', {
-                    key: 'badge',
-                    className: 'mt-2'
-                  }, React.createElement('span', {
-                    className: `py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray
-}, React.createElement('span', {
-                    className: `py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`
-                  }, integratedClassification.bucket)),
-                  React.createElement('p', {
-                    key: 'text',
-                    className: 'mt-2 text-sm text-gray-600'
-                  }, integratedClassification.classificationText)
+                React.createElement('div', {
+                  key: 'right',
+                  className: 'space-y-4'
+                }, [
+                  React.createElement('div', { key: 'conservative' }, [
+                    React.createElement('h3', {
+                      key: 'title',
+                      className: 'text-lg font-medium text-gray-900'
+                    }, 'Conservative Assessment'),
+                    React.createElement('p', {
+                      key: 'description',
+                      className: 'text-sm text-gray-500'
+                    }, 'Based on your direct scoring input'),
+                    React.createElement('div', {
+                      key: 'badge',
+                      className: 'mt-2'
+                    }, React.createElement('span', {
+                      className: `py-1 px-3 text-sm font-bold rounded-full ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`
+                    }, conservativeClassification.bucket)),
+                    React.createElement('p', {
+                      key: 'text',
+                      className: 'mt-2 text-sm text-gray-600'
+                    }, conservativeClassification.classificationText)
+                  ]),
+                  React.createElement('div', { key: 'integrated' }, [
+                    React.createElement('h3', {
+                      key: 'title',
+                      className: 'text-lg font-medium text-gray-900'
+                    }, 'Integrated Assessment'),
+                    React.createElement('p', {
+                      key: 'description',
+                      className: 'text-sm text-gray-500'
+                    }, 'Including interconnected effects'),
+                    React.createElement('div', {
+                      key: 'badge',
+                      className: 'mt-2'
+                    }, React.createElement('span', {
+                      className: `py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`
+                    }, integratedClassification.bucket)),
+                    React.createElement('p', {
+                      key: 'text',
+                      className: 'mt-2 text-sm text-gray-600'
+                    }, integratedClassification.classificationText)
+                  ])
                 ])
               ])
             ])
-          ])
-        ]),
-
-        // Scoring Card
-        React.createElement('div', {
-          key: 'scoring',
-          className: 'bg-white rounded-lg shadow border border-gray-200'
-        }, [
-          React.createElement('div', {
-            key: 'header',
-            className: 'px-4 py-3 border-b border-gray-200'
-          }, React.createElement('div', {
-            className: 'font-semibold text-gray-900'
-          }, 'Scoring')),
-          React.createElement('div', {
-            key: 'content',
-            className: 'p-4 space-y-4'
-          }, [
-            React.createElement('p', {
-              key: 'instructions',
-              className: 'text-sm text-gray-600'
-            }, 'Use the buttons to score the innovation across each indicator from 0-4. Hover for rubric descriptions.'),
-            ...DIM_KEYS.map(dimKey => 
-              React.createElement('div', {
-                key: dimKey,
-                className: 'mb-6 p-4 border rounded-lg bg-gray-50'
-              }, [
-                React.createElement('h3', {
-                  key: 'title',
-                  className: 'text-lg font-medium text-gray-800 mb-2'
-                }, dimKey.charAt(0).toUpperCase() + dimKey.slice(1)),
-                React.createElement('ul', {
-                  key: 'indicators',
-                  className: 'space-y-4'
-                }, INDICATORS[dimKey].map(indicator => 
-                  React.createElement(IndicatorRow, {
-                    key: indicator.id,
-                    indicator: indicator,
-                    score: scores[indicator.id] || 0,
-                    setScore: value => setIndicator(indicator.id, value)
-                  })
-                ))
-              ])
-            )
-          ])
-        ]),
-
-        // Analysis & Examples Card
-        React.createElement('div', {
-          key: 'analysis',
-          className: 'bg-white rounded-lg shadow border border-gray-200'
-        }, [
-          React.createElement('div', {
-            key: 'header',
-            className: 'px-4 py-3 border-b border-gray-200'
-          }, React.createElement('div', {
-            className: 'font-semibold text-gray-900'
-          }, 'Analysis & Examples')),
-          React.createElement('div', {
-            key: 'tabs',
-            className: 'bg-gray-100 border-b border-gray-200 flex'
-          }, [
-            React.createElement('button', {
-              key: 'interconnected',
-              onClick: () => setActiveTab('interconnected'),
-              className: `flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors ${activeTab === 'interconnected' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`
-            }, 'Interconnected Effects'),
-            React.createElement('button', {
-              key: 'charts',
-              onClick: () => setActiveTab('charts'),
-              className: `flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors ${activeTab === 'charts' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`
-            }, 'Charts'),
-            React.createElement('button', {
-              key: 'examples',
-              onClick: () => setActiveTab('examples'),
-              className: `flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors ${activeTab === 'examples' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`
-            }, 'Historical Examples')
           ]),
+
+          // Scoring Card
           React.createElement('div', {
-            key: 'content',
-            className: 'p-4'
+            key: 'scoring',
+            className: 'bg-white rounded-lg shadow border border-gray-200'
           }, [
-            activeTab === 'interconnected' && React.createElement('div', {
-              key: 'interconnected-content',
-              className: 'space-y-4'
-            }, [
-              React.createElement('p', {
-                key: 'description',
-                className: 'text-sm text-gray-600 italic'
-              }, 'This option allows you to capture the reality that a strong score in one area may spill over and justify a score in another. It\'s not automatic — you decide if the evidence warrants it.'),
-              React.createElement('ul', {
-                key: 'prompts',
-                className: 'mt-4 space-y-4'
-              }, PROMPTS.map(prompt => 
-                React.createElement('li', {
-                  key: prompt.id,
-                  className: 'bg-white p-3 rounded-md border border-gray-200'
-                }, [
-                  React.createElement('div', {
-                    key: 'question',
-                    className: 'text-sm font-semibold text-gray-800 mb-2'
-                  }, prompt.question),
-                  React.createElement('div', {
-                    key: 'buttons',
-                    className: 'flex gap-2'
-                  }, [
-                    React.createElement('button', {
-                      key: 'yes',
-                      className: `w-16 h-8 rounded-full text-xs font-bold transition-colors ${promptAnswers[prompt.id] ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`,
-                      onClick: () => handlePromptChange(prompt.id, true)
-                    }, 'Yes'),
-                    React.createElement('button', {
-                      key: 'no',
-                      className: `w-16 h-8 rounded-full text-xs font-bold transition-colors ${!promptAnswers[prompt.id] ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800'}`,
-                      onClick: () => handlePromptChange(prompt.id, false)
-                    }, 'No')
-                  ])
-                ])
-              ))
-            ]),
-            activeTab === 'charts' && React.createElement('div', {
-              key: 'charts-content',
-              className: 'text-center py-8'
-            }, React.createElement('p', {
-              className: 'text-gray-500'
-            }, 'Chart functionality will be added in a future version.')),
-            activeTab === 'examples' && React.createElement('div', {
-              key: 'examples-content',
-              className: 'space-y-4'
+            React.createElement('div', {
+              key: 'header',
+              className: 'px-4 py-3 border-b border-gray-200'
+            }, React.createElement('div', {
+              className: 'font-semibold text-gray-900'
+            }, 'Innovation Scoring')),
+            React.createElement('div', {
+              key: 'content',
+              className: 'p-4 space-y-4'
             }, [
               React.createElement('p', {
                 key: 'instructions',
-                className: 'text-sm text-gray-600 mb-3'
-              }, 'Click any example below to load its pre-configured scores, justification, and sources.'),
-              React.createElement('div', {
-                key: 'buttons',
-                className: 'grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4'
-              }, Object.keys(EXAMPLES).sort().map(name => 
-                React.createElement('button', {
-                  key: name,
-                  onClick: () => loadExample(name),
-                  className: `p-2 rounded border text-left hover:bg-gray-100 transition-colors ${selectedExample === name ? 'bg-gray-200 border-gray-400' : 'bg-white border-gray-200'}`
-                }, name)
-              )),
-              selectedExample && React.createElement('div', {
-                key: 'details',
-                className: 'mt-4'
+                className: 'text-sm text-gray-600'
+              }, 'Score each indicator from 0-4 based on the evidence. Hover over buttons for detailed rubric descriptions.'),
+              ...DIM_KEYS.map(dimKey => 
+                React.createElement('div', {
+                  key: dimKey,
+                  className: 'mb-6 p-4 border rounded-lg bg-gray-50'
+                }, [
+                  React.createElement('h3', {
+                    key: 'title',
+                    className: 'text-lg font-medium text-gray-800 mb-3'
+                  }, dimKey.charAt(0).toUpperCase() + dimKey.slice(1)),
+                  React.createElement('ul', {
+                    key: 'indicators',
+                    className: 'space-y-4'
+                  }, INDICATORS[dimKey].map(indicator => 
+                    React.createElement(IndicatorRow, {
+                      key: indicator.id,
+                      indicator: indicator,
+                      score: scores[indicator.id] || 0,
+                      setScore: value => setIndicator(indicator.id, value)
+                    })
+                  ))
+                ])
+              )
+            ])
+          ]),
+
+          // Analysis & Examples Card
+          React.createElement('div', {
+            key: 'analysis',
+            className: 'bg-white rounded-lg shadow border border-gray-200'
+          }, [
+            React.createElement('div', {
+              key: 'header',
+              className: 'px-4 py-3 border-b border-gray-200'
+            }, React.createElement('div', {
+              className: 'font-semibold text-gray-900'
+            }, 'Analysis & Examples')),
+            React.createElement('div', {
+              key: 'tabs',
+              className: 'bg-gray-100 border-b border-gray-200 flex',
+              role: 'tablist'
+            }, [
+              React.createElement('button', {
+                key: 'interconnected',
+                onClick: () => setActiveTab('interconnected'),
+                className: `flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors ${activeTab === 'interconnected' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`,
+                role: 'tab',
+                'aria-selected': activeTab === 'interconnected',
+                'aria-controls': 'interconnected-panel'
+              }, 'Interconnected Effects'),
+              React.createElement('button', {
+                key: 'charts',
+                onClick: () => setActiveTab('charts'),
+                className: `flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors ${activeTab === 'charts' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`,
+                role: 'tab',
+                'aria-selected': activeTab === 'charts',
+                'aria-controls': 'charts-panel'
+              }, 'Charts'),
+              React.createElement('button', {
+                key: 'examples',
+                onClick: () => setActiveTab('examples'),
+                className: `flex-1 py-3 text-center font-semibold rounded-t-lg transition-colors ${activeTab === 'examples' ? 'bg-white border-b-2 border-blue-600 text-blue-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`,
+                role: 'tab',
+                'aria-selected': activeTab === 'examples',
+                'aria-controls': 'examples-panel'
+              }, 'Historical Examples')
+            ]),
+            React.createElement('div', {
+              key: 'content',
+              className: 'p-4'
+            }, [
+              activeTab === 'interconnected' && React.createElement('div', {
+                key: 'interconnected-content',
+                className: 'space-y-4',
+                role: 'tabpanel',
+                id: 'interconnected-panel'
               }, [
-                React.createElement('h3', {
-                  key: 'title',
-                  className: 'text-lg font-semibold mb-2'
-                }, `${selectedExample} Justification`),
                 React.createElement('p', {
-                  key: 'justification',
-                  className: 'mb-4 text-sm text-gray-700'
-                }, EXAMPLES[selectedExample].justification),
-                React.createElement('h3', {
-                  key: 'sources-title',
-                  className: 'text-lg font-semibold mb-2'
-                }, 'Indicative Sources'),
+                  key: 'description',
+                  className: 'text-sm text-gray-600 italic'
+                }, 'This section captures how strong performance in one dimension may justify increases in another. You decide if the evidence warrants these interconnected effects.'),
                 React.createElement('ul', {
-                  key: 'sources',
-                  className: 'list-disc list-inside space-y-1 text-sm text-gray-700'
-                }, EXAMPLES[selectedExample].sources.map((source, index) =>
-                  React.createElement('li', { key: index }, source)
+                  key: 'prompts',
+                  className: 'mt-4 space-y-4'
+                }, PROMPTS.map(prompt => 
+                  React.createElement('li', {
+                    key: prompt.id,
+                    className: 'bg-white p-3 rounded-md border border-gray-200'
+                  }, [
+                    React.createElement('div', {
+                      key: 'question',
+                      className: 'text-sm font-semibold text-gray-800 mb-2'
+                    }, prompt.question),
+                    React.createElement('div', {
+                      key: 'explanation',
+                      className: 'text-xs text-gray-600 mb-3'
+                    }, prompt.explanation),
+                    React.createElement('div', {
+                      key: 'buttons',
+                      className: 'flex gap-2',
+                      role: 'group',
+                      'aria-label': `Answer for: ${prompt.question}`
+                    }, [
+                      React.createElement('button', {
+                        key: 'yes',
+                        className: `w-16 h-8 rounded-full text-xs font-bold transition-colors ${promptAnswers[prompt.id] === true ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`,
+                        onClick: () => handlePromptChange(prompt.id, true),
+                        'aria-pressed': promptAnswers[prompt.id] === true
+                      }, 'Yes'),
+                      React.createElement('button', {
+                        key: 'no',
+                        className: `w-16 h-8 rounded-full text-xs font-bold transition-colors ${promptAnswers[prompt.id] === false ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`,
+                        onClick: () => handlePromptChange(prompt.id, false),
+                        'aria-pressed': promptAnswers[prompt.id] === false
+                      }, 'No')
+                    ])
+                  ])
                 ))
+              ]),
+              activeTab === 'charts' && React.createElement('div', {
+                key: 'charts-content',
+                className: 'space-y-6',
+                role: 'tabpanel',
+                id: 'charts-panel'
+              }, [
+                React.createElement('div', {
+                  key: 'dimension-chart',
+                  className: 'space-y-2'
+                }, [
+                  React.createElement('h3', {
+                    key: 'title',
+                    className: 'text-lg font-medium text-gray-900'
+                  }, 'Dimension Scores'),
+                  React.createElement('p', {
+                    key: 'description',
+                    className: 'text-sm text-gray-600'
+                  }, 'Compare conservative vs integrated scores across all four dimensions'),
+                  React.createElement('div', {
+                    key: 'chart-container',
+                    className: 'relative h-64'
+                  }, React.createElement('canvas', {
+                    ref: dimensionChartRef,
+                    className: 'w-full h-full'
+                  }))
+                ]),
+                React.createElement('div', {
+                  key: 'indicator-chart',
+                  className: 'space-y-2'
+                }, [
+                  React.createElement('h3', {
+                    key: 'title',
+                    className: 'text-lg font-medium text-gray-900'
+                  }, 'Individual Indicator Scores'),
+                  React.createElement('p', {
+                    key: 'description',
+                    className: 'text-sm text-gray-600'
+                  }, 'Detailed breakdown showing each indicator and how interconnected effects modify scores'),
+                  React.createElement('div', {
+                    key: 'chart-container',
+                    className: 'relative h-96'
+                  }, React.createElement('canvas', {
+                    ref: indicatorChartRef,
+                    className: 'w-full h-full'
+                  }))
+                ])
+              ]),
+              activeTab === 'examples' && React.createElement('div', {
+                key: 'examples-content',
+                className: 'space-y-4',
+                role: 'tabpanel',
+                id: 'examples-panel'
+              }, [
+                React.createElement('p', {
+                  key: 'instructions',
+                  className: 'text-sm text-gray-600 mb-3'
+                }, 'Click any example below to load its pre-configured scores, detailed justification, and academic sources.'),
+                React.createElement('div', {
+                  key: 'buttons',
+                  className: 'grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4'
+                }, Object.keys(EXAMPLES).sort().map(name => 
+                  React.createElement('button', {
+                    key: name,
+                    onClick: () => loadExample(name),
+                    className: `p-2 rounded border text-left hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${selectedExample === name ? 'bg-blue-50 border-blue-300 text-blue-900' : 'bg-white border-gray-200'}`,
+                    'aria-pressed': selectedExample === name
+                  }, name)
+                )),
+                selectedExample && React.createElement('div', {
+                  key: 'details',
+                  className: 'mt-6 p-4 bg-gray-50 rounded-lg'
+                }, [
+                  React.createElement('h3', {
+                    key: 'title',
+                    className: 'text-lg font-semibold mb-3 text-gray-900'
+                  }, `${selectedExample}: Analysis & Classification`),
+                  React.createElement('div', {
+                    key: 'justification',
+                    className: 'mb-4'
+                  }, [
+                    React.createElement('h4', {
+                      key: 'just-title',
+                      className: 'font-medium text-gray-800 mb-2'
+                    }, 'Expert Assessment'),
+                    React.createElement('p', {
+                      key: 'just-text',
+                      className: 'text-sm text-gray-700 leading-relaxed'
+                    }, EXAMPLES[selectedExample].justification)
+                  ]),
+                  React.createElement('div', {
+                    key: 'sources'
+                  }, [
+                    React.createElement('h4', {
+                      key: 'sources-title',
+                      className: 'font-medium text-gray-800 mb-2'
+                    }, 'Academic Sources & References'),
+                    React.createElement('ul', {
+                      key: 'sources-list',
+                      className: 'list-disc list-inside space-y-1 text-sm text-gray-700'
+                    }, EXAMPLES[selectedExample].sources.map((source, index) =>
+                      React.createElement('li', { 
+                        key: index,
+                        className: 'leading-relaxed'
+                      }, source)
+                    ))
+                  ])
+                ])
               ])
             ])
-          ])
-        ]),
+          ]),
 
-        React.createElement('div', {
-          key: 'footer',
-          className: 'text-xs text-gray-500 text-center'
-        }, 'Recognition heuristic. It does not define innovation; it evaluates observed effects across four dimensions.')
+          React.createElement('footer', {
+            key: 'footer',
+            className: 'text-xs text-gray-500 text-center py-4 border-t',
+            role: 'contentinfo'
+          }, 'Recognition heuristic framework. This tool evaluates observed effects across four dimensions rather than defining innovation itself. Conservative vs Integrated assessments provide analytical transparency.')
+        ])
       ]);
     }
 
-    // Initialize the app
-    const root = createRoot(document.getElementById('root'));
-    root.render(React.createElement(App));
+    // Initialize the app with error handling
+    try {
+      const root = createRoot(document.getElementById('root'));
+      root.render(React.createElement(App));
+    } catch (error) {
+      console.error('Failed to initialize application:', error);
+      document.getElementById('root').innerHTML = `
+        <div class="text-center py-8 text-red-600">
+          <h2 class="text-xl font-bold mb-2">Application Error</h2>
+          <p>Failed to load the Military Innovation Assessment Framework.</p>
+          <p class="text-sm mt-2">Please refresh the page and try again.</p>
+        </div>
+      `;
+    }
   </script>
 </body>
 </html>
