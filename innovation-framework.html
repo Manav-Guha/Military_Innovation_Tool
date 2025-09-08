@@ -17,6 +17,10 @@
     .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium; }
     .btn-secondary { @apply bg-gray-100 text-gray-900 hover:bg-gray-200; }
     .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500; }
+    .collapsible-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease-in-out;
+    }
   </style>
 </head>
 <body class="bg-gray-50">
@@ -40,7 +44,7 @@
       );
     }
 
-    // ========= Indicator model (from New_Innovation_Tool.html) =========
+    // ========= Indicator model =========
     const INDICATORS = {
       discontinuity: [
         { id: "d1", label: "Enemy OODA disruption", ladder: ["No evidence","Prototype/lab only","Field trials/limited ops","Adversary response or institutional change","Doctrinal/strategic transformation"]},
@@ -69,7 +73,6 @@
     };
     const DIM_KEYS = ["discontinuity","irreversibility","generative","cognitive"];
 
-    // Combine all indicators into a flat list for easy lookup
     const ALL_INDICATORS = DIM_KEYS.flatMap(dimKey => INDICATORS[dimKey].map(ind => ({ ...ind, dim: dimKey })));
 
     function makeDefaultScores() {
@@ -81,17 +84,16 @@
     // ========= Causal Chain Logic =========
     // The core pre-defined causal prompts
     const PROMPTS = [
-      { id: 'prompt1', question: "Does this budget shift compel adversaries to mirror?", source: "g3", target: "i3", bump: 1, explanation: "Budget share migration (Generative) creates pressure for adversaries to acquire a similar capability (Irreversibility)." },
-      { id: 'prompt2', question: "Does this doctrinal break force reconceptualization?", source: "d2", target: "c1", bump: 1, explanation: "A high score in 'Doctrinal break points' (Discontinuity) causes 'Doctrinal rewrites' (Cognitive)." },
-      { id: 'prompt3', question: "Do new capabilities create new irreversible institutions?", source: "g4", target: "i1", bump: 1, explanation: "The emergence of new capability categories (Generative) leads to irreversible restructuring of training and institutions (Irreversibility)." },
-      { id: 'prompt4', question: "Does disruption of enemy action force new metrics for success?", source: "d1", target: "c4", bump: 1, explanation: "Enemy OODA disruption (Discontinuity) forces leadership to adopt new success metrics (Cognitive)." },
+      { id: 'prompt1', question: "Does this budget shift or cross-domain growth you observed compel adversaries to mirror or adapt?", source: "g3", target: "i3", bump: 1, explanation: "Budget share migration (Generative) creates pressure for adversaries to acquire a similar capability (Irreversibility)." },
+      { id: 'prompt2', question: "Do shortened OODA loops, doctrinal break points, or topology shifts force militaries to reconceptualize doctrine?", source: "d2", target: "c1", bump: 1, explanation: "A high score in 'Doctrinal break points' (Discontinuity) causes 'Doctrinal rewrites' (Cognitive)." },
+      { id: 'prompt3', question: "Has institutional restructuring or sunk investments changed how success is defined?", source: "i1", target: "c4", bump: 1, explanation: "Institutional restructuring (Irreversibility) has changed how success is defined (Cognitive)." },
     ];
 
     function applyCausalChains(baseScores, chains) {
         const integratedScores = { ...baseScores };
         chains.forEach(chain => {
             const { source, target, bump } = chain;
-            if (baseScores[source] > 0) { // Only apply a bump if the source indicator has been scored
+            if (baseScores[source] > 0) {
                 const currentScore = integratedScores[target] || 0;
                 integratedScores[target] = Math.min(4, currentScore + bump);
             }
@@ -115,7 +117,7 @@
       ],
     };
 
-    // ========= Historical Examples (from Code on Github.html) =========
+    // ========= Historical Examples =========
     const EXAMPLES = {
         "AI-Targeting": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 }, justification: "Automated targeting enhances kill chains but doesn't fundamentally rewrite them yet. It creates new capabilities but isn't forcing a complete institutional overhaul.", sources: ["USAF Mad Scientist Initial Research"] },
         "AIP Submarine": { scores: { discontinuity: 1, irreversibility: 1, generative: 1, cognitive: 0 }, justification: "This is an **Upgradation**. Air-Independent Propulsion (AIP) is an excellent example of an upgradation. It provides a significant tactical advantage (staying submerged longer), but it does not fundamentally change the submarine's purpose or operational concept. It is an important improvement but not a revolutionary one.", sources: ["Norman Polmar & K.J. Moore, *Cold War Submarines: The Design and Construction of U.S. and Soviet Submarines* (2004)"] },
@@ -146,7 +148,6 @@
         "UAVs": { scores: { discontinuity: 1, irreversibility: 1, generative: 2, cognitive: 1 }, justification: "This is a **Modernization**. While UAVs have been a significant game-changer in specific contexts, they have largely extended existing doctrines (e.g., reconnaissance and strike) rather than breaking them. They are generative, leading to a new class of unmanned systems, but have not created the sort of irreversible force-structure changes or cognitive disruptions seen in a genuine innovation.", sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] },
     };
 
-    // Correctly map scores for examples to the new indicator-based system
     const mapExampleScores = (exampleScores) => {
         const mappedScores = {};
         DIM_KEYS.forEach(dimKey => {
@@ -168,7 +169,7 @@
     }, {});
 
 
-    // ========= Classification (from the first response, with the correct logic) =========
+    // ========= Classification Logic =========
     function classify(scores) {
         const d = INDICATORS.discontinuity.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
         const i = INDICATORS.irreversibility.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
@@ -189,8 +190,10 @@
       const [scores, setScores] = useState(() => makeDefaultScores());
       const [showRubrics, setShowRubrics] = useState(false);
       const [selectedExample, setSelectedExample] = useState(null);
+      const [promptsOpen, setPromptsOpen] = useState(false);
       const [promptAnswers, setPromptAnswers] = useState(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
       
+      const promptsRef = useRef(null);
       const dimensionChartRef = useRef(null);
       const indicatorChartRef = useRef(null);
       
@@ -280,6 +283,7 @@
         const newScores = { ...makeDefaultScores(), ...exampleData.scores };
         setScores(newScores);
         setPromptAnswers(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
+        setPromptsOpen(false);
       };
       
       const handlePromptChange = (id, value) => {
@@ -343,7 +347,7 @@
                               {INDICATORS[dimKey].map(indicator => (
                                   <li key={indicator.id}>
                                       <div className="flex justify-between items-center">
-                                          <span className="text-sm font-medium text-gray-700" title={showRubrics ? indicator.ladder[scores[indicator.id]] : ""}>
+                                          <span className="text-sm font-medium text-gray-700">
                                               {indicator.label}
                                           </span>
                                           <div className="flex gap-1">
@@ -364,42 +368,52 @@
                   ))}
               </div>
           </div>
-          
+
           <div className="card">
-              <div className="card-header"><div className="card-title">Guided Prompts</div></div>
-              <div className="card-content space-y-4">
-                  <p className="text-sm text-gray-600">
-                      Answer the following questions to apply the Principle of Interconnected Effects.
+              <div className="card-header">
+                <div className="card-title">Apply the Principle of Interconnected Effects</div>
+              </div>
+              <div className="card-content">
+                  <p className="text-sm text-gray-600 italic mb-4">
+                      This option allows you to capture the reality that a strong score in one area may spill over and justify a score in another. It’s not automatic — you decide if the evidence warrants it.
                   </p>
-                  <ul className="space-y-4">
-                    {PROMPTS.map(prompt => (
-                      <li key={prompt.id} className="bg-gray-100 p-3 rounded-md border border-gray-200">
-                        <div className="text-sm font-semibold text-gray-800">{prompt.question}</div>
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            className={`btn ${promptAnswers[prompt.id] ? 'bg-green-500 text-white hover:bg-green-600' : 'btn-secondary'}`}
-                            onClick={() => handlePromptChange(prompt.id, true)}
-                          >
-                            Yes
-                          </button>
-                          <button
-                            className={`btn ${!promptAnswers[prompt.id] ? 'bg-red-500 text-white hover:bg-red-600' : 'btn-secondary'}`}
-                            onClick={() => handlePromptChange(prompt.id, false)}
-                          >
-                            No
-                          </button>
-                        </div>
-                        {promptAnswers[prompt.id] && (
-                            <p className="mt-2 text-xs text-gray-500 italic">
-                                "{prompt.explanation}" is now an active causal link.
-                            </p>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                  <button
+                      className="w-full btn bg-blue-600 text-white hover:bg-blue-700"
+                      onClick={() => setPromptsOpen(!promptsOpen)}
+                  >
+                      {promptsOpen ? "Hide Options" : "Apply Interconnected Effects"}
+                      <span className={`ml-2 transition-transform duration-300 ${promptsOpen ? 'rotate-90' : 'rotate-0'}`}>▸</span>
+                  </button>
+                  <div
+                      ref={promptsRef}
+                      className="collapsible-content"
+                      style={{ maxHeight: promptsOpen ? `${promptsRef.current.scrollHeight}px` : '0px' }}
+                  >
+                      <ul className="mt-4 space-y-4">
+                        {PROMPTS.map(prompt => (
+                          <li key={prompt.id} className="bg-gray-100 p-3 rounded-md border border-gray-200">
+                            <div className="text-sm font-semibold text-gray-800 mb-2">{prompt.question}</div>
+                            <div className="flex gap-2">
+                              <button
+                                className={`w-16 h-8 rounded-full text-xs font-bold transition-colors ${promptAnswers[prompt.id] ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                                onClick={() => handlePromptChange(prompt.id, true)}
+                              >
+                                Yes
+                              </button>
+                              <button
+                                className={`w-16 h-8 rounded-full text-xs font-bold transition-colors ${!promptAnswers[prompt.id] ? 'bg-red-500 text-white' : 'bg-gray-200 text-gray-800'}`}
+                                onClick={() => handlePromptChange(prompt.id, false)}
+                              >
+                                No
+                              </button>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                  </div>
               </div>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="card">
                   <div className="card-header"><div className="card-title">Dimension Scores</div></div>
