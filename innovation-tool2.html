@@ -17,9 +17,9 @@
     .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium; }
     .btn-secondary { @apply bg-gray-100 text-gray-900 hover:bg-gray-200; }
     .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500; }
-    .tab-btn { @apply px-6 py-3 font-semibold rounded-lg transition-colors border border-gray-300; }
-    .tab-btn.active { @apply bg-white text-blue-600 border-blue-600 shadow-md; }
-    .tab-btn.inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200; }
+    .tab-btn { @apply px-8 py-3 font-semibold rounded-lg transition-all duration-200 border border-gray-300 mx-2; }
+    .tab-btn.active { @apply bg-white text-blue-600 border-blue-600 shadow-lg transform scale-105; }
+    .tab-btn.inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-md; }
     .collapsible-content {
       overflow: hidden;
       transition: max-height 0.3s ease-in-out;
@@ -304,17 +304,17 @@
         },
         "Network-Centric Warfare": { 
           scores: { 
-            paradigmaticBreak: 3, 
-            irreversibleEmbedding: 3, 
+            conceptualDisruption: 3, 
+            irreversibleEmbedding: 2, 
             catalyticEmergence: 4, 
-            strategicReconceptualization: 2 
+            strategicReconceptualization: 4 
           }, 
-          justification: "**Genuine Innovation**. NCW challenged platform-centric operational assumptions, created systemic dependencies on network infrastructure, and transcended original domains to influence all warfare concepts. However, strategic reconceptualization remains incomplete as traditional strategic logic persists alongside network concepts.", 
+          justification: "**Genuine Innovation**. NCW represents a classic case of conceptual innovation preceding technological capability. Despite implementation failures due to institutional resistance, it has irreversibly set military thinking on a path toward network-centric operations. The strategic reconceptualization of warfare as information-enabled networked operations cannot be undone, even if full technical instantiation remains incomplete.", 
           sources: ["David S. Alberts, John J. Gartska, & Frederick P. Stein, *Network Centric Warfare: Developing and Leveraging Information Superiority* (1999)"] 
         },
         "Nuclear Weapons": { 
           scores: { 
-            paradigmaticBreak: 4, 
+            conceptualDisruption: 4, 
             irreversibleEmbedding: 4, 
             catalyticEmergence: 4, 
             strategicReconceptualization: 4 
@@ -324,17 +324,17 @@
         },
         "PGMs": { 
           scores: { 
-            paradigmaticBreak: 2, 
+            conceptualDisruption: 2, 
             irreversibleEmbedding: 2, 
             catalyticEmergence: 3, 
             strategicReconceptualization: 1 
           }, 
-          justification: "**Modernization**. Precision-guided munitions enhance existing paradigms without fundamental challenge to operational assumptions. While catalytic in enabling new targeting concepts, strategic reconceptualization remains limited and paradigmatic breaks incomplete.", 
+          justification: "**Modernization**. Precision-guided munitions enhance existing paradigms without fundamental challenge to operational assumptions. While catalytic in enabling new targeting concepts, strategic reconceptualization remains limited and conceptual disruption incomplete.", 
           sources: ["Richard P. Hallion, *Precision-Guided Munitions and the Revolution in Warfare* (1995)"] 
         },
         "Radar": { 
           scores: { 
-            paradigmaticBreak: 3, 
+            conceptualDisruption: 3, 
             irreversibleEmbedding: 3, 
             catalyticEmergence: 3, 
             strategicReconceptualization: 2 
@@ -344,17 +344,17 @@
         },
         "Stealth": { 
           scores: { 
-            paradigmaticBreak: 2, 
+            conceptualDisruption: 2, 
             irreversibleEmbedding: 2, 
             catalyticEmergence: 2, 
             strategicReconceptualization: 1 
           }, 
-          justification: "**Modernization**. Stealth technology challenges detection assumptions but operates within existing air warfare paradigms. Limited strategic reconceptualization and incomplete paradigmatic breaks. Primarily enhances rather than replaces operational concepts.", 
+          justification: "**Modernization**. Stealth technology challenges detection assumptions but operates within existing air warfare paradigms. Limited strategic reconceptualization and incomplete conceptual disruption. Primarily enhances rather than replaces operational concepts.", 
           sources: ["Bill Sweetman, *Stealth Aircraft: Secrets of Future Airpower* (1986)"] 
         },
         "Stirrups": { 
           scores: { 
-            paradigmaticBreak: 4, 
+            conceptualDisruption: 4, 
             irreversibleEmbedding: 4, 
             catalyticEmergence: 4, 
             strategicReconceptualization: 4 
@@ -364,7 +364,7 @@
         },
         "Stosstrupp Tactics": { 
           scores: { 
-            paradigmaticBreak: 4, 
+            conceptualDisruption: 4, 
             irreversibleEmbedding: 3, 
             catalyticEmergence: 3, 
             strategicReconceptualization: 4 
@@ -374,17 +374,17 @@
         },
         "T-72B3M Main Battle Tank": { 
           scores: { 
-            paradigmaticBreak: 0, 
+            conceptualDisruption: 0, 
             irreversibleEmbedding: 1, 
             catalyticEmergence: 1, 
             strategicReconceptualization: 0 
           }, 
-          justification: "**Upgradation**. Modernized tank systems enhance performance within existing armored warfare paradigms. No paradigmatic breaks or strategic reconceptualization - simply improved execution of established tank concepts.", 
+          justification: "**Upgradation**. Modernized tank systems enhance performance within existing armored warfare paradigms. No conceptual disruption or strategic reconceptualization - simply improved execution of established tank concepts.", 
           sources: ["Charles K. Bartles, *The Russian Army: New Military Capability* (2015)"] 
         },
         "Tank": { 
           scores: { 
-            paradigmaticBreak: 4, 
+            conceptualDisruption: 4, 
             irreversibleEmbedding: 4, 
             catalyticEmergence: 4, 
             strategicReconceptualization: 4 
@@ -394,7 +394,7 @@
         },
         "Telegraph": { 
           scores: { 
-            paradigmaticBreak: 4, 
+            conceptualDisruption: 4, 
             irreversibleEmbedding: 4, 
             catalyticEmergence: 4, 
             strategicReconceptualization: 4 
@@ -404,12 +404,14 @@
         },
         "UAVs": { 
           scores: { 
-            paradigmaticBreak: 1, 
+            conceptualDisruption: 1, 
             irreversibleEmbedding: 2, 
             catalyticEmergence: 3, 
             strategicReconceptualization: 1 
           }, 
-          justification: "**Modernization**. UAVs extend existing reconnaissance and strike paradigms without fundamental challenge to operational assumptions. While catalytic in opening new operational concepts, paradigmatic breaks remain limited and strategic reconceptualization incomplete.", 
+          justification: "**Modernization**. UAVs extend existing reconnaissance and strike paradigms without fundamental challenge to operational assumptions. While catalytic in opening new operational concepts, conceptual disruption remains limited and strategic reconceptualization incomplete.", 
+          sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] 
+        }, new operational concepts, paradigmatic breaks remain limited and strategic reconceptualization incomplete.", 
           sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] 
         },
     };
@@ -582,7 +584,7 @@
 
       const getDimensionDisplayName = (key) => {
         const names = {
-          paradigmaticBreak: "Paradigmatic Break",
+          conceptualDisruption: "Conceptual Disruption",
           irreversibleEmbedding: "Irreversible Embedding", 
           catalyticEmergence: "Catalytic Emergence",
           strategicReconceptualization: "Strategic Reconceptualization"
@@ -615,16 +617,26 @@
                           <div>
                               <h3 className="text-lg font-medium text-gray-900">Conservative</h3>
                               <p className="text-sm text-gray-500">Based on your direct assessment.</p>
-                              <div className="mt-2">
+                              <div className="mt-2 space-y-1">
                                   <span className={`py-1 px-3 text-sm font-bold rounded-full ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>{conservativeClassification.bucket}</span>
+                                  <div className="text-xs text-gray-600 mt-1">
+                                      CD: {conservativeClassification.cd}/16 | IE: {conservativeClassification.ie}/16<br/>
+                                      CE: {conservativeClassification.ce}/16 | SR: {conservativeClassification.sr}/16<br/>
+                                      Total: {conservativeClassification.total}/64
+                                  </div>
                               </div>
                               <p className="mt-2 text-sm text-gray-600">{conservativeClassification.classificationText}</p>
                           </div>
                           <div>
                               <h3 className="text-lg font-medium text-gray-900">Integrated</h3>
                               <p className="text-sm text-gray-500">With emergent interdependencies.</p>
-                              <div className="mt-2">
+                              <div className="mt-2 space-y-1">
                                   <span className={`py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>{integratedClassification.bucket}</span>
+                                  <div className="text-xs text-gray-600 mt-1">
+                                      CD: {integratedClassification.cd}/16 | IE: {integratedClassification.ie}/16<br/>
+                                      CE: {integratedClassification.ce}/16 | SR: {integratedClassification.sr}/16<br/>
+                                      Total: {integratedClassification.total}/64
+                                  </div>
                               </div>
                               <p className="mt-2 text-sm text-gray-600">{integratedClassification.classificationText}</p>
                           </div>
