@@ -10,42 +10,215 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    .card { background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
-    .card-header { padding: 1rem; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: space-between; }
-    .card-title { font-weight: 600; color: #111827; }
-    .card-content { padding: 1rem; }
-    .btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 0.375rem; padding: 0.5rem 0.75rem; font-size: 0.875rem; font-weight: 500; }
-    .btn-secondary { background: #f3f4f6; color: #111827; }
-    .btn-secondary:hover { background: #e5e7eb; }
-    .input { width: 100%; border-radius: 0.375rem; border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; font-size: 0.875rem; }
-    .input:focus { outline: none; border-color: #14b8a6; box-shadow: 0 0 0 2px rgba(20,184,166,0.2); }
-    .tab-container { background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: center; align-items: center; gap: 2rem; padding: 0.5rem; }
-    .tab-btn { padding: 0.75rem 2rem; font-weight: 600; border-radius: 0.5rem; transition: all 0.2s; border: 1px solid #d1d5db; cursor: pointer; }
-    .tab-btn-active { background: white; color: #2563eb; border-color: #2563eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); transform: translateY(-1px); }
-    .tab-btn-inactive { background: #f3f4f6; color: #6b7280; }
-    .tab-btn-inactive:hover { background: #e5e7eb; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .card { @apply bg-white rounded-lg shadow border border-gray-200; }
+    .card-header { @apply px-4 py-3 border-b border-gray-200 flex items-center justify-between; }
+    .card-title { @apply font-semibold text-gray-900; }
+    .card-content { @apply p-4; }
+    .btn { @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors; }
+    .btn-secondary { @apply bg-gray-100 text-gray-900 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed; }
+    .btn-primary { @apply bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed; }
+    .btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
+    .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500; }
+    .input-error { @apply border-red-500 focus:ring-red-500 focus:border-red-500; }
+    .tab-container { @apply bg-gray-100 border-b border-gray-200 flex justify-center items-center p-2; }
+    .tab-btn { @apply px-8 py-3 font-semibold rounded-lg transition-all duration-300 border border-gray-300 mx-3 cursor-pointer; }
+    .tab-btn-active { @apply bg-white text-blue-600 border-blue-600 shadow-lg transform -translate-y-1 scale-105; }
+    .tab-btn-inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-md hover:scale-102; }
+    .error-boundary { @apply bg-red-50 border border-red-200 rounded-lg p-4 mb-4; }
+    .error-message { @apply text-red-700 text-sm; }
+    .validation-error { @apply text-red-500 text-xs mt-1; }
+    .progress-bar { @apply w-full bg-gray-200 rounded-full h-2; }
+    .progress-fill { @apply bg-blue-600 h-2 rounded-full transition-all duration-300; }
+    .collapsible-content {
+      overflow: hidden;
+      transition: max-height 0.3s ease-in-out;
+    }
+    .tooltip {
+      position: relative;
+      display: inline-block;
+    }
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 300px;
+      background-color: #555;
+      color: white;
+      text-align: left;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      margin-left: -150px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+    .assessment-progress {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 0.5rem 0;
+    }
   </style>
 </head>
-<body style="background: #f9fafb;">
-  <div id="root" style="max-width: 1280px; margin: 0 auto; padding: 1.5rem;"></div>
+<body class="bg-gray-50">
+  <div id="root" class="max-w-7xl mx-auto p-6"></div>
 
   <script type="text/babel">
-    const { useMemo, useState, useEffect, useRef } = React;
+    const { useMemo, useState, useEffect, useRef, useReducer, useCallback } = React;
 
+    // ========= Error Boundary Component =========
+    class ErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+      }
+
+      static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+      }
+
+      componentDidCatch(error, errorInfo) {
+        console.error('Assessment Framework Error:', error, errorInfo);
+      }
+
+      render() {
+        if (this.state.hasError) {
+          return (
+            <div className="error-boundary">
+              <h3 className="text-red-800 font-semibold mb-2">Assessment Error</h3>
+              <p className="error-message">
+                An error occurred in the assessment framework. Please refresh the page or reset your assessment.
+              </p>
+              <button 
+                onClick={() => this.setState({ hasError: false, error: null })}
+                className="btn btn-primary mt-3"
+              >
+                Try Again
+              </button>
+            </div>
+          );
+        }
+
+        return this.props.children;
+      }
+    }
+
+    // ========= Validation System =========
+    const validateInput = {
+      label: (value) => {
+        if (!value || value.trim().length === 0) return "Case label is required";
+        if (value.length > 100) return "Case label must be less than 100 characters";
+        return null;
+      },
+      scores: (scores) => {
+        const errors = {};
+        const totalIndicators = ALL_INDICATORS.length;
+        const scoredIndicators = Object.values(scores).filter(score => score > 0).length;
+        
+        if (scoredIndicators === 0) {
+          errors.general = "Please score at least one indicator to begin assessment";
+        }
+        
+        return Object.keys(errors).length > 0 ? errors : null;
+      }
+    };
+
+    // ========= Enhanced State Management =========
+    const assessmentReducer = (state, action) => {
+      switch (action.type) {
+        case 'SET_LABEL':
+          return { ...state, label: action.payload, labelError: validateInput.label(action.payload) };
+        case 'SET_SCORE':
+          const newScores = { ...state.scores, [action.payload.id]: action.payload.value };
+          return { 
+            ...state, 
+            scores: newScores, 
+            scoreErrors: validateInput.scores(newScores),
+            selectedExample: null,
+            promptAnswers: PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {})
+          };
+        case 'RESET_ALL':
+          return {
+            ...state,
+            label: "",
+            scores: makeDefaultScores(),
+            selectedExample: null,
+            promptAnswers: PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}),
+            labelError: null,
+            scoreErrors: null
+          };
+        case 'LOAD_EXAMPLE':
+          const exampleData = MAPPED_EXAMPLES[action.payload];
+          return {
+            ...state,
+            label: action.payload,
+            selectedExample: action.payload,
+            scores: { ...makeDefaultScores(), ...exampleData.scores },
+            promptAnswers: PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}),
+            labelError: null,
+            scoreErrors: null
+          };
+        case 'SET_PROMPT_ANSWER':
+          return {
+            ...state,
+            promptAnswers: { ...state.promptAnswers, [action.payload.id]: action.payload.value },
+            selectedExample: null
+          };
+        case 'SET_TAB':
+          return { ...state, activeTab: action.payload };
+        case 'SET_SHOW_RUBRICS':
+          return { ...state, showRubrics: action.payload };
+        default:
+          return state;
+      }
+    };
+
+    // ========= Header Component =========
     function Header() {
       return (
-        <header style={{ textAlign: 'center', marginBottom: '1rem' }}>
-          <h1 style={{ fontSize: '3rem', fontWeight: '800', color: '#111827', marginBottom: '0.25rem' }}>
+        <header className="text-center space-y-1 mb-4">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
             Military Innovation Assessment Framework
           </h1>
-          <div style={{ fontSize: '1.125rem', color: '#374151', marginBottom: '0.25rem' }}>A Four-Dimensional Manifestation Assessment Tool</div>
-          <div style={{ fontSize: '0.875rem', color: '#6b7280', fontStyle: 'italic' }}>
+          <div className="text-lg text-gray-700">A Four-Dimensional Manifestation Assessment Tool</div>
+          <div className="italic text-sm text-gray-600">
             Based on "The Innovation Delusion: How Conceptual Confusion Undermines Military Strategy"
           </div>
         </header>
       );
     }
 
+    // ========= Progress Indicator Component =========
+    function AssessmentProgress({ scores, total }) {
+      const scoredCount = Object.values(scores).filter(score => score > 0).length;
+      const progress = (scoredCount / ALL_INDICATORS.length) * 100;
+      
+      return (
+        <div className="assessment-progress">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700">Assessment Progress</span>
+            <span className="text-sm text-gray-600">{scoredCount}/{ALL_INDICATORS.length} indicators scored</span>
+          </div>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${progress}%` }}
+            ></div>
+          </div>
+        </div>
+      );
+    }
+
+    // ========= Enhanced Indicator model =========
     const INDICATORS = {
       conceptualDisruption: [
         { id: "cd1", label: "Existing operational assumptions become untenable", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
@@ -82,6 +255,7 @@
       return s;
     }
 
+    // ========= Enhanced Causal Chain Logic =========
     const PROMPTS = [
       {
         id: 'prompt1',
@@ -110,17 +284,23 @@
     ];
 
     function applyCausalChains(baseScores, chains) {
-        const integratedScores = { ...baseScores };
-        chains.forEach(chain => {
-            const { source, target, bump } = chain;
-            if (baseScores[source] > 0) {
-                const currentScore = integratedScores[target] || 0;
-                integratedScores[target] = Math.min(4, currentScore + bump);
-            }
-        });
-        return integratedScores;
+        try {
+          const integratedScores = { ...baseScores };
+          chains.forEach(chain => {
+              const { source, target, bump } = chain;
+              if (baseScores[source] > 0) {
+                  const currentScore = integratedScores[target] || 0;
+                  integratedScores[target] = Math.min(4, currentScore + bump);
+              }
+          });
+          return integratedScores;
+        } catch (error) {
+          console.error('Error applying causal chains:', error);
+          return baseScores;
+        }
     }
-
+    
+    // ========= Complete Historical Examples =========
     const EXAMPLES_CAUSAL_CHAINS = {
       "Nuclear Weapons": [
         { source: "cd3", target: "sr4", bump: 1, explanation: "Strategic logic reconceptualization forced command philosophy to adopt deterrence effectiveness criteria." },
@@ -137,49 +317,159 @@
     };
 
     const EXAMPLES = {
+        "AI-Targeting": { 
+          scores: { conceptualDisruption: 1, irreversibleEmbedding: 1, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. While AI-targeting accelerates existing kill chains, it does not fundamentally challenge operational assumptions or strategic logic. The paradigmatic framework of targeting remains intact - AI simply executes it faster. Limited institutional embedding and minimal strategic reconceptualization evidence.", 
+          sources: ["USAF Mad Scientist Initial Research"] 
+        },
+        "AIP Submarine": { 
+          scores: { conceptualDisruption: 1, irreversibleEmbedding: 2, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. AIP extends submarine endurance and creates new patrol capabilities beyond mere performance upgrade. Requires institutional adaptation to new operational patterns and resource allocation shifts. However, operates within existing submarine warfare paradigms without fundamental strategic reconceptualization.", 
+          sources: ["Norman Polmar & K.J. Moore, *Cold War Submarines: The Design and Construction of U.S. and Soviet Submarines* (2004)"] 
+        },
         "ASBM": { 
-          scores: { 
-            conceptualDisruption: 3, 
-            irreversibleEmbedding: 2, 
-            catalyticEmergence: 2, 
-            strategicReconceptualization: 3 
-          }, 
+          scores: { conceptualDisruption: 3, irreversibleEmbedding: 2, catalyticEmergence: 2, strategicReconceptualization: 3 }, 
           justification: "**Genuine Innovation**. ASBM renders existing naval operational assumptions untenable by threatening carrier-centric paradigms. Forces fundamental revision of power projection concepts and strategic assumptions about naval supremacy. Creates conceptual space for anti-access strategies and demands new effectiveness criteria for naval operations.", 
           sources: ["Andrew S. Erickson, *Chinese Anti-Ship Ballistic Missile Development: A Modern Naval Revolution* (2013)"] 
         },
+        "Barbed Wire": { 
+          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 2, strategicReconceptualization: 3 }, 
+          justification: "**Genuine Innovation**. Barbed wire made existing offensive operational assumptions untenable, forcing fundamental revision of tactical frameworks. Created institutional resistance to reversion to linear tactics and opened conceptual space for defensive warfare thinking. Strategic assumptions about offense-defense balance required fundamental questioning.", 
+          sources: ["Stephen Bull, *The Soldier's Kit: The British Army on the Western Front 1914-1918* (2013)"] 
+        },
+        "Blitzkrieg": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 3, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Blitzkrieg represents complete paradigmatic embedding across all dimensions. Made attrition warfare assumptions untenable, created systemic dependencies on combined arms coordination, enabled previously impossible thinking about operational tempo, and forced fundamental questioning of strategic assumptions about warfare's nature.", 
+          sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"] 
+        },
+        "Carrier Aviation": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Carrier aviation achieved complete paradigmatic transformation. Battleship-centric operational assumptions became untenable, organizational DNA permanently altered through aviation-naval integration, transcended original domain to enable global power projection concepts, and command philosophy adopted new criteria for naval effectiveness.", 
+          sources: ["Norman Friedman, *U.S. Aircraft Carriers: An Illustrated Design History* (1983)"] 
+        },
+        "Cyber Warfare": { 
+          scores: { conceptualDisruption: 2, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 2 }, 
+          justification: "**Modernization**. Cyber warfare creates new operational domains but does not fundamentally challenge existing strategic logic. While catalytic in opening new conceptual spaces, it operates alongside rather than replacing traditional paradigms. Institutional adaptation remains incomplete and strategic reconceptualization limited.", 
+          sources: ["Martin C. Libicki, *Conquest in Cyberspace: A New Kind of War* (2012)"] 
+        },
+        "Deep Battle/Reconnaissance Strike Complex": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 3, catalyticEmergence: 3, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Deep Battle doctrine made frontal assault assumptions untenable and demanded strategic logic reconceptualization. Created institutional resistance to reversion to linear operations and opened conceptual space for operational art thinking. Command philosophy adopted new effectiveness criteria emphasizing operational tempo over tactical attrition.", 
+          sources: ["Mary Habeck, *Storm of Steel: The Development of Soviet Operational Art* (2003)"] 
+        },
+        "F-16 Block D": { 
+          scores: { conceptualDisruption: 0, irreversibleEmbedding: 1, catalyticEmergence: 1, strategicReconceptualization: 0 }, 
+          justification: "**Upgradation**. Block upgrades enhance performance within existing air superiority paradigms without challenging operational assumptions. No strategic reconceptualization or conceptual disruption - simply improved execution of established concepts.", 
+          sources: ["U.S. Air Force Fact Sheets"] 
+        },
+        "Hypersonics": { 
+          scores: { conceptualDisruption: 1, irreversibleEmbedding: 1, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. Hypersonics accelerate existing missile paradigms without fundamentally challenging strategic assumptions about deterrence or operational concepts. Limited conceptual disruption and minimal strategic reconceptualization evidence.", 
+          sources: ["Thomas G. Mahnken, *The Technological Revolution in Military Affairs* (2007)"] 
+        },
+        "Information Warfare": { 
+          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 4, strategicReconceptualization: 3 }, 
+          justification: "**Genuine Innovation**. Information warfare challenges operational assumptions about command and control, creates institutional resistance to reversion to hierarchical communication, and transcends original domains to influence political-military boundaries. Strategic assumptions about warfare's information dimension require fundamental questioning.", 
+          sources: ["T. E. Ricks, *The Generals: American Military Command from World War II to Today* (2012)"] 
+        },
+        "Lasers": { 
+          scores: { conceptualDisruption: 2, irreversibleEmbedding: 1, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. Directed energy systems challenge some defensive assumptions but operate within existing paradigmatic frameworks. Limited institutional embedding and strategic reconceptualization evidence. Primarily enhances rather than replaces existing concepts.", 
+          sources: ["Air Force Research Laboratory, *Directed Energy Weapons: A Primer* (2019)"] 
+        },
+        "Machine Gun": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 3, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Machine gun made linear assault assumptions completely untenable, created systemic dependencies making rollback prohibitive, and enabled previously impossible defensive thinking. Strategic assumptions about firepower and maneuver required fundamental questioning, with command philosophy adopting new effectiveness criteria.", 
+          sources: ["John Ellis, *The Social History of the Machine Gun* (1975)"] 
+        },
+        "Military Robotics": { 
+          scores: { conceptualDisruption: 1, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. Military robotics extends human capabilities without fundamentally challenging operational assumptions. While catalytic in opening new conceptual spaces, conceptual disruption remains limited and strategic reconceptualization minimal.", 
+          sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] 
+        },
+        "Minie Ball/Connoidal Bullet": { 
+          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 2, strategicReconceptualization: 3 }, 
+          justification: "**Genuine Innovation**. Minie ball made Napoleonic linear tactics untenable, created institutional resistance to reversion to close-order formations, and forced strategic assumptions about infantry effectiveness to be fundamentally questioned. Command philosophy adopted new criteria emphasizing firepower over shock.", 
+          sources: ["Brent Nosworthy, *The Bloody Crucible of Courage: Fighting Methods and Combat Experience of the American Civil War* (2003)"] 
+        },
+        "Multi-Domain Battle Concept": { 
+          scores: { conceptualDisruption: 2, irreversibleEmbedding: 1, catalyticEmergence: 3, strategicReconceptualization: 2 }, 
+          justification: "**Modernization**. Multi-Domain Operations challenges some stovepiped assumptions but remains conceptually emergent. Limited institutional embedding and incomplete strategic reconceptualization. Primarily catalytic in opening new conceptual spaces rather than achieving conceptual disruption.", 
+          sources: ["U.S. Army Training and Doctrine Command publications (TRADOC Pamphlet 525-3-1)"] 
+        },
+        "Network-Centric Warfare": { 
+          scores: { conceptualDisruption: 3, irreversibleEmbedding: 2, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. NCW represents a classic case of conceptual innovation preceding technological capability. Despite implementation failures due to institutional resistance, it has irreversibly set military thinking on a path toward network-centric operations. The strategic reconceptualization of warfare as information-enabled networked operations cannot be undone, even if full technical instantiation remains incomplete.", 
+          sources: ["David S. Alberts, John J. Gartska, & Frederick P. Stein, *Network Centric Warfare: Developing and Leveraging Information Superiority* (1999)"] 
+        },
         "Nuclear Weapons": { 
-          scores: { 
-            conceptualDisruption: 4, 
-            irreversibleEmbedding: 4, 
-            catalyticEmergence: 4, 
-            strategicReconceptualization: 4 
-          }, 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
           justification: "**Genuine Innovation**. Nuclear weapons represent complete paradigmatic transformation across all dimensions. Made conventional strategic assumptions untenable, created irreversible systemic dependencies, enabled previously impossible deterrence thinking, and forced fundamental questioning of warfare's purpose. Command philosophy completely reconceptualized around mutual assured destruction.", 
           sources: ["Lawrence Freedman, *The Evolution of Nuclear Strategy* (2003)"] 
         },
-        "Network-Centric Warfare": { 
-          scores: { 
-            conceptualDisruption: 3, 
-            irreversibleEmbedding: 2, 
-            catalyticEmergence: 4, 
-            strategicReconceptualization: 4 
-          }, 
-          justification: "**Genuine Innovation**. NCW represents a classic case of conceptual innovation preceding technological capability. Despite implementation failures due to institutional resistance, it has irreversibly set military thinking on a path toward network-centric operations. The strategic reconceptualization of warfare as information-enabled networked operations cannot be undone, even if full technical instantiation remains incomplete.", 
-          sources: ["David S. Alberts, John J. Gartska, & Frederick P. Stein, *Network Centric Warfare: Developing and Leveraging Information Superiority* (1999)"] 
+        "PGMs": { 
+          scores: { conceptualDisruption: 2, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. Precision-guided munitions enhance existing paradigms without fundamental challenge to operational assumptions. While catalytic in enabling new targeting concepts, strategic reconceptualization remains limited and conceptual disruption incomplete.", 
+          sources: ["Richard P. Hallion, *Precision-Guided Munitions and the Revolution in Warfare* (1995)"] 
+        },
+        "Radar": { 
+          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 3, strategicReconceptualization: 2 }, 
+          justification: "**Genuine Innovation**. Radar made surprise attack assumptions untenable, created systemic dependencies on detection networks, and opened conceptual space for integrated air defense thinking. Strategic assumptions about air warfare required significant questioning, though complete reconceptualization remained limited.", 
+          sources: ["David E. Fisher, *A Race on the Edge of Time: Radar - The Decisive Weapon of World War II* (1988)"] 
+        },
+        "Stealth": { 
+          scores: { conceptualDisruption: 2, irreversibleEmbedding: 2, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. Stealth technology challenges detection assumptions but operates within existing air warfare paradigms. Limited strategic reconceptualization and incomplete conceptual disruption. Primarily enhances rather than replaces operational concepts.", 
+          sources: ["Bill Sweetman, *Stealth Aircraft: Secrets of Future Airpower* (1986)"] 
+        },
+        "Stirrups": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Stirrups achieved complete paradigmatic transformation. Made infantry-centric assumptions untenable, created irreversible organizational DNA changes through feudal military structures, enabled previously impossible shock cavalry concepts, and forced fundamental questioning of tactical effectiveness criteria.", 
+          sources: ["Lynn White, Jr., *Medieval Technology and Social Change* (1962)"] 
+        },
+        "Stosstrupp Tactics": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 3, catalyticEmergence: 3, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Stosstrupp tactics made linear assault assumptions completely untenable and demanded strategic logic reconceptualization around infiltration principles. Created institutional resistance to reversion to rigid formations and opened conceptual space for combined arms thinking. Command philosophy adopted new effectiveness criteria emphasizing initiative over control.", 
+          sources: ["Bruce I. Gudmundsson, *Stormtroop Tactics: Innovation in the German Army, 1914-1918* (1989)"] 
+        },
+        "T-72B3M Main Battle Tank": { 
+          scores: { conceptualDisruption: 0, irreversibleEmbedding: 1, catalyticEmergence: 1, strategicReconceptualization: 0 }, 
+          justification: "**Upgradation**. Modernized tank systems enhance performance within existing armored warfare paradigms. No conceptual disruption or strategic reconceptualization - simply improved execution of established tank concepts.", 
+          sources: ["Charles K. Bartles, *The Russian Army: New Military Capability* (2015)"] 
+        },
+        "Tank": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Tank achieved complete paradigmatic transformation. Made trench warfare assumptions untenable, created irreversible systemic dependencies on mechanized logistics, enabled previously impossible mobile warfare concepts, and forced fundamental questioning of tactical effectiveness. Command philosophy completely reconceptualized around maneuver rather than attrition.", 
+          sources: ["J.P. Harris, *Men, Ideas, and Tanks: British Military Thought and Armoured Forces, 1903-1939* (1995)"] 
+        },
+        "Telegraph": { 
+          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
+          justification: "**Genuine Innovation**. Telegraph achieved complete paradigmatic transformation. Made courier-based command assumptions untenable, created irreversible systemic dependencies on communication networks, enabled previously impossible command and control concepts, and forced fundamental questioning of strategic coordination. Command philosophy completely reconceptualized around real-time information.", 
+          sources: ["David Hochfelder, *The Telegraph in America, 1832-1920* (2012)"] 
+        },
+        "UAVs": { 
+          scores: { conceptualDisruption: 1, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 1 }, 
+          justification: "**Modernization**. UAVs extend existing reconnaissance and strike paradigms without fundamental challenge to operational assumptions. While catalytic in opening new operational concepts, conceptual disruption remains limited and strategic reconceptualization incomplete.", 
+          sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] 
         },
     };
 
     const mapExampleScores = (exampleScores) => {
-        const mappedScores = {};
-        DIM_KEYS.forEach(dimKey => {
-            INDICATORS[dimKey].forEach(ind => {
-                const oldScore = exampleScores[dimKey];
-                mappedScores[ind.id] = oldScore;
-            });
-        });
-        return mappedScores;
+        try {
+          const mappedScores = {};
+          DIM_KEYS.forEach(dimKey => {
+              INDICATORS[dimKey].forEach(ind => {
+                  const oldScore = exampleScores[dimKey];
+                  mappedScores[ind.id] = oldScore || 0;
+              });
+          });
+          return mappedScores;
+        } catch (error) {
+          console.error('Error mapping example scores:', error);
+          return makeDefaultScores();
+        }
     };
-
+    
     const MAPPED_EXAMPLES = Object.entries(EXAMPLES).reduce((acc, [key, value]) => {
         acc[key] = {
             ...value,
@@ -188,83 +478,246 @@
         return acc;
     }, {});
 
+    // ========= Enhanced Classification Logic =========
     function classify(scores) {
-        const cd = INDICATORS.conceptualDisruption.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-        const ie = INDICATORS.irreversibleEmbedding.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-        const ce = INDICATORS.catalyticEmergence.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-        const sr = INDICATORS.strategicReconceptualization.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-        const total = cd + ie + ce + sr;
+        try {
+          const cd = INDICATORS.conceptualDisruption.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const ie = INDICATORS.irreversibleEmbedding.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const ce = INDICATORS.catalyticEmergence.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const sr = INDICATORS.strategicReconceptualization.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const total = cd + ie + ce + sr;
 
-        if (total === 0) return { bucket: "None of the Above", total, cd, ie, ce, sr, classificationText: "No innovation has been scored. Please use the buttons to begin your assessment." };
-        
-        if (total >= 15 && ie >= 9 && (cd >= 9 || sr >= 9)) return { 
-            bucket: "Genuine Innovation", total, cd, ie, ce, sr, 
-            classificationText: "This qualifies as a 'Genuine Innovation.' Genuine Innovations achieve paradigmatic transformation through irreversible embedding combined with either complete conceptual disruption or strategic reconceptualization. They fundamentally redefine military thinking in ways that cannot be undone." 
-        };
-        
-        if (cd >= 1 && ie === 0 && ce === 0 && sr === 0) return { 
-            bucket: "Adaptation", total, cd, ie, ce, sr, 
-            classificationText: "This is an 'Adaptation.' It represents a reactive response to changing conditions that creates conceptual emergence but lacks institutional embedding or strategic reconceptualization. Think of it as tactical adjustment rather than paradigmatic transformation."
-        };
-        
-        if (total >= 6 && cd > 0 && ie >= 1) return { 
-            bucket: "Modernization", total, cd, ie, ce, sr, 
-            classificationText: "This qualifies as 'Modernization.' It improves existing paradigms through partial institutional embedding and limited conceptual disruption. While significant, it operates within rather than transcending current conceptual frameworks." 
-        };
-        
-        return { 
-            bucket: "Upgradation", total, cd, ie, ce, sr, 
-            classificationText: "This is an 'Upgradation.' It represents incremental improvement within existing paradigmatic frameworks. Low manifestation scores indicate enhancement rather than transformation of military concepts." 
-        };
+          if (total === 0) return { bucket: "None of the Above", total, cd, ie, ce, sr, classificationText: "No innovation has been scored. Please use the buttons to begin your assessment." };
+          
+          // Enhanced classification with confidence indicators
+          if (total >= 15 && ie >= 9 && (cd >= 9 || sr >= 9)) return { 
+              bucket: "Genuine Innovation", total, cd, ie, ce, sr, confidence: "High",
+              classificationText: "This qualifies as a 'Genuine Innovation.' Genuine Innovations achieve paradigmatic transformation through irreversible embedding combined with either complete conceptual disruption or strategic reconceptualization. They fundamentally redefine military thinking in ways that cannot be undone." 
+          };
+          
+          if (cd >= 1 && ie === 0 && ce === 0 && sr === 0) return { 
+              bucket: "Adaptation", total, cd, ie, ce, sr, confidence: "High",
+              classificationText: "This is an 'Adaptation.' It represents a reactive response to changing conditions that creates conceptual emergence but lacks institutional embedding or strategic reconceptualization. Think of it as tactical adjustment rather than paradigmatic transformation."
+          };
+          
+          if (total >= 6 && cd > 0 && ie >= 1) return { 
+              bucket: "Modernization", total, cd, ie, ce, sr, confidence: total >= 8 ? "High" : "Medium",
+              classificationText: "This qualifies as 'Modernization.' It improves existing paradigms through partial institutional embedding and limited conceptual disruption. While significant, it operates within rather than transcending current conceptual frameworks." 
+          };
+          
+          return { 
+              bucket: "Upgradation", total, cd, ie, ce, sr, confidence: "High",
+              classificationText: "This is an 'Upgradation.' It represents incremental improvement within existing paradigmatic frameworks. Low manifestation scores indicate enhancement rather than transformation of military concepts." 
+          };
+        } catch (error) {
+          console.error('Classification error:', error);
+          return { bucket: "Error", total: 0, cd: 0, ie: 0, ce: 0, sr: 0, classificationText: "Error in classification. Please check your inputs." };
+        }
     }
 
+    // ========= Enhanced Chart Component =========
+    function EnhancedCharts({ scores, integratedScores, conservativeDimensionScores, integratedDimensionScores }) {
+      const dimensionChartRef = useRef(null);
+      const indicatorChartRef = useRef(null);
+      const [chartError, setChartError] = useState(null);
+
+      const updateCharts = useCallback(() => {
+        try {
+          setChartError(null);
+          const dimColors = { 
+            conceptualDisruption: '#34d399', 
+            irreversibleEmbedding: '#f87171', 
+            catalyticEmergence: '#fbbf24', 
+            strategicReconceptualization: '#60a5fa' 
+          };
+
+          if (dimensionChartRef.current) {
+              if (dimensionChartRef.current.chartInstance) {
+                dimensionChartRef.current.chartInstance.destroy();
+              }
+              const dimChartCtx = dimensionChartRef.current.getContext('2d');
+              dimensionChartRef.current.chartInstance = new Chart(dimChartCtx, {
+                  type: 'bar',
+                  data: {
+                      labels: ['CD', 'IE', 'CE', 'SR'],
+                      datasets: [
+                          { 
+                            label: 'Conservative', 
+                            data: Object.values(conservativeDimensionScores), 
+                            backgroundColor: Object.values(dimColors), 
+                            borderColor: Object.values(dimColors), 
+                            borderWidth: 1 
+                          },
+                          { 
+                            label: 'Integrated', 
+                            data: Object.values(integratedDimensionScores), 
+                            backgroundColor: Object.values(dimColors).map(c => c.replace('1)', '0.5)')), 
+                            borderColor: Object.values(dimColors), 
+                            borderWidth: 1 
+                          }
+                      ]
+                  },
+                  options: { 
+                    responsive: true, 
+                    interaction: {
+                      intersect: false,
+                      mode: 'index'
+                    },
+                    scales: { 
+                      y: { beginAtZero: true, max: 16 },
+                      x: { ticks: { font: { weight: 'bold' } } }
+                    },
+                    plugins: { 
+                      legend: { display: true, position: 'top' },
+                      tooltip: {
+                        callbacks: {
+                          title: function(context) {
+                            const labels = ['Conceptual Disruption', 'Irreversible Embedding', 'Catalytic Emergence', 'Strategic Reconceptualization'];
+                            return labels[context[0].dataIndex];
+                          }
+                        }
+                      }
+                    }
+                  }
+              });
+          }
+          
+          if (indicatorChartRef.current) {
+              if (indicatorChartRef.current.chartInstance) {
+                indicatorChartRef.current.chartInstance.destroy();
+              }
+              const indChartCtx = indicatorChartRef.current.getContext('2d');
+              indicatorChartRef.current.chartInstance = new Chart(indChartCtx, {
+                  type: 'bar',
+                  data: {
+                      labels: ALL_INDICATORS.map(i => i.label.substring(0, 30) + '...'),
+                      datasets: [
+                          { 
+                            label: 'Conservative', 
+                            data: ALL_INDICATORS.map(i => scores[i.id]), 
+                            backgroundColor: '#fcd34d', 
+                            borderColor: '#f59e0b', 
+                            borderWidth: 1 
+                          },
+                          { 
+                            label: 'Integrated', 
+                            data: ALL_INDICATORS.map(i => integratedScores[i.id]), 
+                            backgroundColor: '#34d399', 
+                            borderColor: '#10b981', 
+                            borderWidth: 1 
+                          }
+                      ]
+                  },
+                  options: { 
+                    responsive: true, 
+                    indexAxis: 'y', 
+                    interaction: {
+                      intersect: false,
+                      mode: 'index'
+                    },
+                    scales: { 
+                      x: { beginAtZero: true, max: 4 } 
+                    },
+                    plugins: {
+                      legend: { display: true, position: 'top' },
+                      tooltip: {
+                        callbacks: {
+                          title: function(context) {
+                            return ALL_INDICATORS[context[0].dataIndex].label;
+                          }
+                        }
+                      }
+                    }
+                  }
+              });
+          }
+        } catch (error) {
+          console.error('Chart rendering error:', error);
+          setChartError('Unable to render charts. Please try refreshing the page.');
+        }
+      }, [scores, integratedScores, conservativeDimensionScores, integratedDimensionScores]);
+
+      useEffect(() => {
+        updateCharts();
+        return () => {
+          // Cleanup charts on unmount
+          if (dimensionChartRef.current?.chartInstance) {
+            dimensionChartRef.current.chartInstance.destroy();
+          }
+          if (indicatorChartRef.current?.chartInstance) {
+            indicatorChartRef.current.chartInstance.destroy();
+          }
+        };
+      }, [updateCharts]);
+
+      if (chartError) {
+        return (
+          <div className="error-boundary">
+            <p className="error-message">{chartError}</p>
+            <button onClick={updateCharts} className="btn btn-primary mt-2">
+              Retry Chart Rendering
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Dimension Manifestation</h3>
+                <p className="text-sm text-gray-600 mb-3">This chart shows manifestation intensity across the four dimensions. **Conservative** reflects your direct assessment, while **Integrated** includes emergent interdependency effects.</p>
+                <canvas ref={dimensionChartRef} className="h-64"></canvas>
+            </div>
+            <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Indicator Manifestation</h3>
+                <p className="text-sm text-gray-600 mb-3">This chart provides detailed breakdown of manifestation across individual indicators, revealing where paradigmatic transformation is most evident.</p>
+                <canvas ref={indicatorChartRef} className="h-64"></canvas>
+            </div>
+        </div>
+      );
+    }
+
+    // ========= Main App Component =========
     function App() {
-      const [label, setLabel] = useState("");
-      const [scores, setScores] = useState(() => makeDefaultScores());
-      const [showRubrics, setShowRubrics] = useState(false);
-      const [selectedExample, setSelectedExample] = useState(null);
-      const [promptAnswers, setPromptAnswers] = useState(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
-      const [activeTab, setActiveTab] = useState('scoring');
-      
-      const allCausalChains = useMemo(() => {
-        const promptChains = PROMPTS.filter(p => promptAnswers[p.id]).map(({ source, target, bump, explanation }) => ({ source, target, bump, explanation }));
-        const exampleChains = selectedExample ? EXAMPLES_CAUSAL_CHAINS[selectedExample] || [] : [];
-        return [...exampleChains, ...promptChains];
-      }, [selectedExample, promptAnswers]);
-      
-      const integratedScores = useMemo(() => applyCausalChains(scores, allCausalChains), [scores, allCausalChains]);
-      
-      const conservativeClassification = useMemo(() => classify(scores), [scores]);
-      const integratedClassification = useMemo(() => classify(integratedScores), [integratedScores]);
-      
-      const setIndicator = (id, value) => {
-        setScores(prevScores => ({ ...prevScores, [id]: value }));
-        setSelectedExample(null);
-        setPromptAnswers(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
-      };
-      
-      const resetAll = () => {
-        setLabel("");
-        setScores(makeDefaultScores());
-        setSelectedExample(null);
-        setPromptAnswers(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
-      };
-      
-      const loadExample = (name) => {
-        setLabel(name);
-        setSelectedExample(name);
-        const exampleData = MAPPED_EXAMPLES[name];
-        const newScores = { ...makeDefaultScores(), ...exampleData.scores };
-        setScores(newScores);
-        setPromptAnswers(PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}));
-        setActiveTab('examples');
-      };
-      
-      const handlePromptChange = (id, value) => {
-        setPromptAnswers(prev => ({ ...prev, [id]: value }));
-        setSelectedExample(null);
+      const initialState = {
+        label: "",
+        scores: makeDefaultScores(),
+        showRubrics: false,
+        selectedExample: null,
+        promptAnswers: PROMPTS.reduce((acc, prompt) => ({ ...acc, [prompt.id]: false }), {}),
+        activeTab: 'scoring',
+        labelError: null,
+        scoreErrors: null
       };
 
+      const [state, dispatch] = useReducer(assessmentReducer, initialState);
+      
+      const allCausalChains = useMemo(() => {
+        try {
+          const promptChains = PROMPTS.filter(p => state.promptAnswers[p.id]).map(({ source, target, bump, explanation }) => ({ source, target, bump, explanation }));
+          const exampleChains = state.selectedExample ? EXAMPLES_CAUSAL_CHAINS[state.selectedExample] || [] : [];
+          return [...exampleChains, ...promptChains];
+        } catch (error) {
+          console.error('Error calculating causal chains:', error);
+          return [];
+        }
+      }, [state.selectedExample, state.promptAnswers]);
+      
+      const integratedScores = useMemo(() => applyCausalChains(state.scores, allCausalChains), [state.scores, allCausalChains]);
+      
+      const conservativeClassification = useMemo(() => classify(state.scores), [state.scores]);
+      const integratedClassification = useMemo(() => classify(integratedScores), [integratedScores]);
+      
+      const calculateDimensionScores = useCallback((currentScores) => {
+        return DIM_KEYS.reduce((acc, key) => ({
+          ...acc,
+          [key]: INDICATORS[key].reduce((sum, ind) => sum + (currentScores[ind.id] || 0), 0)
+        }), {});
+      }, []);
+      
+      const conservativeDimensionScores = useMemo(() => calculateDimensionScores(state.scores), [state.scores, calculateDimensionScores]);
+      const integratedDimensionScores = useMemo(() => calculateDimensionScores(integratedScores), [integratedScores, calculateDimensionScores]);
+      
       const getDimensionDisplayName = (key) => {
         const names = {
           conceptualDisruption: "Conceptual Disruption",
@@ -276,243 +729,241 @@
       };
 
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <Header />
-          
-          <div className="card">
-              <div className="card-header">
-                <div className="card-title">Case Setup & Classification</div>
-              </div>
-              <div className="card-content">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                          <div>
-                              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}>Case Label</label>
-                              <input type="text" className="input" placeholder="e.g., Quantum computing applications" value={label} onChange={e => setLabel(e.target.value)} style={{ marginTop: '0.25rem' }} />
-                          </div>
-                          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-                              <input type="checkbox" checked={showRubrics} onChange={e => setShowRubrics(e.target.checked)} />
-                              <span>Show manifestation intensity tooltips</span>
-                          </label>
-                          <button onClick={resetAll} className="btn btn-secondary" style={{ width: '100%' }}>Reset All</button>
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          <div>
-                              <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#111827' }}>Conservative</h3>
-                              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Based on your direct assessment.</p>
-                              <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  <span style={{ 
-                                    padding: '0.25rem 0.75rem', 
-                                    fontSize: '0.875rem', 
-                                    fontWeight: '700', 
-                                    borderRadius: '9999px',
-                                    background: conservativeClassification.bucket === "Genuine Innovation" ? '#10b981' : '#e5e7eb',
-                                    color: conservativeClassification.bucket === "Genuine Innovation" ? 'white' : '#374151'
-                                  }}>
-                                    {conservativeClassification.bucket}
-                                  </span>
-                                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                                      Conceptual Disruption: {conservativeClassification.cd}/16<br/>
-                                      Irreversible Embedding: {conservativeClassification.ie}/16<br/>
-                                      Catalytic Emergence: {conservativeClassification.ce}/16<br/>
-                                      Strategic Reconceptualization: {conservativeClassification.sr}/16<br/>
-                                      <strong>Total: {conservativeClassification.total}/64</strong>
-                                  </div>
-                              </div>
-                              <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>{conservativeClassification.classificationText}</p>
-                          </div>
-                          <div>
-                              <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#111827' }}>Integrated</h3>
-                              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>With emergent interdependencies.</p>
-                              <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                  <span style={{ 
-                                    padding: '0.25rem 0.75rem', 
-                                    fontSize: '0.875rem', 
-                                    fontWeight: '700', 
-                                    borderRadius: '9999px',
-                                    background: integratedClassification.bucket === "Genuine Innovation" ? '#10b981' : '#e5e7eb',
-                                    color: integratedClassification.bucket === "Genuine Innovation" ? 'white' : '#374151'
-                                  }}>
-                                    {integratedClassification.bucket}
-                                  </span>
-                                  <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                                      Conceptual Disruption: {integratedClassification.cd}/16<br/>
-                                      Irreversible Embedding: {integratedClassification.ie}/16<br/>
-                                      Catalytic Emergence: {integratedClassification.ce}/16<br/>
-                                      Strategic Reconceptualization: {integratedClassification.sr}/16<br/>
-                                      <strong>Total: {integratedClassification.total}/64</strong>
-                                  </div>
-                              </div>
-                              <p style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: '#6b7280' }}>{integratedClassification.classificationText}</p>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-          
-          <div className="card">
-              <div className="card-header"><div className="card-title">Manifestation Assessment</div></div>
-              <div className="card-content" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Assess the degree of manifestation across each indicator from 0-4. Hover for manifestation intensity descriptions.</p>
-                  {DIM_KEYS.map(dimKey => (
-                      <div key={dimKey} style={{ marginBottom: '1.5rem', padding: '1rem', border: '1px solid #e5e7eb', borderRadius: '0.5rem', background: '#f9fafb' }}>
-                          <h3 style={{ fontSize: '1.125rem', fontWeight: '500', color: '#1f2937', display: 'flex', alignItems: 'center', marginBottom: '0.5rem' }}>
-                              {getDimensionDisplayName(dimKey)}
-                          </h3>
-                          <ul style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                              {INDICATORS[dimKey].map(indicator => (
-                                  <li key={indicator.id}>
-                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                          <span style={{ fontSize: '0.875rem', fontWeight: '500', color: '#374151' }}>
-                                              {indicator.label}
-                                          </span>
-                                          <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                              {[0, 1, 2, 3, 4].map(v => (
-                                                  <button key={v}
-                                                      style={{
-                                                        width: '1.5rem',
-                                                        height: '1.5rem',
-                                                        borderRadius: '0.25rem',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: '700',
-                                                        border: 'none',
-                                                        cursor: 'pointer',
-                                                        background: (scores[indicator.id] || 0) === v ? '#1f2937' : '#e5e7eb',
-                                                        color: (scores[indicator.id] || 0) === v ? 'white' : '#1f2937',
-                                                        transition: 'all 0.2s'
-                                                      }}
-                                                      onClick={() => setIndicator(indicator.id, v)}
-                                                      title={indicator.ladder[v]}>
-                                                      {v}
-                                                  </button>
-                                              ))}
-                                          </div>
-                                      </div>
+        <ErrorBoundary>
+          <div className="space-y-6">
+            <Header />
+            
+            <AssessmentProgress scores={state.scores} total={conservativeClassification.total} />
+            
+            <div className="card">
+                <div className="card-header">
+                  <div className="card-title">Case Setup & Classification</div>
+                </div>
+                <div className="card-content">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Case Label</label>
+                                <input 
+                                  type="text" 
+                                  className={`input mt-1 ${state.labelError ? 'input-error' : ''}`}
+                                  placeholder="e.g., Quantum computing applications" 
+                                  value={state.label} 
+                                  onChange={e => dispatch({ type: 'SET_LABEL', payload: e.target.value })} 
+                                  maxLength={100}
+                                />
+                                {state.labelError && <div className="validation-error">{state.labelError}</div>}
+                            </div>
+                            <label className="inline-flex items-center gap-2 text-sm">
+                                <input 
+                                  type="checkbox" 
+                                  checked={state.showRubrics} 
+                                  onChange={e => dispatch({ type: 'SET_SHOW_RUBRICS', payload: e.target.checked })} 
+                                />
+                                <span>Show manifestation intensity tooltips</span>
+                            </label>
+                            <button 
+                              onClick={() => dispatch({ type: 'RESET_ALL' })} 
+                              className="w-full btn btn-danger"
+                            >
+                              Reset All
+                            </button>
+                            {state.scoreErrors && (
+                              <div className="validation-error">{state.scoreErrors.general}</div>
+                            )}
+                        </div>
+                        <div className="space-y-4">
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900">Conservative</h3>
+                                <p className="text-sm text-gray-500">Based on your direct assessment.</p>
+                                <div className="mt-2 space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`py-1 px-3 text-sm font-bold rounded-full ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                                        {conservativeClassification.bucket}
+                                      </span>
+                                      {conservativeClassification.confidence && (
+                                        <span className="text-xs text-gray-500">
+                                          ({conservativeClassification.confidence} confidence)
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-gray-600 mt-1">
+                                        Conceptual Disruption: {conservativeClassification.cd}/16<br/>
+                                        Irreversible Embedding: {conservativeClassification.ie}/16<br/>
+                                        Catalytic Emergence: {conservativeClassification.ce}/16<br/>
+                                        Strategic Reconceptualization: {conservativeClassification.sr}/16<br/>
+                                        <strong>Total: {conservativeClassification.total}/64</strong>
+                                    </div>
+                                </div>
+                                <p className="mt-2 text-sm text-gray-600">{conservativeClassification.classificationText}</p>
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-medium text-gray-900">Integrated</h3>
+                                <p className="text-sm text-gray-500">With emergent interdependencies.</p>
+                                <div className="mt-2 space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className={`py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                                        {integratedClassification.bucket}
+                                      </span>
+                                      {integratedClassification.confidence && (
+                                        <span className="text-xs text-gray-500">
+                                          ({integratedClassification.confidence} confidence)
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="text-xs text-gray-600 mt-1">
+                                        Conceptual Disruption: {integratedClassification.cd}/16<br/>
+                                        Irreversible Embedding: {integratedClassification.ie}/16<br/>
+                                        Catalytic Emergence: {integratedClassification.ce}/16<br/>
+                                        Strategic Reconceptualization: {integratedClassification.sr}/16<br/>
+                                        <strong>Total: {integratedClassification.total}/64</strong>
+                                    </div>
+                                </div>
+                                <p className="mt-2 text-sm text-gray-600">{integratedClassification.classificationText}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div className="card">
+                <div className="card-header"><div className="card-title">Manifestation Assessment</div></div>
+                <div className="card-content space-y-4">
+                    <p className="text-sm text-gray-600">Assess the degree of manifestation across each indicator from 0-4. Hover for manifestation intensity descriptions.</p>
+                    {DIM_KEYS.map(dimKey => (
+                        <div key={dimKey} className="mb-6 p-4 border rounded-lg bg-gray-50">
+                            <h3 className="text-lg font-medium text-gray-800 flex items-center mb-2">
+                                {getDimensionDisplayName(dimKey)}
+                            </h3>
+                            <ul className="space-y-4">
+                                {INDICATORS[dimKey].map(indicator => (
+                                    <li key={indicator.id}>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-sm font-medium text-gray-700">
+                                                {indicator.label}
+                                            </span>
+                                            <div className="flex gap-1">
+                                                {[0, 1, 2, 3, 4].map(v => (
+                                                    <button key={v}
+                                                        className={`tooltip w-6 h-6 rounded text-xs font-bold transition-all duration-200 ${(state.scores[indicator.id] || 0) === v ? 'bg-gray-800 text-white scale-110' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                                                        onClick={() => dispatch({ type: 'SET_SCORE', payload: { id: indicator.id, value: v } })}
+                                                    >
+                                                        {v}
+                                                        {state.showRubrics && (
+                                                          <span className="tooltiptext">{indicator.ladder[v]}</span>
+                                                        )}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="card">
+                <div className="card-header">
+                    <div className="card-title">Analysis & Examples</div>
+                </div>
+                <div className="tab-container">
+                    <button onClick={() => dispatch({ type: 'SET_TAB', payload: 'scoring' })}
+                            className={`tab-btn ${state.activeTab === 'scoring' ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
+                        Emergent Interdependencies
+                    </button>
+                    <button onClick={() => dispatch({ type: 'SET_TAB', payload: 'charts' })}
+                            className={`tab-btn ${state.activeTab === 'charts' ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
+                        Charts
+                    </button>
+                    <button onClick={() => dispatch({ type: 'SET_TAB', payload: 'examples' })}
+                            className={`tab-btn ${state.activeTab === 'examples' ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
+                        Historical Examples
+                    </button>
+                </div>
+
+                <div className="card-content">
+                    {state.activeTab === 'scoring' && (
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-600 italic">
+                                This section captures the reality that innovation manifestation involves recursive, non-linear interactions across dimensions. Strong manifestation in one area may reveal previously invisible aspects in others.
+                            </p>
+                            <ul className="mt-4 space-y-4">
+                                {PROMPTS.map(prompt => (
+                                  <li key={prompt.id} className="bg-white p-3 rounded-md border border-gray-200">
+                                    <div className="text-sm font-semibold text-gray-800 mb-2">{prompt.question}</div>
+                                    <div className="flex gap-2">
+                                      <button
+                                        className={`w-16 h-8 rounded-full text-xs font-bold transition-all duration-200 ${state.promptAnswers[prompt.id] ? 'bg-green-500 text-white scale-105' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                                        onClick={() => dispatch({ type: 'SET_PROMPT_ANSWER', payload: { id: prompt.id, value: true } })}
+                                      >
+                                        Yes
+                                      </button>
+                                      <button
+                                        className={`w-16 h-8 rounded-full text-xs font-bold transition-all duration-200 ${!state.promptAnswers[prompt.id] ? 'bg-red-500 text-white scale-105' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                                        onClick={() => dispatch({ type: 'SET_PROMPT_ANSWER', payload: { id: prompt.id, value: false } })}
+                                      >
+                                        No
+                                      </button>
+                                    </div>
+                                    <div className="text-xs text-gray-500 mt-2">{prompt.explanation}</div>
                                   </li>
-                              ))}
-                          </ul>
-                      </div>
-                  ))}
-              </div>
-          </div>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
-          <div className="card">
-              <div className="card-header">
-                  <div className="card-title">Analysis & Examples</div>
-              </div>
-              <div className="tab-container">
-                  <button onClick={() => setActiveTab('scoring')}
-                          className={`tab-btn ${activeTab === 'scoring' ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
-                      Emergent Interdependencies
-                  </button>
-                  <button onClick={() => setActiveTab('examples')}
-                          className={`tab-btn ${activeTab === 'examples' ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
-                      Historical Examples
-                  </button>
-              </div>
+                    {state.activeTab === 'charts' && (
+                        <EnhancedCharts 
+                          scores={state.scores}
+                          integratedScores={integratedScores}
+                          conservativeDimensionScores={conservativeDimensionScores}
+                          integratedDimensionScores={integratedDimensionScores}
+                        />
+                    )}
 
-              <div className="card-content">
-                  {activeTab === 'scoring' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          <p style={{ fontSize: '0.875rem', color: '#6b7280', fontStyle: 'italic' }}>
-                              This section captures the reality that innovation manifestation involves recursive, non-linear interactions across dimensions. Strong manifestation in one area may reveal previously invisible aspects in others.
-                          </p>
-                          <ul style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                              {PROMPTS.map(prompt => (
-                                <li key={prompt.id} style={{ background: 'white', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid #e5e7eb' }}>
-                                  <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.5rem' }}>{prompt.question}</div>
-                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                    <button
-                                      style={{
-                                        width: '4rem',
-                                        height: '2rem',
-                                        borderRadius: '9999px',
-                                        fontSize: '0.75rem',
-                                        fontWeight: '700',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        background: promptAnswers[prompt.id] ? '#10b981' : '#e5e7eb',
-                                        color: promptAnswers[prompt.id] ? 'white' : '#1f2937'
-                                      }}
-                                      onClick={() => handlePromptChange(prompt.id, true)}
-                                    >
-                                      Yes
+                    {state.activeTab === 'examples' && (
+                        <div className="space-y-4">
+                            <p className="text-sm text-gray-600 mb-3">
+                                Click any example below to load its manifestation assessment, theoretical justification, and sources.
+                            </p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
+                                {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
+                                    <button key={name}
+                                        onClick={() => {
+                                          dispatch({ type: 'LOAD_EXAMPLE', payload: name });
+                                          dispatch({ type: 'SET_TAB', payload: 'examples' });
+                                        }}
+                                        className={`p-2 rounded border text-left hover:bg-gray-100 transition-all duration-200 hover:scale-102 ${state.selectedExample === name ? 'bg-blue-100 border-blue-400 shadow-md' : 'bg-white border-gray-200'}`}>
+                                        {name}
                                     </button>
-                                    <button
-                                      style={{
-                                        width: '4rem',
-                                        height: '2rem',
-                                        borderRadius: '9999px',
-                                        fontSize: '0.75rem',
-                                        fontWeight: '700',
-                                        border: 'none',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        background: !promptAnswers[prompt.id] ? '#ef4444' : '#e5e7eb',
-                                        color: !promptAnswers[prompt.id] ? 'white' : '#1f2937'
-                                      }}
-                                      onClick={() => handlePromptChange(prompt.id, false)}
-                                    >
-                                      No
-                                    </button>
-                                  </div>
-                                </li>
-                              ))}
-                          </ul>
-                      </div>
-                  )}
-
-                  {activeTab === 'examples' && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.75rem' }}>
-                              Click any example below to load its manifestation assessment, theoretical justification, and sources.
-                          </p>
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', fontSize: '0.75rem', marginBottom: '1rem' }}>
-                              {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
-                                  <button key={name}
-                                      onClick={() => loadExample(name)}
-                                      style={{
-                                        padding: '0.5rem',
-                                        borderRadius: '0.25rem',
-                                        border: '1px solid #e5e7eb',
-                                        textAlign: 'left',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        background: selectedExample === name ? '#e5e7eb' : 'white',
-                                        borderColor: selectedExample === name ? '#9ca3af' : '#e5e7eb'
-                                      }}
-                                      onMouseEnter={(e) => e.target.style.background = '#f3f4f6'}
-                                      onMouseLeave={(e) => e.target.style.background = selectedExample === name ? '#e5e7eb' : 'white'}>
-                                      {name}
-                                  </button>
-                              ))}
-                          </div>
-                          {selectedExample && (
-                              <div style={{ marginTop: '1rem' }}>
-                                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>{selectedExample} Assessment</h3>
-                                  <p style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#374151' }}>{MAPPED_EXAMPLES[selectedExample].justification}</p>
-                                  <h3 style={{ fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' }}>Indicative Sources</h3>
-                                  <ul style={{ listStyle: 'disc', listStylePosition: 'inside', display: 'flex', flexDirection: 'column', gap: '0.25rem', fontSize: '0.875rem', color: '#374151' }}>
-                                      {MAPPED_EXAMPLES[selectedExample].sources.map((source, index) => (
-                                        <li key={index}>{source}</li>
-                                      ))}
-                                  </ul>
-                              </div>
-                          )}
-                      </div>
-                  )}
-              </div>
+                                ))}
+                            </div>
+                            {state.selectedExample && (
+                                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                    <h3 className="text-lg font-semibold mb-2 text-blue-900">{state.selectedExample} Assessment</h3>
+                                    <p className="mb-4 text-sm text-blue-800">{MAPPED_EXAMPLES[state.selectedExample].justification}</p>
+                                    <h3 className="text-lg font-semibold mb-2 text-blue-900">Indicative Sources</h3>
+                                    <ul className="list-disc list-inside space-y-1 text-sm text-blue-800">
+                                        {MAPPED_EXAMPLES[state.selectedExample].sources.map((source, index) => (<li key={index}>{source}</li>))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </div>
+            
+            <div className="text-xs text-gray-500 text-center">
+              Manifestation assessment framework. Evaluates observed paradigmatic transformation across four dimensions rather than defining innovation categorically. Conservative vs Integrated assessments shown for analytical transparency.
+            </div>
           </div>
-          
-          <div style={{ fontSize: '0.75rem', color: '#6b7280', textAlign: 'center' }}>
-            Manifestation assessment framework. Evaluates observed paradigmatic transformation across four dimensions rather than defining innovation categorically. Conservative vs Integrated assessments shown for analytical transparency.
-          </div>
-        </div>
+        </ErrorBoundary>
       );
     }
 
     ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
-</html
+</html>
