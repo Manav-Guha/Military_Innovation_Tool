@@ -20,10 +20,10 @@
     .btn-danger { @apply bg-red-600 text-white hover:bg-red-700; }
     .input { @apply w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500; }
     .input-error { @apply border-red-500 focus:ring-red-500 focus:border-red-500; }
-    .tab-container { @apply bg-gray-100 border-b border-gray-200 flex justify-center items-center p-2; }
-    .tab-btn { @apply px-8 py-3 font-semibold rounded-lg transition-all duration-300 border border-gray-300 mx-3 cursor-pointer; }
-    .tab-btn-active { @apply bg-white text-blue-600 border-blue-600 shadow-lg transform -translate-y-1 scale-105; }
-    .tab-btn-inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-md hover:scale-102; }
+    .tab-container { @apply bg-gray-100 border-b border-gray-200 flex justify-center items-center p-4; }
+    .tab-btn { @apply px-8 py-3 font-semibold rounded-lg transition-all duration-300 border border-gray-300 cursor-pointer; margin: 0 1rem; }
+    .tab-btn-active { @apply bg-white text-blue-600 border-blue-600 transform -translate-y-1; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1); }
+    .tab-btn-inactive { @apply bg-gray-100 text-gray-600 hover:bg-gray-200; }
     .error-boundary { @apply bg-red-50 border border-red-200 rounded-lg p-4 mb-4; }
     .error-message { @apply text-red-700 text-sm; }
     .validation-error { @apply text-red-500 text-xs mt-1; }
