@@ -489,17 +489,26 @@
 
           if (total === 0) return { bucket: "None of the Above", total, cd, ie, ce, sr, classificationText: "No innovation has been scored. Please use the buttons to begin your assessment." };
           
-          // Enhanced classification with confidence indicators
-          if (total >= 15 && ie >= 9 && (cd >= 9 || sr >= 9)) return { 
+          // Fixed classification with correct thresholds based on your theoretical framework
+          // Genuine Innovation: High total with strong irreversible embedding AND strong conceptual disruption OR strategic reconceptualization
+          if (total >= 15 && ie >= 8 && (cd >= 9 || sr >= 9)) return { 
               bucket: "Genuine Innovation", total, cd, ie, ce, sr, confidence: "High",
               classificationText: "This qualifies as a 'Genuine Innovation.' Genuine Innovations achieve paradigmatic transformation through irreversible embedding combined with either complete conceptual disruption or strategic reconceptualization. They fundamentally redefine military thinking in ways that cannot be undone." 
           };
           
+          // Alternative path for Genuine Innovation: Very high total with strong disruption even if embedding is moderate
+          if (total >= 12 && (cd >= 10 || sr >= 10) && ie >= 6) return { 
+              bucket: "Genuine Innovation", total, cd, ie, ce, sr, confidence: "Medium",
+              classificationText: "This qualifies as a 'Genuine Innovation.' While institutional embedding may be developing, the strength of paradigmatic transformation in conceptual disruption or strategic reconceptualization indicates fundamental redefinition of military thinking." 
+          };
+          
+          // Adaptation: conceptual disruption without institutional embedding
           if (cd >= 1 && ie === 0 && ce === 0 && sr === 0) return { 
               bucket: "Adaptation", total, cd, ie, ce, sr, confidence: "High",
               classificationText: "This is an 'Adaptation.' It represents a reactive response to changing conditions that creates conceptual emergence but lacks institutional embedding or strategic reconceptualization. Think of it as tactical adjustment rather than paradigmatic transformation."
           };
           
+          // Modernization: significant manifestation with some embedding
           if (total >= 6 && cd > 0 && ie >= 1) return { 
               bucket: "Modernization", total, cd, ie, ce, sr, confidence: total >= 8 ? "High" : "Medium",
               classificationText: "This qualifies as 'Modernization.' It improves existing paradigms through partial institutional embedding and limited conceptual disruption. While significant, it operates within rather than transcending current conceptual frameworks." 
