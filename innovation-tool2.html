@@ -29,10 +29,6 @@
     .validation-error { @apply text-red-500 text-xs mt-1; }
     .progress-bar { @apply w-full bg-gray-200 rounded-full h-2; }
     .progress-fill { @apply bg-blue-600 h-2 rounded-full transition-all duration-300; }
-    .collapsible-content {
-      overflow: hidden;
-      transition: max-height 0.3s ease-in-out;
-    }
     .tooltip {
       position: relative;
       display: inline-block;
@@ -189,7 +185,7 @@
           <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
             Military Innovation Assessment Framework
           </h1>
-          <div className="text-lg text-gray-700">A Four-Dimensional Manifestation Assessment Tool</div>
+          <div className="text-lg text-gray-700">A Four-Dimensional Assessment Tool</div>
           <div className="italic text-sm text-gray-600">
             Based on "Military Innovation: Between the Knowns and the Unknowns"
           </div>
@@ -218,35 +214,35 @@
       );
     }
 
-    // ========= Enhanced Indicator model =========
+    // ========= Simplified Indicator Model =========
     const INDICATORS = {
-      conceptualDisruption: [
-        { id: "cd1", label: "Existing operational assumptions become untenable", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "cd2", label: "Conceptual frameworks require fundamental revision", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "cd3", label: "Strategic logic demands reconceptualization", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "cd4", label: "Opponent conceptual models prove inadequate", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
+      gameChanging: [
+        { id: "gc1", label: "Forces enemies to change how they fight", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "gc2", label: "Requires new ways of thinking about war", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "gc3", label: "Changes what commanders focus on", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "gc4", label: "Makes old tactics obsolete", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
       ],
-      irreversibleEmbedding: [
-        { id: "ie1", label: "Institutional resistance to reversion emerges", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "ie2", label: "Systemic dependencies make rollback prohibitive", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "ie3", label: "Cross-military adoption patterns consolidate", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "ie4", label: "Organizational DNA becomes permanently altered", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
+      permanent: [
+        { id: "p1", label: "Too expensive to go back to old ways", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "p2", label: "Organizations resist changing back", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "p3", label: "Other militaries copy this approach", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "p4", label: "Becomes the new normal way of fighting", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
       ],
-      catalyticEmergence: [
-        { id: "ce1", label: "Conceptual frameworks enable previously impossible thinking", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "ce2", label: "Paradigmatic insights transcend original application domains", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "ce3", label: "Resource allocation patterns reflect new strategic priorities", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "ce4", label: "Conceptual space for novel approaches opens", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
+      generative: [
+        { id: "g1", label: "Creates new ideas that spread to other areas", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "g2", label: "Enables new capabilities not possible before", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "g3", label: "Changes how money and resources are spent", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "g4", label: "Opens up new possibilities for innovation", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
       ],
-      strategicReconceptualization: [
-        { id: "sr1", label: "Strategic assumptions require fundamental questioning", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "sr2", label: "Professional education acknowledges paradigm inadequacy", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "sr3", label: "Simulation models reveal conceptual blind spots", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
-        { id: "sr4", label: "Command philosophy adopts new effectiveness criteria", ladder: ["No manifestation evidence","Conceptual emergence detectable","Institutional adaptation begins","Systematic integration visible","Complete paradigmatic embedding"]},
+      mindShift: [
+        { id: "ms1", label: "Forces military leaders to rethink basic assumptions", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "ms2", label: "Changes what gets taught in military schools", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "ms3", label: "Makes war games and exercises give different results", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
+        { id: "ms4", label: "Changes how success and failure are measured", ladder: ["No evidence","Some signs","Clear impact","Major change","Complete transformation"]},
       ],
     };
 
-    const DIM_KEYS = ["conceptualDisruption","irreversibleEmbedding","catalyticEmergence","strategicReconceptualization"];
+    const DIM_KEYS = ["gameChanging","permanent","generative","mindShift"];
     const ALL_INDICATORS = DIM_KEYS.flatMap(dimKey => INDICATORS[dimKey].map(ind => ({ ...ind, dim: dimKey })));
 
     function makeDefaultScores() {
@@ -255,31 +251,31 @@
       return s;
     }
 
-    // ========= Enhanced Causal Chain Logic =========
+    // ========= Simplified Causal Chain Logic =========
     const PROMPTS = [
       {
         id: 'prompt1',
-        question: "Do paradigmatic breaks in one domain reveal conceptual inadequacies that cascade across other domains?",
-        source: "ce3",
-        target: "ie3",
+        question: "Does this change in one area expose problems that spread to other areas?",
+        source: "g3",
+        target: "p3",
         bump: 1,
-        explanation: "This link captures how resource allocation shifts (Catalytic Emergence) can drive cross-military adoption patterns (Irreversible Embedding)."
+        explanation: "When money shifts to new approaches, other militaries often have to copy them to stay competitive."
       },
       {
         id: 'prompt2',
-        question: "Do operational applications expose fundamental assumptions that cannot be reconciled within existing strategic frameworks?",
-        source: "cd2",
-        target: "sr1",
+        question: "Do the new ways of fighting reveal that old strategies don't work anymore?",
+        source: "gc2",
+        target: "ms1",
         bump: 1,
-        explanation: "This link demonstrates how conceptual framework revision requirements (Conceptual Disruption) directly force strategic assumption questioning (Strategic Reconceptualization)."
+        explanation: "When new thinking is required, it often forces leaders to question their basic assumptions."
       },
       {
         id: 'prompt3',
-        question: "Do institutional adaptations generate emergent capabilities that reframe strategic objectives beyond original intent?",
-        source: "ie1",
-        target: "sr4",
+        question: "Do changes in organizations create new capabilities that change what victory looks like?",
+        source: "p1",
+        target: "ms4",
         bump: 1,
-        explanation: "This link shows how institutional resistance to reversion can lead to adoption of new effectiveness criteria (Strategic Reconceptualization)."
+        explanation: "When organizations can't go back, they often develop new ways to measure success."
       },
     ];
 
@@ -300,157 +296,62 @@
         }
     }
     
-    // ========= Complete Historical Examples =========
+    // ========= Simplified Historical Examples =========
     const EXAMPLES_CAUSAL_CHAINS = {
       "Nuclear Weapons": [
-        { source: "cd3", target: "sr4", bump: 1, explanation: "Strategic logic reconceptualization forced command philosophy to adopt deterrence effectiveness criteria." },
-        { source: "ce4", target: "ie1", bump: 1, explanation: "Conceptual space opening for strategic deterrence created institutional resistance to nuclear disarmament." },
+        { source: "gc3", target: "ms4", bump: 1, explanation: "Nuclear weapons changed what commanders focus on, forcing new ways to measure success (deterrence vs. victory)." },
+        { source: "s4", target: "p1", bump: 1, explanation: "Nuclear capabilities opened new possibilities, making it too expensive to abandon nuclear programs." },
       ],
       "Machine Gun": [
-        { source: "cd1", target: "sr1", bump: 1, explanation: "Operational assumptions about infantry assault became untenable, forcing strategic assumption questioning." },
-        { source: "ce1", target: "ie4", bump: 1, explanation: "Defensive warfare concepts enabled new thinking that permanently altered organizational DNA." }
+        { source: "gc1", target: "ms1", bump: 1, explanation: "Machine guns forced enemies to change tactics, making leaders rethink basic assumptions about infantry assault." },
+        { source: "s1", target: "p4", bump: 1, explanation: "Machine guns created new defensive ideas that became the new normal way of fighting." }
       ],
-      "Telegraph": [
-        { source: "cd2", target: "sr2", bump: 1, explanation: "Command and control frameworks required fundamental revision, forcing professional education changes." },
-        { source: "ce2", target: "ie2", bump: 1, explanation: "Communication paradigms transcended original domains, creating systemic dependencies." }
+      "Blitzkrieg": [
+        { source: "gc2", target: "ms2", bump: 1, explanation: "Blitzkrieg required new thinking about war, changing what military schools taught about operations." },
+        { source: "s2", target: "p2", bump: 1, explanation: "Blitzkrieg enabled new capabilities, creating organizational resistance to going back to static warfare." }
       ],
     };
 
     const EXAMPLES = {
         "AI-Targeting": { 
-          scores: { conceptualDisruption: 1, irreversibleEmbedding: 1, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. While AI-targeting accelerates existing kill chains, it does not fundamentally challenge operational assumptions or strategic logic. The paradigmatic framework of targeting remains intact - AI simply executes it faster. Limited institutional embedding and minimal strategic reconceptualization evidence.", 
+          scores: { gameChanging: 1, permanent: 1, generative: 2, mindShift: 1 }, 
+          justification: "**Modernization**. AI-targeting speeds up existing processes but doesn't fundamentally change how war is fought. Limited organizational changes and minimal shift in military thinking.", 
           sources: ["USAF Mad Scientist Initial Research"] 
         },
-        "AIP Submarine": { 
-          scores: { conceptualDisruption: 1, irreversibleEmbedding: 2, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. AIP extends submarine endurance and creates new patrol capabilities beyond mere performance upgrade. Requires institutional adaptation to new operational patterns and resource allocation shifts. However, operates within existing submarine warfare paradigms without fundamental strategic reconceptualization.", 
-          sources: ["Norman Polmar & K.J. Moore, *Cold War Submarines: The Design and Construction of U.S. and Soviet Submarines* (2004)"] 
-        },
         "ASBM": { 
-          scores: { conceptualDisruption: 3, irreversibleEmbedding: 2, catalyticEmergence: 2, strategicReconceptualization: 3 }, 
-          justification: "**Genuine Innovation**. ASBM renders existing naval operational assumptions untenable by threatening carrier-centric paradigms. Forces fundamental revision of power projection concepts and strategic assumptions about naval supremacy. Creates conceptual space for anti-access strategies and demands new effectiveness criteria for naval operations.", 
-          sources: ["Andrew S. Erickson, *Chinese Anti-Ship Ballistic Missile Development: A Modern Naval Revolution* (2013)"] 
-        },
-        "Barbed Wire": { 
-          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 2, strategicReconceptualization: 3 }, 
-          justification: "**Genuine Innovation**. Barbed wire made existing offensive operational assumptions untenable, forcing fundamental revision of tactical frameworks. Created institutional resistance to reversion to linear tactics and opened conceptual space for defensive warfare thinking. Strategic assumptions about offense-defense balance required fundamental questioning.", 
-          sources: ["Stephen Bull, *The Soldier's Kit: The British Army on the Western Front 1914-1918* (2013)"] 
+          scores: { gameChanging: 3, permanent: 2, generative: 2, mindShift: 3 }, 
+          justification: "**Genuine Innovation**. ASBMs force navies to completely rethink carrier operations and power projection. Creates fundamental shifts in naval strategy and planning.", 
+          sources: ["Andrew S. Erickson, Chinese Anti-Ship Ballistic Missile Development (2013)"] 
         },
         "Blitzkrieg": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 3, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Blitzkrieg represents complete paradigmatic embedding across all dimensions. Made attrition warfare assumptions untenable, created systemic dependencies on combined arms coordination, enabled previously impossible thinking about operational tempo, and forced fundamental questioning of strategic assumptions about warfare's nature.", 
+          scores: { gameChanging: 4, permanent: 3, generative: 4, mindShift: 4 }, 
+          justification: "**Genuine Innovation**. Blitzkrieg completely transformed land warfare, became irreversible standard, spawned numerous follow-on innovations, and forced fundamental rethinking of military strategy.", 
           sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"] 
         },
-        "Carrier Aviation": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Carrier aviation achieved complete paradigmatic transformation. Battleship-centric operational assumptions became untenable, organizational DNA permanently altered through aviation-naval integration, transcended original domain to enable global power projection concepts, and command philosophy adopted new criteria for naval effectiveness.", 
-          sources: ["Norman Friedman, *U.S. Aircraft Carriers: An Illustrated Design History* (1983)"] 
-        },
-        "Cyber Warfare": { 
-          scores: { conceptualDisruption: 2, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 2 }, 
-          justification: "**Modernization**. Cyber warfare creates new operational domains but does not fundamentally challenge existing strategic logic. While catalytic in opening new conceptual spaces, it operates alongside rather than replacing traditional paradigms. Institutional adaptation remains incomplete and strategic reconceptualization limited.", 
-          sources: ["Martin C. Libicki, *Conquest in Cyberspace: A New Kind of War* (2012)"] 
-        },
-        "Deep Battle/Reconnaissance Strike Complex": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 3, catalyticEmergence: 3, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Deep Battle doctrine made frontal assault assumptions untenable and demanded strategic logic reconceptualization. Created institutional resistance to reversion to linear operations and opened conceptual space for operational art thinking. Command philosophy adopted new effectiveness criteria emphasizing operational tempo over tactical attrition.", 
-          sources: ["Mary Habeck, *Storm of Steel: The Development of Soviet Operational Art* (2003)"] 
-        },
-        "F-16 Block D": { 
-          scores: { conceptualDisruption: 0, irreversibleEmbedding: 1, catalyticEmergence: 1, strategicReconceptualization: 0 }, 
-          justification: "**Upgradation**. Block upgrades enhance performance within existing air superiority paradigms without challenging operational assumptions. No strategic reconceptualization or conceptual disruption - simply improved execution of established concepts.", 
-          sources: ["U.S. Air Force Fact Sheets"] 
-        },
-        "Hypersonics": { 
-          scores: { conceptualDisruption: 1, irreversibleEmbedding: 1, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. Hypersonics accelerate existing missile paradigms without fundamentally challenging strategic assumptions about deterrence or operational concepts. Limited conceptual disruption and minimal strategic reconceptualization evidence.", 
-          sources: ["Thomas G. Mahnken, *The Technological Revolution in Military Affairs* (2007)"] 
-        },
-        "Information Warfare": { 
-          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 4, strategicReconceptualization: 3 }, 
-          justification: "**Genuine Innovation**. Information warfare challenges operational assumptions about command and control, creates institutional resistance to reversion to hierarchical communication, and transcends original domains to influence political-military boundaries. Strategic assumptions about warfare's information dimension require fundamental questioning.", 
-          sources: ["T. E. Ricks, *The Generals: American Military Command from World War II to Today* (2012)"] 
-        },
-        "Lasers": { 
-          scores: { conceptualDisruption: 2, irreversibleEmbedding: 1, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. Directed energy systems challenge some defensive assumptions but operate within existing paradigmatic frameworks. Limited institutional embedding and strategic reconceptualization evidence. Primarily enhances rather than replaces existing concepts.", 
-          sources: ["Air Force Research Laboratory, *Directed Energy Weapons: A Primer* (2019)"] 
-        },
         "Machine Gun": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 3, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Machine gun made linear assault assumptions completely untenable, created systemic dependencies making rollback prohibitive, and enabled previously impossible defensive thinking. Strategic assumptions about firepower and maneuver required fundamental questioning, with command philosophy adopting new effectiveness criteria.", 
-          sources: ["John Ellis, *The Social History of the Machine Gun* (1975)"] 
-        },
-        "Military Robotics": { 
-          scores: { conceptualDisruption: 1, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. Military robotics extends human capabilities without fundamentally challenging operational assumptions. While catalytic in opening new conceptual spaces, conceptual disruption remains limited and strategic reconceptualization minimal.", 
-          sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] 
-        },
-        "Minie Ball/Connoidal Bullet": { 
-          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 2, strategicReconceptualization: 3 }, 
-          justification: "**Genuine Innovation**. Minie ball made Napoleonic linear tactics untenable, created institutional resistance to reversion to close-order formations, and forced strategic assumptions about infantry effectiveness to be fundamentally questioned. Command philosophy adopted new criteria emphasizing firepower over shock.", 
-          sources: ["Brent Nosworthy, *The Bloody Crucible of Courage: Fighting Methods and Combat Experience of the American Civil War* (2003)"] 
-        },
-        "Multi-Domain Battle Concept": { 
-          scores: { conceptualDisruption: 2, irreversibleEmbedding: 1, catalyticEmergence: 3, strategicReconceptualization: 2 }, 
-          justification: "**Modernization**. Multi-Domain Operations challenges some stovepiped assumptions but remains conceptually emergent. Limited institutional embedding and incomplete strategic reconceptualization. Primarily catalytic in opening new conceptual spaces rather than achieving conceptual disruption.", 
-          sources: ["U.S. Army Training and Doctrine Command publications (TRADOC Pamphlet 525-3-1)"] 
-        },
-        "Network-Centric Warfare": { 
-          scores: { conceptualDisruption: 3, irreversibleEmbedding: 2, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. NCW represents a classic case of conceptual innovation preceding technological capability. Despite implementation failures due to institutional resistance, it has irreversibly set military thinking on a path toward network-centric operations. The strategic reconceptualization of warfare as information-enabled networked operations cannot be undone, even if full technical instantiation remains incomplete.", 
-          sources: ["David S. Alberts, John J. Gartska, & Frederick P. Stein, *Network Centric Warfare: Developing and Leveraging Information Superiority* (1999)"] 
+          scores: { gameChanging: 4, permanent: 4, generative: 3, mindShift: 4 }, 
+          justification: "**Genuine Innovation**. Machine guns made linear tactics obsolete, created irreversible changes to military organization, and forced fundamental rethinking of infantry warfare.", 
+          sources: ["John Ellis, The Social History of the Machine Gun (1975)"] 
         },
         "Nuclear Weapons": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Nuclear weapons represent complete paradigmatic transformation across all dimensions. Made conventional strategic assumptions untenable, created irreversible systemic dependencies, enabled previously impossible deterrence thinking, and forced fundamental questioning of warfare's purpose. Command philosophy completely reconceptualized around mutual assured destruction.", 
-          sources: ["Lawrence Freedman, *The Evolution of Nuclear Strategy* (2003)"] 
-        },
-        "PGMs": { 
-          scores: { conceptualDisruption: 2, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. Precision-guided munitions enhance existing paradigms without fundamental challenge to operational assumptions. While catalytic in enabling new targeting concepts, strategic reconceptualization remains limited and conceptual disruption incomplete.", 
-          sources: ["Richard P. Hallion, *Precision-Guided Munitions and the Revolution in Warfare* (1995)"] 
+          scores: { gameChanging: 4, permanent: 4, generative: 4, mindShift: 4 }, 
+          justification: "**Genuine Innovation**. Nuclear weapons represent complete transformation across all dimensions. Fundamentally redefined warfare, strategy, and international relations.", 
+          sources: ["Lawrence Freedman, The Evolution of Nuclear Strategy (2003)"] 
         },
         "Radar": { 
-          scores: { conceptualDisruption: 3, irreversibleEmbedding: 3, catalyticEmergence: 3, strategicReconceptualization: 2 }, 
-          justification: "**Genuine Innovation**. Radar made surprise attack assumptions untenable, created systemic dependencies on detection networks, and opened conceptual space for integrated air defense thinking. Strategic assumptions about air warfare required significant questioning, though complete reconceptualization remained limited.", 
-          sources: ["David E. Fisher, *A Race on the Edge of Time: Radar - The Decisive Weapon of World War II* (1988)"] 
+          scores: { gameChanging: 3, permanent: 3, generative: 3, mindShift: 2 }, 
+          justification: "**Genuine Innovation**. Radar transformed air warfare by making surprise attacks much harder. Created permanent changes in air defense thinking and organization.", 
+          sources: ["David E. Fisher, A Race on the Edge of Time: Radar (1988)"] 
         },
         "Stealth": { 
-          scores: { conceptualDisruption: 2, irreversibleEmbedding: 2, catalyticEmergence: 2, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. Stealth technology challenges detection assumptions but operates within existing air warfare paradigms. Limited strategic reconceptualization and incomplete conceptual disruption. Primarily enhances rather than replaces operational concepts.", 
-          sources: ["Bill Sweetman, *Stealth Aircraft: Secrets of Future Airpower* (1986)"] 
-        },
-        "Stirrups": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Stirrups achieved complete paradigmatic transformation. Made infantry-centric assumptions untenable, created irreversible organizational DNA changes through feudal military structures, enabled previously impossible shock cavalry concepts, and forced fundamental questioning of tactical effectiveness criteria.", 
-          sources: ["Lynn White, Jr., *Medieval Technology and Social Change* (1962)"] 
-        },
-        "Stosstrupp Tactics": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 3, catalyticEmergence: 3, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Stosstrupp tactics made linear assault assumptions completely untenable and demanded strategic logic reconceptualization around infiltration principles. Created institutional resistance to reversion to rigid formations and opened conceptual space for combined arms thinking. Command philosophy adopted new effectiveness criteria emphasizing initiative over control.", 
-          sources: ["Bruce I. Gudmundsson, *Stormtroop Tactics: Innovation in the German Army, 1914-1918* (1989)"] 
-        },
-        "T-72B3M Main Battle Tank": { 
-          scores: { conceptualDisruption: 0, irreversibleEmbedding: 1, catalyticEmergence: 1, strategicReconceptualization: 0 }, 
-          justification: "**Upgradation**. Modernized tank systems enhance performance within existing armored warfare paradigms. No conceptual disruption or strategic reconceptualization - simply improved execution of established tank concepts.", 
-          sources: ["Charles K. Bartles, *The Russian Army: New Military Capability* (2015)"] 
+          scores: { gameChanging: 2, permanent: 2, generative: 2, mindShift: 1 }, 
+          justification: "**Modernization**. Stealth improves existing air warfare capabilities but operates within established paradigms. Limited fundamental changes to military thinking.", 
+          sources: ["Bill Sweetman, Stealth Aircraft: Secrets of Future Airpower (1986)"] 
         },
         "Tank": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Tank achieved complete paradigmatic transformation. Made trench warfare assumptions untenable, created irreversible systemic dependencies on mechanized logistics, enabled previously impossible mobile warfare concepts, and forced fundamental questioning of tactical effectiveness. Command philosophy completely reconceptualized around maneuver rather than attrition.", 
-          sources: ["J.P. Harris, *Men, Ideas, and Tanks: British Military Thought and Armoured Forces, 1903-1939* (1995)"] 
-        },
-        "Telegraph": { 
-          scores: { conceptualDisruption: 4, irreversibleEmbedding: 4, catalyticEmergence: 4, strategicReconceptualization: 4 }, 
-          justification: "**Genuine Innovation**. Telegraph achieved complete paradigmatic transformation. Made courier-based command assumptions untenable, created irreversible systemic dependencies on communication networks, enabled previously impossible command and control concepts, and forced fundamental questioning of strategic coordination. Command philosophy completely reconceptualized around real-time information.", 
-          sources: ["David Hochfelder, *The Telegraph in America, 1832-1920* (2012)"] 
-        },
-        "UAVs": { 
-          scores: { conceptualDisruption: 1, irreversibleEmbedding: 2, catalyticEmergence: 3, strategicReconceptualization: 1 }, 
-          justification: "**Modernization**. UAVs extend existing reconnaissance and strike paradigms without fundamental challenge to operational assumptions. While catalytic in opening new operational concepts, conceptual disruption remains limited and strategic reconceptualization incomplete.", 
-          sources: ["Peter W. Singer, *Wired for War: The Robotics Revolution and Conflict in the 21st Century* (2009)"] 
+          scores: { gameChanging: 4, permanent: 4, generative: 4, mindShift: 4 }, 
+          justification: "**Genuine Innovation**. Tanks completely transformed land warfare, created irreversible organizational changes, and fundamentally changed military thinking about mobility and firepower.", 
+          sources: ["J.P. Harris, Men, Ideas, and Tanks (1995)"] 
         },
     };
 
@@ -478,49 +379,51 @@
         return acc;
     }, {});
 
-    // ========= Enhanced Classification Logic =========
+    // ========= Fixed Classification Logic =========
     function classify(scores) {
         try {
-          const cd = INDICATORS.conceptualDisruption.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-          const ie = INDICATORS.irreversibleEmbedding.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-          const ce = INDICATORS.catalyticEmergence.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-          const sr = INDICATORS.strategicReconceptualization.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
-          const total = cd + ie + ce + sr;
+          const gc = INDICATORS.gameChanging.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const p = INDICATORS.permanent.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const g = INDICATORS.generative.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const ms = INDICATORS.mindShift.reduce((sum, ind) => sum + (scores[ind.id] || 0), 0);
+          const total = gc + p + g + ms;
 
-          if (total === 0) return { bucket: "None of the Above", total, cd, ie, ce, sr, classificationText: "No innovation has been scored. Please use the buttons to begin your assessment." };
+          if (total === 0) return { bucket: "None of the Above", total, gc, p, g, ms, classificationText: "No innovation has been scored. Please use the buttons to begin your assessment." };
           
-          // Fixed classification with correct thresholds based on your theoretical framework
-          // Genuine Innovation: High total with strong irreversible embedding AND strong conceptual disruption OR strategic reconceptualization
-          if (total >= 15 && ie >= 8 && (cd >= 9 || sr >= 9)) return { 
-              bucket: "Genuine Innovation", total, cd, ie, ce, sr, confidence: "High",
-              classificationText: "This qualifies as a 'Genuine Innovation.' Genuine Innovations achieve paradigmatic transformation through irreversible embedding combined with either complete conceptual disruption or strategic reconceptualization. They fundamentally redefine military thinking in ways that cannot be undone." 
+          // IRREVERSIBILITY IS REQUIRED FOR ALL INNOVATIONS - this is your necessary condition
+          if (p < 4) {
+            if (total >= 6) return { 
+                bucket: "Adaptation", total, gc, p, g, ms, confidence: "High",
+                classificationText: "This is an 'Adaptation.' While it shows some changes, it lacks the permanent, irreversible effects required for innovation. Can be reversed or abandoned without major consequences." 
+            };
+            return { 
+                bucket: "Upgradation", total, gc, p, g, ms, confidence: "High",
+                classificationText: "This is an 'Upgradation.' Limited improvements within existing frameworks without permanent changes." 
+            };
+          }
+          
+          // NOW ASSESS INNOVATION TYPES - all require permanent ≥ 4
+          // Genuine Innovation: Strong permanent effects AND either strong game-changing OR mind-shift effects
+          if (p >= 8 && total >= 15 && (gc >= 9 || ms >= 9)) return { 
+              bucket: "Genuine Innovation", total, gc, p, g, ms, confidence: "High",
+              classificationText: "This qualifies as a 'Genuine Innovation.' It creates permanent changes that can't be undone AND either forces major changes in how enemies fight OR fundamentally shifts military thinking." 
           };
           
-          // Alternative path for Genuine Innovation: Very high total with strong disruption even if embedding is moderate
-          if (total >= 12 && (cd >= 10 || sr >= 10) && ie >= 6) return { 
-              bucket: "Genuine Innovation", total, cd, ie, ce, sr, confidence: "Medium",
-              classificationText: "This qualifies as a 'Genuine Innovation.' While institutional embedding may be developing, the strength of paradigmatic transformation in conceptual disruption or strategic reconceptualization indicates fundamental redefinition of military thinking." 
+          // Alternative path for Genuine Innovation: High total with strong permanent and moderate game-changing/mind-shift
+          if (p >= 6 && total >= 12 && (gc >= 6 || ms >= 6)) return { 
+              bucket: "Genuine Innovation", total, gc, p, g, ms, confidence: "Medium",
+              classificationText: "This qualifies as a 'Genuine Innovation.' Strong evidence of permanent change combined with significant game-changing or mind-shift effects." 
           };
           
-          // Adaptation: conceptual disruption without institutional embedding
-          if (cd >= 1 && ie === 0 && ce === 0 && sr === 0) return { 
-              bucket: "Adaptation", total, cd, ie, ce, sr, confidence: "High",
-              classificationText: "This is an 'Adaptation.' It represents a reactive response to changing conditions that creates conceptual emergence but lacks institutional embedding or strategic reconceptualization. Think of it as tactical adjustment rather than paradigmatic transformation."
-          };
-          
-          // Modernization: significant manifestation with some embedding
-          if (total >= 6 && cd > 0 && ie >= 1) return { 
-              bucket: "Modernization", total, cd, ie, ce, sr, confidence: total >= 8 ? "High" : "Medium",
-              classificationText: "This qualifies as 'Modernization.' It improves existing paradigms through partial institutional embedding and limited conceptual disruption. While significant, it operates within rather than transcending current conceptual frameworks." 
-          };
-          
+          // Modernization: Has required permanent effects but doesn't reach innovation thresholds
           return { 
-              bucket: "Upgradation", total, cd, ie, ce, sr, confidence: "High",
-              classificationText: "This is an 'Upgradation.' It represents incremental improvement within existing paradigmatic frameworks. Low manifestation scores indicate enhancement rather than transformation of military concepts." 
+              bucket: "Modernization", total, gc, p, g, ms, confidence: "High",
+              classificationText: "This qualifies as 'Modernization.' It creates permanent changes but doesn't fundamentally transform military thinking or force major enemy changes. Improves existing approaches rather than replacing them." 
           };
+          
         } catch (error) {
           console.error('Classification error:', error);
-          return { bucket: "Error", total: 0, cd: 0, ie: 0, ce: 0, sr: 0, classificationText: "Error in classification. Please check your inputs." };
+          return { bucket: "Error", total: 0, gc: 0, p: 0, g: 0, ms: 0, classificationText: "Error in classification. Please check your inputs." };
         }
     }
 
@@ -534,10 +437,10 @@
         try {
           setChartError(null);
           const dimColors = { 
-            conceptualDisruption: '#34d399', 
-            irreversibleEmbedding: '#f87171', 
-            catalyticEmergence: '#fbbf24', 
-            strategicReconceptualization: '#60a5fa' 
+            gameChanging: '#34d399', 
+            permanent: '#f87171', 
+            generative: '#fbbf24', 
+            mindShift: '#60a5fa' 
           };
 
           if (dimensionChartRef.current) {
@@ -548,7 +451,7 @@
               dimensionChartRef.current.chartInstance = new Chart(dimChartCtx, {
                   type: 'bar',
                   data: {
-                      labels: ['CD', 'IE', 'CE', 'SR'],
+                      labels: ['Game Changing', 'Permanent', 'Generative', 'Mind Shift'],
                       datasets: [
                           { 
                             label: 'Conservative', 
@@ -577,15 +480,7 @@
                       x: { ticks: { font: { weight: 'bold' } } }
                     },
                     plugins: { 
-                      legend: { display: true, position: 'top' },
-                      tooltip: {
-                        callbacks: {
-                          title: function(context) {
-                            const labels = ['Conceptual Disruption', 'Irreversible Embedding', 'Catalytic Emergence', 'Strategic Reconceptualization'];
-                            return labels[context[0].dataIndex];
-                          }
-                        }
-                      }
+                      legend: { display: true, position: 'top' }
                     }
                   }
               });
@@ -628,14 +523,7 @@
                       x: { beginAtZero: true, max: 4 } 
                     },
                     plugins: {
-                      legend: { display: true, position: 'top' },
-                      tooltip: {
-                        callbacks: {
-                          title: function(context) {
-                            return ALL_INDICATORS[context[0].dataIndex].label;
-                          }
-                        }
-                      }
+                      legend: { display: true, position: 'top' }
                     }
                   }
               });
@@ -649,7 +537,6 @@
       useEffect(() => {
         updateCharts();
         return () => {
-          // Cleanup charts on unmount
           if (dimensionChartRef.current?.chartInstance) {
             dimensionChartRef.current.chartInstance.destroy();
           }
@@ -673,13 +560,13 @@
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Dimension Manifestation</h3>
-                <p className="text-sm text-gray-600 mb-3">This chart shows manifestation intensity across the four dimensions. **Conservative** reflects your direct assessment, while **Integrated** includes emergent interdependency effects.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Dimension Scores</h3>
+                <p className="text-sm text-gray-600 mb-3">This chart shows scores across the four dimensions. **Conservative** reflects your direct assessment, while **Integrated** includes spillover effects.</p>
                 <canvas ref={dimensionChartRef} className="h-64"></canvas>
             </div>
             <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Indicator Manifestation</h3>
-                <p className="text-sm text-gray-600 mb-3">This chart provides detailed breakdown of manifestation across individual indicators, revealing where paradigmatic transformation is most evident.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Individual Indicators</h3>
+                <p className="text-sm text-gray-600 mb-3">This chart shows detailed breakdown across individual indicators.</p>
                 <canvas ref={indicatorChartRef} className="h-64"></canvas>
             </div>
         </div>
@@ -729,10 +616,10 @@
       
       const getDimensionDisplayName = (key) => {
         const names = {
-          conceptualDisruption: "Conceptual Disruption",
-          irreversibleEmbedding: "Irreversible Embedding", 
-          catalyticEmergence: "Catalytic Emergence",
-          strategicReconceptualization: "Strategic Reconceptualization"
+          gameChanging: "Game Changing",
+          permanent: "Permanent", 
+          generative: "Generative",
+          mindShift: "Mind Shift"
         };
         return names[key] || key;
       };
@@ -769,7 +656,7 @@
                                   checked={state.showRubrics} 
                                   onChange={e => dispatch({ type: 'SET_SHOW_RUBRICS', payload: e.target.checked })} 
                                 />
-                                <span>Show manifestation intensity tooltips</span>
+                                <span>Show score descriptions</span>
                             </label>
                             <button 
                               onClick={() => dispatch({ type: 'RESET_ALL' })} 
@@ -783,8 +670,8 @@
                         </div>
                         <div className="space-y-4">
                             <div>
-                                <h3 className="text-lg font-medium text-gray-900">Conservative</h3>
-                                <p className="text-sm text-gray-500">Based on your direct assessment.</p>
+                                <h3 className="text-lg font-medium text-gray-900">Your Assessment</h3>
+                                <p className="text-sm text-gray-500">Based on your direct scoring.</p>
                                 <div className="mt-2 space-y-1">
                                     <div className="flex items-center gap-2">
                                       <span className={`py-1 px-3 text-sm font-bold rounded-full ${conservativeClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
@@ -797,18 +684,18 @@
                                       )}
                                     </div>
                                     <div className="text-xs text-gray-600 mt-1">
-                                        Conceptual Disruption: {conservativeClassification.cd}/16<br/>
-                                        Irreversible Embedding: {conservativeClassification.ie}/16<br/>
-                                        Catalytic Emergence: {conservativeClassification.ce}/16<br/>
-                                        Strategic Reconceptualization: {conservativeClassification.sr}/16<br/>
+                                        Game Changing: {conservativeClassification.gc}/16<br/>
+                                        Permanent: {conservativeClassification.p}/16<br/>
+                                        Generative: {conservativeClassification.g}/16<br/>
+                                        Mind Shift: {conservativeClassification.ms}/16<br/>
                                         <strong>Total: {conservativeClassification.total}/64</strong>
                                     </div>
                                 </div>
                                 <p className="mt-2 text-sm text-gray-600">{conservativeClassification.classificationText}</p>
                             </div>
                             <div>
-                                <h3 className="text-lg font-medium text-gray-900">Integrated</h3>
-                                <p className="text-sm text-gray-500">With emergent interdependencies.</p>
+                                <h3 className="text-lg font-medium text-gray-900">With Spillover Effects</h3>
+                                <p className="text-sm text-gray-500">Including connections between areas.</p>
                                 <div className="mt-2 space-y-1">
                                     <div className="flex items-center gap-2">
                                       <span className={`py-1 px-3 text-sm font-bold rounded-full ${integratedClassification.bucket === "Genuine Innovation" ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
@@ -821,10 +708,10 @@
                                       )}
                                     </div>
                                     <div className="text-xs text-gray-600 mt-1">
-                                        Conceptual Disruption: {integratedClassification.cd}/16<br/>
-                                        Irreversible Embedding: {integratedClassification.ie}/16<br/>
-                                        Catalytic Emergence: {integratedClassification.ce}/16<br/>
-                                        Strategic Reconceptualization: {integratedClassification.sr}/16<br/>
+                                        Game Changing: {integratedClassification.gc}/16<br/>
+                                        Permanent: {integratedClassification.p}/16<br/>
+                                        Generative: {integratedClassification.g}/16<br/>
+                                        Mind Shift: {integratedClassification.ms}/16<br/>
                                         <strong>Total: {integratedClassification.total}/64</strong>
                                     </div>
                                 </div>
@@ -836,9 +723,9 @@
             </div>
             
             <div className="card">
-                <div className="card-header"><div className="card-title">Manifestation Assessment</div></div>
+                <div className="card-header"><div className="card-title">Innovation Assessment</div></div>
                 <div className="card-content space-y-4">
-                    <p className="text-sm text-gray-600">Assess the degree of manifestation across each indicator from 0-4. Hover for manifestation intensity descriptions.</p>
+                    <p className="text-sm text-gray-600">Rate each factor from 0-4 based on how much evidence you see. Hover for descriptions if enabled.</p>
                     {DIM_KEYS.map(dimKey => (
                         <div key={dimKey} className="mb-6 p-4 border rounded-lg bg-gray-50">
                             <h3 className="text-lg font-medium text-gray-800 flex items-center mb-2">
@@ -880,7 +767,7 @@
                 <div className="tab-container">
                     <button onClick={() => dispatch({ type: 'SET_TAB', payload: 'scoring' })}
                             className={`tab-btn ${state.activeTab === 'scoring' ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
-                        Emergent Interdependencies
+                        Connected Effects
                     </button>
                     <button onClick={() => dispatch({ type: 'SET_TAB', payload: 'charts' })}
                             className={`tab-btn ${state.activeTab === 'charts' ? 'tab-btn-active' : 'tab-btn-inactive'}`}>
@@ -896,7 +783,7 @@
                     {state.activeTab === 'scoring' && (
                         <div className="space-y-4">
                             <p className="text-sm text-gray-600 italic">
-                                This section captures the reality that innovation manifestation involves recursive, non-linear interactions across dimensions. Strong manifestation in one area may reveal previously invisible aspects in others.
+                                Sometimes changes in one area create effects in other areas. Answer these questions to capture those connections.
                             </p>
                             <ul className="mt-4 space-y-4">
                                 {PROMPTS.map(prompt => (
@@ -935,7 +822,7 @@
                     {state.activeTab === 'examples' && (
                         <div className="space-y-4">
                             <p className="text-sm text-gray-600 mb-3">
-                                Click any example below to load its manifestation assessment, theoretical justification, and sources.
+                                Click any example below to see how it was assessed using this framework.
                             </p>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs mb-4">
                                 {Object.keys(MAPPED_EXAMPLES).sort().map(name => (
@@ -953,7 +840,7 @@
                                 <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                                     <h3 className="text-lg font-semibold mb-2 text-blue-900">{state.selectedExample} Assessment</h3>
                                     <p className="mb-4 text-sm text-blue-800">{MAPPED_EXAMPLES[state.selectedExample].justification}</p>
-                                    <h3 className="text-lg font-semibold mb-2 text-blue-900">Indicative Sources</h3>
+                                    <h3 className="text-lg font-semibold mb-2 text-blue-900">Sources</h3>
                                     <ul className="list-disc list-inside space-y-1 text-sm text-blue-800">
                                         {MAPPED_EXAMPLES[state.selectedExample].sources.map((source, index) => (<li key={index}>{source}</li>))}
                                     </ul>
@@ -965,7 +852,7 @@
             </div>
             
             <div className="text-xs text-gray-500 text-center">
-              Manifestation assessment framework. Evaluates observed paradigmatic transformation across four dimensions rather than defining innovation categorically. Conservative vs Integrated assessments shown for analytical transparency.
+              Innovation assessment framework. This tool helps identify genuine military innovations by looking at evidence across four key areas rather than trying to define innovation perfectly.
             </div>
           </div>
         </ErrorBoundary>
