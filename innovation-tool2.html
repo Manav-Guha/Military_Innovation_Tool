@@ -47,7 +47,7 @@
     ];
     const ORDER = DIMS.map(d=>d.key);
 
-    // ===== Sub-indicator scaffold =====
+    // ===== Sub-indicator scaffold (4 per dimension) =====
     const SUBS = {
       Disruption: [
         {k:"d1", name:"Enemy OODA disruption", hint:"Throws off observe–orient–decide–act."},
@@ -76,6 +76,7 @@
     };
 
     // ===== Core logic =====
+    const meanToInt = arr => Math.round(arr.reduce((a,v)=>a+v,0)/arr.length);
     const thresholdOK = s => (s.Cognitive||0) >= 2 && (s.Irreversibility||0) >= 2;
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
     function classify(s){
@@ -86,11 +87,9 @@
       if (strong >= 2) return "Innovation";
       return "Modernization";
     }
-    const meanToInt = arr => Math.round(arr.reduce((a,v)=>a+v,0)/arr.length);
 
     // ===== Full Historical Examples (C/I/D/G) =====
-    // Optional: add "sub" with 4-item arrays per dimension for granular presetting.
-    // If absent, sub-indicators render as the dimension score replicated across its four items.
+    // Note: If a case lacks "sub" arrays, sub-sliders are shown locked with the dimension score replicated across the 4 items.
     const EXAMPLES = {
       "AI-Targeting": {
         scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 },
@@ -99,159 +98,190 @@
       },
       "AIP Submarine": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 },
-        justification: "**Modernization**. AIP extends submarine endurance and creates new patrol capabilities beyond mere performance upgrade. Requires institutional adaptation; stays within submarine-warfare paradigms.",
+        justification: "**Modernization**. AIP extends submarine endurance and creates new patrol capabilities beyond mere performance upgrade. Requires institutional adaptation to new operational patterns and resource allocation shifts. However, operates within existing submarine warfare paradigms without fundamental strategic reconceptualization.",
         sources: ["Norman Polmar & K.J. Moore, Cold War Submarines (2004)"]
       },
       "ASBM": {
         scores: { Cognitive:3, Irreversibility:2, Disruption:3, Generative:2 },
-        justification: "**Genuine Innovation**. Forces rethinking of carrier operations and power projection.",
+        justification: "**Genuine Innovation**. ASBMs force navies to completely rethink carrier operations and power projection. Creates fundamental shifts in naval strategy and planning.",
         sources: ["Andrew S. Erickson, Chinese Anti-Ship Ballistic Missile Development (2013)"]
       },
       "Barbed Wire": {
         scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 },
-        justification: "**Genuine Innovation**. Offensive linear assumptions collapse; defensive concepts entrenched.",
-        sources: ["Stephen Bull, The Soldier's Kit (2013)"]
+        justification: "**Genuine Innovation**. Barbed wire made existing offensive operational assumptions untenable, forcing fundamental revision of tactical frameworks. Created institutional resistance to reversion to linear tactics and opened conceptual space for defensive warfare thinking.",
+        sources: ["Stephen Bull, The Soldier's Kit: The British Army on the Western Front 1914-1918 (2013)"]
       },
       "Blitzkrieg": {
         scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Rewires doctrine around tempo and combined arms; closes off pre-mechanized practice.",
-        sources: ["Liddell Hart; Guderian, Panzer Leader"]
+        justification: "**Genuine Innovation**. Blitzkrieg completely transformed land warfare, became irreversible standard, spawned numerous follow-on innovations, and forced fundamental rethinking of military strategy.",
+        sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"]
       },
       "Carrier Aviation": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. From battleship primacy to sea-based air power; strategic and organizational overhaul.",
-        sources: ["Norman Friedman, U.S. Aircraft Carriers (1983)"]
+        justification: "**Genuine Innovation**. Carrier aviation achieved complete paradigmatic transformation. Battleship-centric operational assumptions became untenable, organizational DNA permanently altered through aviation-naval integration, transcended original domain to enable global power projection concepts.",
+        sources: ["Norman Friedman, U.S. Aircraft Carriers: An Illustrated Design History (1983)"]
       },
       "Cyber Warfare": {
         scores: { Cognitive:2, Irreversibility:2, Disruption:2, Generative:3 },
-        justification: "**Modernization**. Adds an operational layer; core strategic grammar largely intact.",
-        sources: ["Martin C. Libicki, Conquest in Cyberspace (2012)"]
+        justification: "**Modernization**. Cyber warfare creates new operational domains but does not fundamentally challenge existing strategic logic. While catalytic in opening new conceptual spaces, it operates alongside rather than replacing traditional paradigms.",
+        sources: ["Martin C. Libicki, Conquest in Cyberspace: A New Kind of War (2012)"]
       },
       "Deep Battle/Reconnaissance Strike Complex": {
         scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 },
-        justification: "**Genuine Innovation**. Collapses frontal-assault assumptions; drives operational art.",
-        sources: ["Mary Habeck, Storm of Steel (2003)"]
+        justification: "**Genuine Innovation**. Deep Battle doctrine made frontal assault assumptions untenable and demanded strategic logic reconceptualization. Created institutional resistance to reversion to linear operations and opened conceptual space for operational art thinking.",
+        sources: ["Mary Habeck, Storm of Steel: The Development of Soviet Operational Art (2003)"]
       },
       "F-16 Block D": {
         scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 },
-        justification: "**Upgradation**. Performance uplift inside existing paradigm.",
-        sources: ["USAF Fact Sheets"]
+        justification: "**Upgradation**. Block upgrades enhance performance within existing air superiority paradigms without challenging operational assumptions. No strategic reconceptualization or conceptual disruption—simply improved execution of established concepts.",
+        sources: ["U.S. Air Force Fact Sheets"]
       },
       "Hypersonics": {
         scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 },
-        justification: "**Modernization**. Speed-focused; limited doctrinal reconceptualization so far.",
-        sources: ["Thomas G. Mahnken, RMA literature (2007)"]
+        justification: "**Modernization**. Hypersonics accelerate existing missile paradigms without fundamentally challenging strategic assumptions about deterrence or operational concepts. Limited conceptual disruption and minimal strategic reconceptualization evidence.",
+        sources: ["Thomas G. Mahnken, The Technological Revolution in Military Affairs (2007)"]
       },
       "Information Warfare": {
         scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 },
-        justification: "**Genuine Innovation**. Challenges C2 assumptions; pushes non-hierarchical flows.",
-        sources: ["T. E. Ricks, The Generals (2012)"]
+        justification: "**Genuine Innovation**. Information warfare challenges operational assumptions about command and control, creates institutional resistance to reversion to hierarchical communication, and transcends original domains to influence political-military boundaries.",
+        sources: ["T. E. Ricks, The Generals: American Military Command from World War II to Today (2012)"]
       },
       "Lasers": {
         scores: { Cognitive:1, Irreversibility:1, Disruption:2, Generative:2 },
-        justification: "**Modernization**. Defensive challenges but within established frameworks.",
-        sources: ["AFRL, Directed Energy Weapons: A Primer (2019)"]
+        justification: "**Modernization**. Directed energy systems challenge some defensive assumptions but operate within existing paradigmatic frameworks. Limited institutional embedding and strategic reconceptualization evidence.",
+        sources: ["Air Force Research Laboratory, Directed Energy Weapons: A Primer (2019)"]
       },
       "Machine Gun": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:3 },
-        justification: "**Genuine Innovation**. Ends linear assault viability; forces new infantry doctrine.",
+        justification: "**Genuine Innovation**. Machine guns made linear tactics obsolete, created irreversible changes to military organization, and forced fundamental rethinking of infantry warfare.",
         sources: ["John Ellis, The Social History of the Machine Gun (1975)"]
       },
       "Military Robotics": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 },
-        justification: "**Modernization**. Extends reach; conceptual disruption still limited.",
-        sources: ["Peter W. Singer, Wired for War (2009)"]
+        justification: "**Modernization**. Military robotics extends human capabilities without fundamentally challenging operational assumptions. While catalytic in opening new conceptual spaces, conceptual disruption remains limited and strategic reconceptualization minimal.",
+        sources: ["Peter W. Singer, Wired for War: The Robotics Revolution and Conflict in the 21st Century (2009)"]
       },
       "Minie Ball/Conoidal Bullet": {
         scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 },
-        justification: "**Genuine Innovation**. Undermines Napoleonic lines; reframes infantry effectiveness.",
-        sources: ["Brent Nosworthy, The Bloody Crucible of Courage (2003)"]
+        justification: "**Genuine Innovation**. Minie ball made Napoleonic linear tactics untenable, created institutional resistance to reversion to close-order formations, and forced strategic assumptions about infantry effectiveness to be fundamentally questioned.",
+        sources: ["Brent Nosworthy, The Bloody Crucible of Courage: Fighting Methods and Combat Experience of the American Civil War (2003)"]
       },
       "Multi-Domain Battle Concept": {
         scores: { Cognitive:2, Irreversibility:1, Disruption:2, Generative:3 },
-        justification: "**Modernization**. Challenges stovepipes; still emergent.",
-        sources: ["TRADOC Pamphlet 525-3-1"]
+        justification: "**Modernization**. Multi-Domain Operations challenges some stovepiped assumptions but remains conceptually emergent. Limited institutional embedding and incomplete strategic reconceptualization.",
+        sources: ["U.S. Army TRADOC Pamphlet 525-3-1"]
       },
       "Network-Centric Warfare": {
         scores: { Cognitive:4, Irreversibility:2, Disruption:3, Generative:4 },
-        justification: "**Genuine Innovation**. Conceptual lead with uneven execution; trajectory is locked.",
-        sources: ["Alberts, Garstka, Stein, Network Centric Warfare (1999)"]
+        justification: "**Genuine Innovation**. NCW represents a classic case of conceptual innovation preceding technological capability. Despite implementation failures due to institutional resistance, it has irreversibly set military thinking on a path toward network-centric operations.",
+        sources: ["David S. Alberts, John J. Garstka, & Frederick P. Stein, Network Centric Warfare (1999)"]
       },
       "Nuclear Weapons": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Paradigmatic transformation across all dimensions.",
+        justification: "**Genuine Innovation**. Nuclear weapons represent complete transformation across all dimensions. Fundamentally redefined warfare, strategy, and international relations.",
         sources: ["Lawrence Freedman, The Evolution of Nuclear Strategy (2003)"]
       },
       "PGMs": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:3 },
-        justification: "**Modernization**. Enhances targeting; limited strategic reconceptualization.",
-        sources: ["Richard P. Hallion, Precision-Guided Munitions (1995)"]
+        justification: "**Modernization**. Precision-guided munitions enhance existing paradigms without fundamental challenge to operational assumptions. While catalytic in enabling new targeting concepts, strategic reconceptualization remains limited.",
+        sources: ["Richard P. Hallion, Precision-Guided Munitions and the Revolution in Warfare (1995)"]
       },
       "Radar": {
         scores: { Cognitive:2, Irreversibility:3, Disruption:3, Generative:3 },
-        justification: "**Genuine Innovation**. Transforms air defense; permanently embeds.",
-        sources: ["David E. Fisher, A Race on the Edge of Time (1988)"]
+        justification: "**Genuine Innovation**. Radar transformed air warfare by making surprise attacks much harder. Created permanent changes in air defense thinking and organization.",
+        sources: ["David E. Fisher, A Race on the Edge of Time: Radar (1988)"]
       },
       "Stealth": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:2 },
-        justification: "**Modernization**. Improves survivability within existing airpower logic.",
-        sources: ["Bill Sweetman, Stealth Aircraft (1986)"]
+        justification: "**Modernization**. Stealth improves existing air warfare capabilities but operates within established paradigms. Limited fundamental changes to military thinking.",
+        sources: ["Bill Sweetman, Stealth Aircraft: Secrets of Future Airpower (1986)"]
       },
       "Stirrups": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Enables shock cavalry; reorders military-social structure.",
-        sources: ["Lynn White Jr., Medieval Technology and Social Change (1962)"]
+        justification: "**Genuine Innovation**. Stirrups achieved complete paradigmatic transformation. Made infantry-centric assumptions untenable, created irreversible organizational DNA changes through feudal military structures, enabled previously impossible shock cavalry concepts.",
+        sources: ["Lynn White, Jr., Medieval Technology and Social Change (1962)"]
       },
       "Stosstrupp Tactics": {
         scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 },
-        justification: "**Genuine Innovation**. Infiltration collapses rigid formations; doctrinal reconceptualization.",
-        sources: ["Bruce I. Gudmundsson, Stormtroop Tactics (1989)"]
+        justification: "**Genuine Innovation**. Stosstrupp tactics made linear assault assumptions completely untenable and demanded strategic logic reconceptualization around infiltration principles. Created institutional resistance to reversion to rigid formations.",
+        sources: ["Bruce I. Gudmundsson, Stormtroop Tactics: Innovation in the German Army, 1914-1918 (1989)"]
       },
       "T-72B3M Main Battle Tank": {
         scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 },
-        justification: "**Upgradation**. Performance upgrades; no doctrinal shift.",
-        sources: ["Charles K. Bartles, notes on Russian capability (2015)"]
+        justification: "**Upgradation**. Modernized tank systems enhance performance within existing armored warfare paradigms. No conceptual disruption or strategic reconceptualization—simply improved execution of established tank concepts.",
+        sources: ["Charles K. Bartles, The Russian Army: New Military Capability (2015)"]
       },
       "Tank": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Mobility + firepower reframe land warfare.",
+        justification: "**Genuine Innovation**. Tanks completely transformed land warfare, created irreversible organizational changes, and fundamentally changed military thinking about mobility and firepower.",
         sources: ["J.P. Harris, Men, Ideas, and Tanks (1995)"]
       },
       "Telegraph": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Command latency collapse; network dependency entrenched.",
-        sources: ["David Hochfelder, The Telegraph in America (2012)"]
+        justification: "**Genuine Innovation**. Telegraph achieved complete paradigmatic transformation. Made courier-based command assumptions untenable, created irreversible systemic dependencies on communication networks, enabled previously impossible command and control concepts.",
+        sources: ["David Hochfelder, The Telegraph in America, 1832–1920 (2012)"]
       },
       "UAVs": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 },
-        justification: "**Modernization**. Extends reconnaissance/strike; limited doctrinal closure.",
-        sources: ["Peter W. Singer, Wired for War (2009)"]
+        justification: "**Modernization**. UAVs extend existing reconnaissance and strike paradigms without fundamental challenge to operational assumptions. While catalytic in opening new operational concepts, conceptual disruption remains limited.",
+        sources: ["Peter W. Singer, Wired for War: The Robotics Revolution and Conflict in the 21st Century (2009)"]
       }
     };
 
     // ===== Charts =====
-    function RadarChart({scores}){
-      const ref=useRef(null), chart=useRef(null);
-      const values = useMemo(()=> ORDER.map(k => +scores[k]||0), [scores]);
-      useEffect(()=>{
-        const ctx=ref.current.getContext('2d');
-        if(chart.current) chart.current.destroy();
-        chart.current=new Chart(ctx,{
-          type:'radar',
-          data:{ labels:DIMS.map(d=>d.label),
-                 datasets:[
-                   {label:'Current',data:values,fill:true,borderWidth:2,pointRadius:3,
-                    backgroundColor:'rgba(37,99,235,0.2)',borderColor:'rgba(37,99,235,1)'},
-                   {label:'Threshold (C≥2, I≥2)',data:[2,2,0,0],fill:true,borderWidth:1,borderDash:[6,4],pointRadius:0,
-                    backgroundColor:'rgba(107,114,128,0.12)',borderColor:'rgba(107,114,128,0.8)'}
-                 ]},
-          options:{responsive:true,plugins:{legend:{position:'top'}},
-                   scales:{r:{beginAtZero:true,min:0,max:4,ticks:{stepSize:1},grid:{circular:true}}}}
+    function RadarChart({scores}) {
+      const ref = useRef(null);
+      const chart = useRef(null);
+      const values = useMemo(() => ORDER.map(k => +scores[k] || 0), [scores]);
+
+      useEffect(() => {
+        const ctx = ref.current.getContext('2d');
+        if (chart.current) chart.current.destroy();
+        chart.current = new Chart(ctx, {
+          type: 'radar',
+          data: {
+            labels: DIMS.map(d => d.label),
+            datasets: [
+              {
+                label: 'Current',
+                data: values,
+                fill: true,
+                backgroundColor: 'rgba(37,99,235,0.2)',
+                borderColor: 'rgba(37,99,235,1)',
+                borderWidth: 2,
+                pointRadius: 3
+              },
+              {
+                label: 'Threshold (C≥2, I≥2)',
+                data: [2,2,2,2],  // four axes
+                fill: false,
+                borderColor: 'rgba(107,114,128,0.8)',
+                borderDash: [6, 4],
+                borderWidth: 1,
+                pointRadius: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top' } },
+            scales: {
+              r: {
+                beginAtZero: true,
+                min: 0,
+                max: 4,
+                ticks: { stepSize: 1 }
+              }
+            }
+          }
         });
-        return ()=> chart.current && chart.current.destroy();
-      },[values]);
-      return <canvas ref={ref} height={360} className="w-full"/>;
+        return () => { if (chart.current) chart.current.destroy(); };
+      }, [values]);
+
+      return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
     }
+
     function BarChart({scores}){
       const ref=useRef(null), chart=useRef(null);
       const values = useMemo(()=> ORDER.map(k => +scores[k]||0), [scores]);
@@ -262,7 +292,7 @@
         chart.current=new Chart(ctx,{
           type:'bar',
           data:{labels:DIMS.map(d=>d.label),
-                datasets:[{label:'Score',data:values,backgroundColor:values.map(colorFor),borderWidth:1}]},
+                datasets:[{label:'Score',data:values,backgroundColor:values.map(colorFor)}]},
           options:{responsive:true,plugins:{legend:{display:false}},
                    scales:{y:{beginAtZero:true,min:0,max:4,ticks:{stepSize:1}}}}
         });
@@ -270,6 +300,7 @@
       },[values]);
       return <canvas ref={ref} height={360} className="w-full"/>;
     }
+
     function ChartsPanel({scores,meta}){
       return (
         <div className="grid md:grid-cols-2 gap-6">
@@ -341,14 +372,12 @@
     function HistoricalExamples({setScores,setMeta}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
-      // Build sub-values from example: use provided sub arrays if present, else replicate dim score.
       const [subs,setSubs]=useState(null);
 
       const buildSubFromExample = (ex) => {
         const s = {};
         DIMS.forEach(d=>{
           const val = ex.scores[d.key]||0;
-          // If ex.sub && ex.sub[d.key] exists and has 4 values, map them onto scaffold order
           const arr = ex.sub && Array.isArray(ex.sub[d.key]) && ex.sub[d.key].length===4
             ? ex.sub[d.key]
             : [val,val,val,val];
@@ -362,7 +391,6 @@
         if(!sel) return;
         const ex = EXAMPLES[sel];
         setMeta({label: sel});
-        // Aggregate sub-values (average) to scores for charts
         const subVals = buildSubFromExample(ex);
         const dimScores = {
           Disruption:      meanToInt([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
@@ -399,7 +427,6 @@
           {ex && (
             <div className="grid md:grid-cols-2 gap-6">
               {["Disruption","Irreversibility","Cognitive","Generative"].map(dim=>{
-                // Render locked sub-panels using either provided granular subs or replicated dim score
                 const subVals = subs ?? (()=> {
                   const seed = {};
                   const v = ex.scores[dim]||0;
@@ -407,7 +434,7 @@
                   return seed;
                 })();
                 const pick = Object.fromEntries(SUBS[dim].map(it => [it.k, subVals[it.k]]));
-                const dummySet = ()=>{}; // locked
+                const dummySet = ()=>{};
                 return <SubPanel key={dim} dim={dim} values={pick} setValue={dummySet} locked={true} />;
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
@@ -470,7 +497,7 @@
       );
     }
 
-    // ===== Tabs + App =====
+    // ===== Tabs + Legend =====
     function Tabs({tab,setTab}){
       const items=[
         {k:'examples',label:'Historical Examples'},
@@ -492,7 +519,7 @@
         <div className="panel panel-b text-sm">
           <div className="font-semibold mb-2">Scoring Legend</div>
           <ul className="list-disc list-inside text-gray-700 space-y-1">
-            <li><b>0</b> = Not applicable / none</li>
+            <li><b>0</b> = None</li>
             <li><b>1</b> = Minimal impact</li>
             <li><b>2</b> = Limited but measurable impact</li>
             <li><b>3</b> = Significant impact</li>
@@ -502,6 +529,7 @@
       );
     }
 
+    // ===== App =====
     function App(){
       const [tab,setTab]=useState('examples');
       const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
