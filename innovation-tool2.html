@@ -7,13 +7,14 @@
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js" data-presets="react"></script>
+  <!-- Use env+react so modern syntax is transpiled -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" data-presets="env,react"></script>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js UMD (auto-registered) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
     .big-tabs{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.5rem 0}
@@ -31,8 +32,8 @@
     .meter{height:.5rem;background:#e5e7eb;border-radius:.375rem;overflow:hidden}
     .meter-fill{height:100%;background:#2563eb}
     .flag-icon{display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:2px;margin-left:.4rem}
-    .flag-mild{background:#f59e0b;color:#111;border:1px solid #7c2d12} /* yellow, black ! */
-    .flag-major{background:#ef4444;color:#111;border:1px solid #111} /* red, black ! */
+    .flag-mild{background:#f59e0b;color:#111;border:1px solid #7c2d12} /* yellow with black ! */
+    .flag-major{background:#ef4444;color:#111;border:1px solid #111}    /* red with black ! */
     .dim-title{display:flex;align-items:center;gap:.25rem}
     .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
     .modal{background:#fff;border-radius:12px;max-width:720px;width:94%;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}
@@ -58,17 +59,17 @@
       Cognitive: [
         {k:"c1", name:"Core Assumptions Challenged", hint:"Prospective: which assumptions break? Retrospective: records show assumptions seen as broken."},
         {k:"c2", name:"Doctrine / Professional Military Education (PME) Revision", hint:"Prospective: plan for Tactics, Techniques, and Procedures (TTPs)/modules. Retrospective: practice embedded (manuals, SOPs, curricula)."},
-        {k:"c3", name:"Shift in Command Attention", hint:"Prospective: new variables monitored. Retrospective: orders/AARs show new focus."},
-        {k:"c4", name:"New Criteria for Success", hint:"Prospective: requires new criteria. Retrospective: success redefined and measured differently."}
+        {k:"c3", name:"Shift in Command Attention", hint:"Prospective: new variables monitored. Retrospective: orders/After-Action Reports (AARs) show new focus."},
+        {k:"c4", name:"New Criteria for Success", hint:"Prospective: requires new criteria. Retrospective: success defined and measured differently."}
       ],
       Irreversibility: [
         {k:"i1", name:"Training and Skill Path Dependence", hint:"New long-term pipelines vs none."},
         {k:"i2", name:"Logistics and Infrastructure Path Dependence", hint:"Supply, maintenance, infrastructure reconfigured."},
         {k:"i3", name:"Adversary Compulsion to Mirror", hint:"Extent of rival adoption."},
-        {k:"i4", name:"Force Structure Changes", hint:"Units/TO&E created or reconfigured."}
+        {k:"i4", name:"Force Structure Changes", hint:"Units/Tables of Organization and Equipment (TO&E) created or reconfigured."}
       ],
       Disruption: [
-        {k:"d1", name:"Enemy OODA Disruption", hint:"Observe–Orient–Decide–Act cycle broken?"},
+        {k:"d1", name:"Enemy Observe–Orient–Decide–Act (OODA) Disruption", hint:"OODA cycle broken?"},
         {k:"d2", name:"Doctrinal Breakpoints", hint:"Old doctrine rendered unusable?"},
         {k:"d3", name:"Kill-Chain / Topology Shifts", hint:"Sequencing/roles fundamentally change?"},
         {k:"d4", name:"Adversary Scramble", hint:"Urgent, costly countermeasures?"}
@@ -142,38 +143,35 @@
 
     function evaluateContradictions(dimScores, subScores) {
       const issues=[];
-      for (const rule of CONTRADICTION_RULES){
-        let ok=true;
-        for (const c of rule.conditions){
+      for (var r=0;r<CONTRADICTION_RULES.length;r++){
+        const rule = CONTRADICTION_RULES[r];
+        var ok=true;
+        for (var i=0;i<rule.conditions.length;i++){
+          const c = rule.conditions[i];
           if (c.dim){
             const v = +dimScores[c.dim]||0;
-            if (c.min!=null && v < c.min) ok=false;
-            if (c.max!=null && v > c.max) ok=false;
+            if (c.min!=null && v < c.min) { ok=false; break; }
+            if (c.max!=null && v > c.max) { ok=false; break; }
           } else if (c.sub){
-            const v = +subScores[c.sub]||0;
-            if (c.min!=null && v < c.min) ok=false;
-            if (c.max!=null && v > c.max) ok=false;
+            const v2 = +subScores[c.sub]||0;
+            if (c.min!=null && v2 < c.min) { ok=false; break; }
+            if (c.max!=null && v2 > c.max) { ok=false; break; }
           }
-          if(!ok) break;
         }
-        if(ok) issues.push({id:rule.id,severity:rule.severity,message:rule.message});
+        if (ok) issues.push({id:rule.id,severity:rule.severity,message:rule.message});
       }
-      // Map to per-dimension flags
       const flags = { Cognitive:null, Irreversibility:null, Disruption:null, Generative:null };
       const bump = (curr,sev)=> {
         const rank = {mild:1,major:2};
         if(!curr) return sev;
         return rank[sev]>rank[curr]?sev:curr;
       };
-      for(const it of issues){
-        if (it.id.includes("C_")) flags.Cognitive = bump(flags.Cognitive,it.severity);
-        if (it.id.includes("_C")) flags.Cognitive = bump(flags.Cognitive,it.severity);
-        if (it.id.includes("I_")) flags.Irreversibility = bump(flags.Irreversibility,it.severity);
-        if (it.id.includes("_I")) flags.Irreversibility = bump(flags.Irreversibility,it.severity);
-        if (it.id.includes("D_")) flags.Disruption = bump(flags.Disruption,it.severity);
-        if (it.id.includes("_D")) flags.Disruption = bump(flags.Disruption,it.severity);
-        if (it.id.includes("G_")) flags.Generative = bump(flags.Generative,it.severity);
-        if (it.id.includes("_G")) flags.Generative = bump(flags.Generative,it.severity);
+      for (var j=0;j<issues.length;j++){
+        const it = issues[j];
+        if (it.id.indexOf("C_")>=0 || it.id.indexOf("_C")>=0) flags.Cognitive = bump(flags.Cognitive,it.severity);
+        if (it.id.indexOf("I_")>=0 || it.id.indexOf("_I")>=0) flags.Irreversibility = bump(flags.Irreversibility,it.severity);
+        if (it.id.indexOf("D_")>=0 || it.id.indexOf("_D")>=0) flags.Disruption = bump(flags.Disruption,it.severity);
+        if (it.id.indexOf("G_")>=0 || it.id.indexOf("_G")>=0) flags.Generative = bump(flags.Generative,it.severity);
         if (it.id==="G_vs_G3") flags.Generative = bump(flags.Generative,it.severity);
       }
       return {issues, flags};
@@ -188,12 +186,12 @@
       },
       "AIP Submarine": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 },
-        justification: "**Modernization**. AIP extends endurance and creates new patrol capabilities.",
+        justification: "AIP extends endurance and creates new patrol capabilities.",
         sources: ["Polmar & Moore, Cold War Submarines (2004)"]
       },
       "ASBM": {
         scores: { Cognitive:3, Irreversibility:2, Disruption:3, Generative:2 },
-        justification: "**Genuine Innovation**. Re-thinks carrier ops and power projection.",
+        justification: "Re-thinks carrier operations and power projection.",
         sources: ["Erickson, Chinese ASBM Development (2013)"]
       },
       "Barbed Wire": {
@@ -208,7 +206,7 @@
       },
       "Carrier Aviation": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "Paradigmatic shift from battleships; naval aviation embedded.",
+        justification: "Paradigm shift from battleships; naval aviation embedded.",
         sources: ["Friedman, U.S. Aircraft Carriers (1983)"]
       },
       "Cyber Warfare": {
@@ -218,7 +216,7 @@
       },
       "Deep Battle/Reconnaissance Strike Complex": {
         scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 },
-        justification: "Front assaults untenable; operational art entrenched.",
+        justification: "Frontal assaults untenable; operational art entrenched.",
         sources: ["Habeck, Storm of Steel (2003)"]
       },
       "F-16 Block D": {
@@ -233,7 +231,7 @@
       },
       "Information Warfare": {
         scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 },
-        justification: "Challenges C2 assumptions; influences politico-military bounds.",
+        justification: "Challenges C2 assumptions; influences politico-military boundaries.",
         sources: ["Ricks, The Generals (2012)"]
       },
       "Lasers": {
@@ -243,7 +241,7 @@
       },
       "Machine Gun": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:3 },
-        justification: "Linear tactics obsolete; irreversible org changes.",
+        justification: "Linear tactics obsolete; irreversible organizational changes.",
         sources: ["Ellis, Social History of the Machine Gun (1975)"]
       },
       "Military Robotics": {
@@ -263,7 +261,7 @@
       },
       "Network-Centric Warfare": {
         scores: { Cognitive:4, Irreversibility:2, Disruption:3, Generative:4 },
-        justification: "Conceptual innovation preceded capability; path set irreversibly.",
+        justification: "Conceptual innovation preceded capability; path set.",
         sources: ["Alberts, Garstka, Stein (1999)"]
       },
       "Nuclear Weapons": {
@@ -303,17 +301,17 @@
       },
       "Tank": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "Transformed land warfare; org changes; new thinking.",
+        justification: "Transformed land warfare; organizational change; new thinking.",
         sources: ["Harris (1995)"]
       },
       "Telegraph": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "Courier assumptions untenable; networked C2 emerges.",
+        justification: "Courier assumptions untenable; networked command emerges.",
         sources: ["Hochfelder (2012)"]
       },
       "UAVs": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 },
-        justification: "Extends recon/strike; limited paradigm challenge.",
+        justification: "Extends reconnaissance/strike; limited paradigm challenge.",
         sources: ["Singer (2009)"]
       }
     };
@@ -414,7 +412,7 @@
               <div>{thresholdOK(scores)
                 ? <span className="badge bg-green-100 text-green-800">Threshold met (C≥2 & I≥2)</span>
                 : <span className="badge bg-yellow-100 text-yellow-800">Threshold not met</span>}</div>
-              {meta?.label && <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div>}
+              {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
               <button onClick={openModal} className="ml-auto px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">
                 Review & Explain Flags
               </button>
@@ -437,13 +435,13 @@
       const items = SUBS[dim];
       const rated = items.filter(it => (values[it.k]||0) > 0).length;
       const agg = meanToInt(items.map(it => values[it.k]||0));
+      const dMeta = DIMS.find(d=>d.key===dim);
       return (
         <div className="panel">
-          <div className="panel-h flex items-center justify-between">
-            <div className="dim-title">
-              <span>{DIMS.find(d=>d.key===dim).label}</span>
-            </div>
-            <div className="text-sm text-gray-600">{rated}/4 rated</div>
+          <div className="panel-h">
+            <div className="dim-title"><span>{dMeta.label}</span></div>
+            <div className="hint">{dMeta.def}</div>
+            <div className="text-sm text-gray-600 mt-1">{rated}/4 rated</div>
           </div>
           <div className="panel-b">
             {items.map(it=>(
@@ -479,29 +477,30 @@
       const [sel,setSel]=useState("");
       const [subs,setSubs]=useState(null);
 
-      const buildSubFromExample = (ex) => {
+      function buildSubFromExample(ex) {
         const s = {};
-        // replicate each dimension score across its 4 sub-items (unless you later add explicit sub arrays)
-        const rep = (dim,val,keys)=> keys.forEach((k)=> s[k]=val);
-        rep("Disruption",      ex.scores.Disruption,     SUBS.Disruption.map(x=>x.k));
-        rep("Irreversibility", ex.scores.Irreversibility,SUBS.Irreversibility.map(x=>x.k));
-        rep("Cognitive",       ex.scores.Cognitive,      SUBS.Cognitive.map(x=>x.k));
-        rep("Generative",      ex.scores.Generative,     SUBS.Generative.map(x=>x.k));
+        function rep(keys,val){ for (var i=0;i<keys.length;i++) s[keys[i]]=val; }
+        rep(SUBS.Disruption.map(x=>x.k),      ex.scores.Disruption);
+        rep(SUBS.Irreversibility.map(x=>x.k), ex.scores.Irreversibility);
+        rep(SUBS.Cognitive.map(x=>x.k),       ex.scores.Cognitive);
+        rep(SUBS.Generative.map(x=>x.k),      ex.scores.Generative);
         return s;
-      };
+      }
 
-      const aggregate = (subVals) => ({
-        Disruption:      meanToInt([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
-        Irreversibility: meanToInt([subVals.i1,subVals.i2,subVals.i3,subVals.i4]),
-        Cognitive:       meanToInt([subVals.c1,subVals.c2,subVals.c3,subVals.c4]),
-        Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
-      });
+      function aggregate(subVals){
+        return {
+          Disruption:      meanToInt([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
+          Irreversibility: meanToInt([subVals.i1,subVals.i2,subVals.i3,subVals.i4]),
+          Cognitive:       meanToInt([subVals.c1,subVals.c2,subVals.c3,subVals.c4]),
+          Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
+        };
+      }
 
-      const loadFromSelection = (v)=>{
+      function loadFromSelection(v){
         setSel(v);
         if (!v) return;
         const ex = EXAMPLES[v];
-        setMeta({label: v, ex});
+        setMeta({label: v, ex:ex});
         const subVals = buildSubFromExample(ex);
         setSubs(subVals);
         const dim = aggregate(subVals);
@@ -509,20 +508,19 @@
         const {issues,flags} = evaluateContradictions(dim, subVals);
         setIssues(issues);
         setFlags(flags);
-      };
+      }
 
-      const setValue = (k,v)=>{
-        setSubs(s=>{
-          const next={...s,[k]:v};
+      function setValue(k,v){
+        setSubs(function(prev){
+          const next = Object.assign({}, prev, { [k]: v });
           const dim = aggregate(next);
           setScores(dim);
-          // trigger contradictions immediately when student touches historical sliders
-          const {issues,flags} = evaluateContradictions(dim, next);
-          setIssues(issues);
-          setFlags(flags);
+          const res = evaluateContradictions(dim, next);
+          setIssues(res.issues);
+          setFlags(res.flags);
           return next;
         });
-      };
+      }
 
       const ex = sel ? EXAMPLES[sel] : null;
 
@@ -539,20 +537,25 @@
             <label className="text-sm font-medium">Example</label>
             <select value={sel} onChange={e=>loadFromSelection(e.target.value)} className="border rounded-md px-3 py-2 text-sm min-w-[18rem]">
               <option value="">— choose a case —</option>
-              {keys.map(k=><option key={k} value={k}>{k}</option>)}
+              {keys.map(function(k){return <option key={k} value={k}>{k}</option>;})}
             </select>
           </div>
 
           {ex && (
             <div className="grid md:grid-cols-2 gap-6">
-              {["Disruption","Irreversibility","Cognitive","Generative"].map(dim=>{
-                const pick = Object.fromEntries(SUBS[dim].map(it => [it.k, subs?.[it.k] ?? ex.scores[dim] || 0]));
+              {["Disruption","Irreversibility","Cognitive","Generative"].map(function(dim){
+                const pick = {};
+                const items = SUBS[dim];
+                for (var i=0;i<items.length;i++){
+                  const key = items[i].k;
+                  pick[key] = subs && (key in subs) ? subs[key] : ex.scores[dim] || 0;
+                }
                 return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} />;
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
                 <div className="font-semibold mb-1">Explanation & References</div>
                 <div className="text-gray-700 mb-3">{ex.justification}</div>
-                {(ex.sources||[]).map((r,i)=>(<div key={i}>• {r}</div>))}
+                {(ex.sources||[]).map(function(r,i){return (<div key={i}>• {r}</div>);})}
               </div>
             </div>
           )}
@@ -569,30 +572,33 @@
         c1:0,c2:0,c3:0,c4:0,
         g1:0,g2:0,g3:0,g4:0
       });
-      const aggregate = (s)=>({
-        Disruption:      meanToInt([s.d1,s.d2,s.d3,s.d4]),
-        Irreversibility: meanToInt([s.i1,s.i2,s.i3,s.i4]),
-        Cognitive:       meanToInt([s.c1,s.c2,s.c3,s.c4]),
-        Generative:      meanToInt([s.g1,s.g2,s.g3,s.g4]),
-      });
-      const setValue=(k,v)=> setSub(s=>{
-        const next={...s,[k]:v};
-        const dim = aggregate(next);
-        setScores(dim);
-        return next;
-      });
 
-      useEffect(()=>{
-        setMeta({label});
-      },[label]);
+      function aggregate(s){
+        return {
+          Disruption:      meanToInt([s.d1,s.d2,s.d3,s.d4]),
+          Irreversibility: meanToInt([s.i1,s.i2,s.i3,s.i4]),
+          Cognitive:       meanToInt([s.c1,s.c2,s.c3,s.c4]),
+          Generative:      meanToInt([s.g1,s.g2,s.g3,s.g4]),
+        };
+      }
 
-      // when clicking review, run contradiction detection
-      const review = ()=>{
+      function setValue(k,v){
+        setSub(function(prev){
+          const next = Object.assign({}, prev, { [k]: v });
+          const dim = aggregate(next);
+          setScores(dim);
+          return next;
+        });
+      }
+
+      useEffect(function(){ setMeta({label:label}); },[label]);
+
+      function review(){
         const dim = aggregate(sub);
-        const {issues,flags} = evaluateContradictions(dim, sub);
-        setIssues(issues);
-        setFlags(flags);
-      };
+        const res = evaluateContradictions(dim, sub);
+        setIssues(res.issues);
+        setFlags(res.flags);
+      }
 
       return (
         <div className="space-y-6">
@@ -612,8 +618,13 @@
             </div>
 
             <div className="mt-5 grid md:grid-cols-2 gap-6">
-              {["Disruption","Irreversibility","Cognitive","Generative"].map(dim=>{
-                const pick = Object.fromEntries(SUBS[dim].map(it => [it.k, sub[it.k]]));
+              {["Disruption","Irreversibility","Cognitive","Generative"].map(function(dim){
+                const pick = {};
+                const items = SUBS[dim];
+                for (var i=0;i<items.length;i++){
+                  const key = items[i].k;
+                  pick[key] = sub[key];
+                }
                 return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} />;
               })}
             </div>
@@ -638,10 +649,12 @@
       ];
       return (
         <div className="big-tabs">
-          {items.map(t=>(
-            <button key={t.k} onClick={()=>setTab(t.k)}
-              className={`big-tab ${tab===t.k?'big-tab-active':'big-tab-inactive'}`}>{t.label}</button>
-          ))}
+          {items.map(function(t){
+            return (
+              <button key={t.k} onClick={()=>setTab(t.k)}
+                className={'big-tab ' + (tab===t.k?'big-tab-active':'big-tab-inactive')}>{t.label}</button>
+            );
+          })}
         </div>
       );
     }
@@ -668,19 +681,21 @@
           <div className="modal" onClick={e=>e.stopPropagation()}>
             <div className="p-4 border-b">
               <div className="text-lg font-semibold">Possible Inconsistencies Detected</div>
-              <div className="text-sm text-gray-600">These are prompts to refine scoring, not errors.</div>
+              <div className="text-sm text-gray-600">Prompts to refine scoring, not errors.</div>
             </div>
             <div className="p-4 max-h-[60vh] overflow-auto">
               {issues.length===0 ? (
                 <div className="text-sm text-gray-700">No contradictions detected.</div>
               ) : (
                 <ul className="space-y-3">
-                  {issues.map((it,i)=>(
-                    <li key={i} className="flex items-start gap-2">
-                      <span className={it.severity==='major'?'flag-icon flag-major':'flag-icon flag-mild'}>!</span>
-                      <div className="text-sm text-gray-800">{it.message}</div>
-                    </li>
-                  ))}
+                  {issues.map(function(it,i){
+                    return (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className={it.severity==='major'?'flag-icon flag-major':'flag-icon flag-mild'}>!</span>
+                        <div className="text-sm text-gray-800">{it.message}</div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </div>
@@ -731,7 +746,7 @@
                   setFlags={setFlags}
                   setIssues={setIssues}
                 />
-                <ChartsPanel scores={scores} meta={meta} flags={flags} openModal={()=>setModalOpen(true)}/>
+                <ChartsPanel scores={scores} meta={meta} flags={flags} openModal={openModal}/>
               </>
             )}
             {tab==='charts' && (<ChartsPanel scores={scores} meta={meta} flags={flags} openModal={openModal}/>)}
