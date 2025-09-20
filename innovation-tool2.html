@@ -2,50 +2,49 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Military Innovation Assessment — Four Dimensions</title>
+  <title>Military Innovation Assessment Framework</title>
 
-  <!-- React + Babel (single-file, no build) -->
+  <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js" data-presets="react"></script>
 
-  <!-- Tailwind CDN -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    /* Centered, large tabs with active shadow */
-    .big-tabs { display:flex; align-items:center; justify-content:center; gap:1rem; margin:1.5rem 0; }
-    .big-tab { padding:0.9rem 1.75rem; border-radius:1rem; font-weight:600; border:1px solid; transition:all .2s; }
-    .big-tab-inactive { background:#f3f4f6; border-color:#d1d5db; color:#374151; }
-    .big-tab-inactive:hover { background:#e5e7eb; }
-    .big-tab-active { background:#fff; border-color:#2563eb; color:#1d4ed8; box-shadow:0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.1); }
-
-    .info-dot { display:inline-flex; align-items:center; justify-content:center; width:1.15rem; height:1.15rem; border-radius:9999px; border:1px solid #cbd5e1; font-size:0.75rem; color:#334155; }
-    .anchor-hint { font-size:0.75rem; color:#6b7280; }
-    .badge { display:inline-block; padding:0.125rem 0.5rem; border-radius:0.375rem; font-size:0.75rem; font-weight:600; }
+    .big-tabs{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.5rem 0}
+    .big-tab{padding:.9rem 1.75rem;border-radius:1rem;font-weight:600;border:1px solid;transition:all .2s}
+    .big-tab-inactive{background:#f3f4f6;border-color:#d1d5db;color:#374151}
+    .big-tab-inactive:hover{background:#e5e7eb}
+    .big-tab-active{background:#fff;border-color:#2563eb;color:#1d4ed8;box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1)}
+    .badge{display:inline-block;padding:.125rem .5rem;border-radius:.375rem;font-size:.75rem;font-weight:600}
+    .hint{font-size:.8rem;color:#6b7280}
+    .item-row{padding:.6rem 0;border-bottom:1px solid #eef2f7}
+    .item-row:last-child{border-bottom:none}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
-  <div id="root" class="max-w-6xl mx-auto p-6"></div>
+  <div id="root" class="max-w-7xl mx-auto p-6"></div>
 
   <script type="text/babel">
-    const { useState, useMemo, useEffect, useRef } = React;
+    const {useState,useMemo,useEffect,useRef} = React;
 
-    // ----- Core model (non-sequential four dimensions) -----
+    // ===== Dimensions =====
     const DIMS = [
-      { key:"Cognitive", label:"Cognitive (C)", def:"Doctrine, training, and mental models change to accommodate the novelty." },
-      { key:"Irreversibility", label:"Irreversibility (I)", def:"Prior doctrine ceases to be viable as decisive practice; no rational return." },
-      { key:"Disruption", label:"Disruptive Capacity (D)", def:"Adversaries are compelled to abandon or radically alter existing methods." },
-      { key:"Generative", label:"Generative Capacity (G)", def:"The change enables new capabilities or follow-on innovations." }
+      { key:"Cognitive",        label:"Cognitive (C)",             def:"Doctrine, training, and mental models change to accommodate the novelty." },
+      { key:"Irreversibility",  label:"Irreversibility (I)",       def:"Prior doctrine ceases to be viable as decisive practice; no rational return." },
+      { key:"Disruption",       label:"Disruptive Capacity (D)",   def:"Adversaries are compelled to abandon or radically alter existing methods." },
+      { key:"Generative",       label:"Generative Capacity (G)",   def:"The change enables new capabilities or follow-on innovations." }
     ];
     const ORDER = DIMS.map(d=>d.key);
 
+    // ===== Core logic =====
     const thresholdOK = s => (s.Cognitive||0) >= 2 && (s.Irreversibility||0) >= 2;
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
-
     function classify(s){
       const vals = ORDER.map(k => +s[k]||0);
       if (!thresholdOK(s)) return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
@@ -55,221 +54,204 @@
       return "Modernization";
     }
 
-    // ----- Example library (rewritten to new keys) -----
+    // ===== Full Historical Examples (C/I/D/G) =====
     const EXAMPLES = {
       "AI-Targeting": {
         scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 },
-        justification: "**Modernization**. AI-targeting speeds up existing processes but doesn't change the grammar of war. Limited organizational change and minimal doctrinal shift.",
+        justification: "**Modernization**. AI-targeting speeds up existing processes but doesn't fundamentally change how war is fought. Limited organizational changes and minimal shift in military thinking.",
         sources: ["USAF Mad Scientist Initial Research"]
       },
       "AIP Submarine": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 },
-        justification: "**Modernization**. Extends endurance and patrol patterns; demands adaptation but stays within submarine-warfare paradigms.",
-        sources: ["Norman Polmar & K.J. Moore, *Cold War Submarines* (2004)"]
+        justification: "**Modernization**. AIP extends submarine endurance and creates new patrol capabilities beyond mere performance upgrade. Requires institutional adaptation to new operational patterns and resource allocation shifts. However, operates within existing submarine warfare paradigms without fundamental strategic reconceptualization.",
+        sources: ["Norman Polmar & K.J. Moore, Cold War Submarines (2004)"]
       },
       "ASBM": {
         scores: { Cognitive:3, Irreversibility:2, Disruption:3, Generative:2 },
-        justification: "**Genuine Innovation**. Forces rethinking of carrier ops and power projection.",
-        sources: ["Andrew S. Erickson, *Chinese ASBM Development* (2013)"]
+        justification: "**Genuine Innovation**. ASBMs force navies to completely rethink carrier operations and power projection. Creates fundamental shifts in naval strategy and planning.",
+        sources: ["Andrew S. Erickson, Chinese Anti-Ship Ballistic Missile Development (2013)"]
       },
       "Barbed Wire": {
         scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 },
-        justification: "**Genuine Innovation**. Makes offensive linear assumptions untenable; entrenches defensive concepts; opens pathway to tanks and infiltration.",
-        sources: ["Stephen Bull, *The Soldier's Kit* (2013)"]
+        justification: "**Genuine Innovation**. Barbed wire made existing offensive operational assumptions untenable, forcing fundamental revision of tactical frameworks. Created institutional resistance to reversion to linear tactics and opened conceptual space for defensive warfare thinking.",
+        sources: ["Stephen Bull, The Soldier's Kit: The British Army on the Western Front 1914-1918 (2013)"]
       },
       "Blitzkrieg": {
         scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Rewires doctrine around combined arms and tempo; closes off pre-mechanized practice.",
-        sources: ["Liddell Hart; Guderian, *Panzer Leader*"]
+        justification: "**Genuine Innovation**. Blitzkrieg completely transformed land warfare, became irreversible standard, spawned numerous follow-on innovations, and forced fundamental rethinking of military strategy.",
+        sources: ["Liddell Hart on Blitzkrieg", "Guderian's Panzer Leader"]
       },
       "Carrier Aviation": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. From battleship primacy to sea-based air power; organizational and strategic overhaul.",
-        sources: ["Norman Friedman, *U.S. Aircraft Carriers* (1983)"]
+        justification: "**Genuine Innovation**. Carrier aviation achieved complete paradigmatic transformation. Battleship-centric operational assumptions became untenable, organizational DNA permanently altered through aviation-naval integration, transcended original domain to enable global power projection concepts.",
+        sources: ["Norman Friedman, U.S. Aircraft Carriers: An Illustrated Design History (1983)"]
       },
       "Cyber Warfare": {
         scores: { Cognitive:2, Irreversibility:2, Disruption:2, Generative:3 },
-        justification: "**Modernization**. Adds an operational layer; strategic logic remains adjacent to traditional paradigms.",
-        sources: ["Martin C. Libicki, *Conquest in Cyberspace* (2012)"]
+        justification: "**Modernization**. Cyber warfare creates new operational domains but does not fundamentally challenge existing strategic logic. While catalytic in opening new conceptual spaces, it operates alongside rather than replacing traditional paradigms.",
+        sources: ["Martin C. Libicki, Conquest in Cyberspace: A New Kind of War (2012)"]
       },
       "Deep Battle/Reconnaissance Strike Complex": {
         scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 },
-        justification: "**Genuine Innovation**. Collapses frontal-assault assumptions; drives operational art.",
-        sources: ["Mary Habeck, *Storm of Steel* (2003)"]
+        justification: "**Genuine Innovation**. Deep Battle doctrine made frontal assault assumptions untenable and demanded strategic logic reconceptualization. Created institutional resistance to reversion to linear operations and opened conceptual space for operational art thinking.",
+        sources: ["Mary Habeck, Storm of Steel: The Development of Soviet Operational Art (2003)"]
       },
       "F-16 Block D": {
         scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 },
-        justification: "**Upgradation**. Performance improvement within existing airpower paradigm.",
-        sources: ["USAF Fact Sheets"]
+        justification: "**Upgradation**. Block upgrades enhance performance within existing air superiority paradigms without challenging operational assumptions. No strategic reconceptualization or conceptual disruption—simply improved execution of established concepts.",
+        sources: ["U.S. Air Force Fact Sheets"]
       },
       "Hypersonics": {
         scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 },
-        justification: "**Modernization**. Speed-focused; limited doctrinal/organizational reconceptualization so far.",
-        sources: ["Thomas G. Mahnken, RMA literature (2007)"]
+        justification: "**Modernization**. Hypersonics accelerate existing missile paradigms without fundamentally challenging strategic assumptions about deterrence or operational concepts. Limited conceptual disruption and minimal strategic reconceptualization evidence.",
+        sources: ["Thomas G. Mahnken, The Technological Revolution in Military Affairs (2007)"]
       },
       "Information Warfare": {
         scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 },
-        justification: "**Genuine Innovation**. Challenges C2 assumptions and pushes non-hierarchical flows.",
-        sources: ["T. E. Ricks, *The Generals* (2012)"]
+        justification: "**Genuine Innovation**. Information warfare challenges operational assumptions about command and control, creates institutional resistance to reversion to hierarchical communication, and transcends original domains to influence political-military boundaries.",
+        sources: ["T. E. Ricks, The Generals: American Military Command from World War II to Today (2012)"]
       },
       "Lasers": {
         scores: { Cognitive:1, Irreversibility:1, Disruption:2, Generative:2 },
-        justification: "**Modernization**. Defensive challenges but within established frameworks.",
-        sources: ["AFRL, *Directed Energy Weapons: A Primer* (2019)"]
+        justification: "**Modernization**. Directed energy systems challenge some defensive assumptions but operate within existing paradigmatic frameworks. Limited institutional embedding and strategic reconceptualization evidence.",
+        sources: ["Air Force Research Laboratory, Directed Energy Weapons: A Primer (2019)"]
       },
       "Machine Gun": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:3 },
-        justification: "**Genuine Innovation**. Ends linear assault viability; forces new infantry doctrine.",
-        sources: ["John Ellis, *The Social History of the Machine Gun* (1975)"]
+        justification: "**Genuine Innovation**. Machine guns made linear tactics obsolete, created irreversible changes to military organization, and forced fundamental rethinking of infantry warfare.",
+        sources: ["John Ellis, The Social History of the Machine Gun (1975)"]
       },
       "Military Robotics": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 },
-        justification: "**Modernization**. Extends reach; conceptual disruption still limited.",
-        sources: ["Peter W. Singer, *Wired for War* (2009)"]
+        justification: "**Modernization**. Military robotics extends human capabilities without fundamentally challenging operational assumptions. While catalytic in opening new conceptual spaces, conceptual disruption remains limited and strategic reconceptualization minimal.",
+        sources: ["Peter W. Singer, Wired for War: The Robotics Revolution and Conflict in the 21st Century (2009)"]
       },
       "Minie Ball/Conoidal Bullet": {
         scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 },
-        justification: "**Genuine Innovation**. Undermines Napoleonic lines; reframes infantry effectiveness.",
-        sources: ["Brent Nosworthy, *The Bloody Crucible of Courage* (2003)"]
+        justification: "**Genuine Innovation**. Minie ball made Napoleonic linear tactics untenable, created institutional resistance to reversion to close-order formations, and forced strategic assumptions about infantry effectiveness to be fundamentally questioned.",
+        sources: ["Brent Nosworthy, The Bloody Crucible of Courage: Fighting Methods and Combat Experience of the American Civil War (2003)"]
       },
       "Multi-Domain Battle Concept": {
         scores: { Cognitive:2, Irreversibility:1, Disruption:2, Generative:3 },
-        justification: "**Modernization**. Challenges stovepipes but remains emergent.",
-        sources: ["TRADOC Pamphlet 525-3-1"]
+        justification: "**Modernization**. Multi-Domain Operations challenges some stovepiped assumptions but remains conceptually emergent. Limited institutional embedding and incomplete strategic reconceptualization.",
+        sources: ["U.S. Army TRADOC Pamphlet 525-3-1"]
       },
       "Network-Centric Warfare": {
         scores: { Cognitive:4, Irreversibility:2, Disruption:3, Generative:4 },
-        justification: "**Genuine Innovation**. Conceptual lead with uneven implementation; trajectory is locked.",
-        sources: ["Alberts, Garstka, Stein, *Network Centric Warfare* (1999)"]
+        justification: "**Genuine Innovation**. NCW represents a classic case of conceptual innovation preceding technological capability. Despite implementation failures due to institutional resistance, it has irreversibly set military thinking on a path toward network-centric operations.",
+        sources: ["David S. Alberts, John J. Garstka, & Frederick P. Stein, Network Centric Warfare (1999)"]
       },
       "Nuclear Weapons": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Paradigmatic transformation across all dimensions.",
-        sources: ["Lawrence Freedman, *The Evolution of Nuclear Strategy* (2003)"]
+        justification: "**Genuine Innovation**. Nuclear weapons represent complete transformation across all dimensions. Fundamentally redefined warfare, strategy, and international relations.",
+        sources: ["Lawrence Freedman, The Evolution of Nuclear Strategy (2003)"]
       },
       "PGMs": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:3 },
-        justification: "**Modernization**. Enhances targeting; strategic reconceptualization limited.",
-        sources: ["Richard P. Hallion, PGM history (1995)"]
+        justification: "**Modernization**. Precision-guided munitions enhance existing paradigms without fundamental challenge to operational assumptions. While catalytic in enabling new targeting concepts, strategic reconceptualization remains limited.",
+        sources: ["Richard P. Hallion, Precision-Guided Munitions and the Revolution in Warfare (1995)"]
       },
       "Radar": {
         scores: { Cognitive:2, Irreversibility:3, Disruption:3, Generative:3 },
-        justification: "**Genuine Innovation**. Transforms air defense; embeds permanently.",
-        sources: ["David E. Fisher, *A Race on the Edge of Time* (1988)"]
+        justification: "**Genuine Innovation**. Radar transformed air warfare by making surprise attacks much harder. Created permanent changes in air defense thinking and organization.",
+        sources: ["David E. Fisher, A Race on the Edge of Time: Radar (1988)"]
       },
       "Stealth": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:2 },
-        justification: "**Modernization**. Improves survivability within existing airpower logic.",
-        sources: ["Bill Sweetman, *Stealth Aircraft* (1986)"]
+        justification: "**Modernization**. Stealth improves existing air warfare capabilities but operates within established paradigms. Limited fundamental changes to military thinking.",
+        sources: ["Bill Sweetman, Stealth Aircraft: Secrets of Future Airpower (1986)"]
       },
       "Stirrups": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Enables shock cavalry; reorders military-social structure.",
-        sources: ["Lynn White Jr., *Medieval Technology and Social Change* (1962)"]
+        justification: "**Genuine Innovation**. Stirrups achieved complete paradigmatic transformation. Made infantry-centric assumptions untenable, created irreversible organizational DNA changes through feudal military structures, enabled previously impossible shock cavalry concepts.",
+        sources: ["Lynn White, Jr., Medieval Technology and Social Change (1962)"]
       },
       "Stosstrupp Tactics": {
         scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 },
-        justification: "**Genuine Innovation**. Infiltration collapses rigid formations and drives doctrinal reconceptualization.",
-        sources: ["Bruce I. Gudmundsson, *Stormtroop Tactics* (1989)"]
+        justification: "**Genuine Innovation**. Stosstrupp tactics made linear assault assumptions completely untenable and demanded strategic logic reconceptualization around infiltration principles. Created institutional resistance to reversion to rigid formations.",
+        sources: ["Bruce I. Gudmundsson, Stormtroop Tactics: Innovation in the German Army, 1914-1918 (1989)"]
       },
       "T-72B3M Main Battle Tank": {
         scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 },
-        justification: "**Upgradation**. Performance upgrades; no doctrinal shift.",
-        sources: ["Charles K. Bartles, Russian capability notes (2015)"]
+        justification: "**Upgradation**. Modernized tank systems enhance performance within existing armored warfare paradigms. No conceptual disruption or strategic reconceptualization—simply improved execution of established tank concepts.",
+        sources: ["Charles K. Bartles, The Russian Army: New Military Capability (2015)"]
       },
       "Tank": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Mobility + firepower reframe land warfare.",
-        sources: ["J.P. Harris, *Men, Ideas, and Tanks* (1995)"]
+        justification: "**Genuine Innovation**. Tanks completely transformed land warfare, created irreversible organizational changes, and fundamentally changed military thinking about mobility and firepower.",
+        sources: ["J.P. Harris, Men, Ideas, and Tanks (1995)"]
       },
       "Telegraph": {
         scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 },
-        justification: "**Genuine Innovation**. Command latency collapse; network dependency entrenched.",
-        sources: ["David Hochfelder, *The Telegraph in America* (2012)"]
+        justification: "**Genuine Innovation**. Telegraph achieved complete paradigmatic transformation. Made courier-based command assumptions untenable, created irreversible systemic dependencies on communication networks, enabled previously impossible command and control concepts.",
+        sources: ["David Hochfelder, The Telegraph in America, 1832–1920 (2012)"]
       },
       "UAVs": {
         scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 },
-        justification: "**Modernization**. Extends reconnaissance/strike; limited doctrinal closure.",
-        sources: ["Peter W. Singer, *Wired for War* (2009)"]
+        justification: "**Modernization**. UAVs extend existing reconnaissance and strike paradigms without fundamental challenge to operational assumptions. While catalytic in opening new operational concepts, conceptual disruption remains limited.",
+        sources: ["Peter W. Singer, Wired for War: The Robotics Revolution and Conflict in the 21st Century (2009)"]
       }
     };
 
-    // ----- Charts -----
+    // ===== Charts =====
     function RadarChart({scores}){
-      const cvs = useRef(null);
-      const chart = useRef(null);
+      const ref=useRef(null), chart=useRef(null);
       const values = useMemo(()=> ORDER.map(k => +scores[k]||0), [scores]);
       useEffect(()=>{
-        const ctx = cvs.current.getContext('2d');
-        if (chart.current) chart.current.destroy();
-        chart.current = new Chart(ctx, {
-          type: 'radar',
-          data: {
-            labels: DIMS.map(d=>d.label),
-            datasets: [
-              { label:'Current', data: values, fill:true, borderWidth:2, pointRadius:3,
-                backgroundColor:'rgba(37,99,235,0.2)', borderColor:'rgba(37,99,235,1)' },
-              { label:'Threshold (C≥2, I≥2)', data:[2,2,0,0], fill:true, borderWidth:1, borderDash:[6,4], pointRadius:0,
-                backgroundColor:'rgba(107,114,128,0.12)', borderColor:'rgba(107,114,128,0.8)' }
-            ]
-          },
-          options: {
-            responsive:true,
-            plugins: { legend: { position:'top' } },
-            scales: { r: { beginAtZero:true, min:0, max:4, ticks:{ stepSize:1 }, grid:{ circular:true } } }
-          }
+        const ctx=ref.current.getContext('2d');
+        if(chart.current) chart.current.destroy();
+        chart.current=new Chart(ctx,{
+          type:'radar',
+          data:{ labels:DIMS.map(d=>d.label),
+                 datasets:[
+                   {label:'Current',data:values,fill:true,borderWidth:2,pointRadius:3,
+                    backgroundColor:'rgba(37,99,235,0.2)',borderColor:'rgba(37,99,235,1)'},
+                   {label:'Threshold (C≥2, I≥2)',data:[2,2,0,0],fill:true,borderWidth:1,borderDash:[6,4],pointRadius:0,
+                    backgroundColor:'rgba(107,114,128,0.12)',borderColor:'rgba(107,114,128,0.8)'}
+                 ]},
+          options:{responsive:true,plugins:{legend:{position:'top'}},
+                   scales:{r:{beginAtZero:true,min:0,max:4,ticks:{stepSize:1},grid:{circular:true}}}}
         });
         return ()=> chart.current && chart.current.destroy();
-      }, [values]);
-      return <canvas ref={cvs} height={360} className="w-full" />;
+      },[values]);
+      return <canvas ref={ref} height={360} className="w-full"/>;
     }
-
     function BarChart({scores}){
-      const cvs = useRef(null);
-      const chart = useRef(null);
+      const ref=useRef(null), chart=useRef(null);
       const values = useMemo(()=> ORDER.map(k => +scores[k]||0), [scores]);
-      const colorFor = v => v>=3 ? 'rgba(22,163,74,0.7)' : v>=2 ? 'rgba(234,179,8,0.8)' : 'rgba(239,68,68,0.8)';
+      const colorFor=v=> v>=3?'rgba(22,163,74,0.7)':v>=2?'rgba(234,179,8,0.8)':'rgba(239,68,68,0.8)';
       useEffect(()=>{
-        const ctx = cvs.current.getContext('2d');
-        if (chart.current) chart.current.destroy();
-        chart.current = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: DIMS.map(d=>d.label),
-            datasets: [{ label:'Score', data: values, backgroundColor: values.map(colorFor), borderWidth:1 }]
-          },
-          options: {
-            responsive:true,
-            plugins: { legend: { display:false } },
-            scales: { y: { beginAtZero:true, min:0, max:4, ticks:{ stepSize:1 } } }
-          }
+        const ctx=ref.current.getContext('2d');
+        if(chart.current) chart.current.destroy();
+        chart.current=new Chart(ctx,{
+          type:'bar',
+          data:{labels:DIMS.map(d=>d.label),
+                datasets:[{label:'Score',data:values,backgroundColor:values.map(colorFor),borderWidth:1}]},
+          options:{responsive:true,plugins:{legend:{display:false}},
+                   scales:{y:{beginAtZero:true,min:0,max:4,ticks:{stepSize:1}}}}
         });
         return ()=> chart.current && chart.current.destroy();
-      }, [values]);
-      return <canvas ref={cvs} height={360} className="w-full" />;
+      },[values]);
+      return <canvas ref={ref} height={360} className="w-full"/>;
     }
-
-    // ----- Panels -----
-    function ChartsPanel({scores, meta}){
+    function ChartsPanel({scores,meta}){
       return (
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-2xl border shadow-sm">
             <div className="px-5 py-4 border-b font-semibold">Radar</div>
-            <div className="p-5"><RadarChart scores={scores} /></div>
+            <div className="p-5"><RadarChart scores={scores}/></div>
           </div>
           <div className="bg-white rounded-2xl border shadow-sm">
             <div className="px-5 py-4 border-b font-semibold">Bar (color-coded)</div>
-            <div className="p-5"><BarChart scores={scores} /></div>
+            <div className="p-5"><BarChart scores={scores}/></div>
           </div>
           <div className="md:col-span-2 bg-white rounded-2xl border shadow-sm p-5 text-sm">
             <div className="flex flex-wrap items-center gap-3">
               <div><span className="font-semibold">Index:</span> {indexScore(scores)}</div>
               <div><span className="font-semibold">Class:</span> {classify(scores)}</div>
-              <div>
-                {thresholdOK(scores)
-                  ? <span className="badge bg-green-100 text-green-800">Threshold met (C≥2 & I≥2)</span>
-                  : <span className="badge bg-yellow-100 text-yellow-800">Threshold not met</span>}
-              </div>
+              <div>{thresholdOK(scores)
+                ? <span className="badge bg-green-100 text-green-800">Threshold met (C≥2 & I≥2)</span>
+                : <span className="badge bg-yellow-100 text-yellow-800">Threshold not met</span>}</div>
               {meta?.label && <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div>}
             </div>
           </div>
@@ -277,166 +259,108 @@
       );
     }
 
-    function InteractiveEffects({scores, setScores}){
-      // Single-pass effects, capped +1
-      const PROMPTS = [
-        { id:"p1", label:"Enemy tactics abandoned or altered → Cognitive (C) +1 if Disruptive Capacity (D) ≥ 2",
-          effect:(s)=> s.Disruption>=2 ? ({Cognitive: Math.min(4,(s.Cognitive||0)+1)}) : ({}) },
-        { id:"p2", label:"PME/doctrine rewritten → Irreversibility (I) +1 if Cognitive (C) ≥ 2",
-          effect:(s)=> s.Cognitive>=2 ? ({Irreversibility: Math.min(4,(s.Irreversibility||0)+1)}) : ({}) },
-        { id:"p3", label:"≥10% budget shift ≥2 FYs → Irreversibility (I) +1 if Generative Capacity (G) ≥ 2",
-          effect:(s)=> s.Generative>=2 ? ({Irreversibility: Math.min(4,(s.Irreversibility||0)+1)}) : ({}) },
-        { id:"p4", label:"Org charts/career paths changed → Generative Capacity (G) +1 if Irreversibility (I) ≥ 3",
-          effect:(s)=> s.Irreversibility>=3 ? ({Generative: Math.min(4,(s.Generative||0)+1)}) : ({}) },
-        { id:"p5", label:"New success metrics used operationally → Generative Capacity (G) +1 if Cognitive (C) ≥ 3",
-          effect:(s)=> s.Cognitive>=3 ? ({Generative: Math.min(4,(s.Generative||0)+1)}) : ({}) }
-      ];
-      const [checked, setChecked] = useState({});
-      const apply = ()=>{
-        let s = {...scores};
-        PROMPTS.forEach(p=>{ if(checked[p.id]) s = {...s, ...(p.effect(s))}; });
-        setScores(s);
+    // ===== Historical Examples (dropdown) =====
+    function HistoricalExamples({setScores,setMeta}){
+      const keys=Object.keys(EXAMPLES);
+      const [sel,setSel]=useState("");
+      const ex = sel ? EXAMPLES[sel] : null;
+
+      const load=()=>{
+        if(!sel) return;
+        setScores({...EXAMPLES[sel].scores});
+        setMeta({label: sel});
       };
+
       return (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl border shadow-sm p-5">
-            <h3 className="font-semibold mb-3">Set base scores</h3>
-            <div className="space-y-4">
-              {DIMS.map(dim => (
-                <div key={dim.key} className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-56 text-sm font-medium">{dim.label}</div>
-                    <span className="info-dot" title={dim.def}>i</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <input type="range" min="0" max="4" value={scores[dim.key]||0}
-                      onChange={e=> setScores(s=>({...s,[dim.key]: Number(e.target.value)}))} className="flex-1" />
-                    <div className="w-6 text-right text-sm">{scores[dim.key]||0}</div>
-                  </div>
-                  <div className="anchor-hint">
-                    {dim.key==="Cognitive" && "0 none · 1 minor tweaks · 2 doctrinal updates · 3 syllabi/doctrine rewrite · 4 paradigm shift"}
-                    {dim.key==="Irreversibility" && "0 reversible · 1 costly to undo · 2 prior doctrine non-viable · 3 organization/path lock-in · 4 systemic no return"}
-                    {dim.key==="Disruption" && "0 none · 1 local inconvenience · 2 enemy adaptation needed · 3 enemy doctrine altered · 4 enemy core invalidated"}
-                    {dim.key==="Generative" && "0 none · 1 minor spin-offs · 2 enables new workflows · 3 new capability families · 4 platform for further innovations"}
-                  </div>
+          <div>
+            <h2 className="text-2xl font-semibold">Historical Examples</h2>
+            <p className="italic text-sm text-gray-600 mt-1">
+              Select a case from the dropdown to view its scores, justification, and sources. Then click “Load Example into Charts” to visualize.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="text-sm font-medium">Example</label>
+            <select value={sel} onChange={e=>setSel(e.target.value)} className="border rounded-md px-3 py-2 text-sm min-w-[16rem]">
+              <option value="">— choose a case —</option>
+              {keys.map(k=><option key={k} value={k}>{k}</option>)}
+            </select>
+            <button onClick={load} className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50" disabled={!sel}>
+              Load Example into Charts
+            </button>
+          </div>
+
+          {ex && (
+            <div className="grid md:grid-cols-2 gap-6">
+              <div className="bg-white rounded-2xl border shadow-sm">
+                <div className="px-5 py-4 border-b font-semibold">Scores</div>
+                <div className="p-5 text-sm space-y-2">
+                  {DIMS.map(dim=>(
+                    <div key={dim.key} className="flex items-center gap-3">
+                      <div className="w-56 font-medium">{dim.label}</div>
+                      <div className="w-8 text-right">{ex.scores[dim.key]}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div className="bg-white rounded-2xl border shadow-sm">
+                <div className="px-5 py-4 border-b font-semibold">Explanation & References</div>
+                <div className="p-5 text-sm text-gray-700 space-y-4">
+                  <div>{ex.justification}</div>
+                  {(ex.sources||[]).map((r,i)=>(<div key={i}>• {r}</div>))}
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="bg-white rounded-2xl border shadow-sm p-5">
-            <h3 className="font-semibold mb-3">Interactive effects (single-pass)</h3>
-            <div className="space-y-2">
-              {PROMPTS.map(p => (
-                <label key={p.id} className="flex items-center gap-3">
-                  <input type="checkbox" checked={!!checked[p.id]} onChange={e=> setChecked(c=>({...c,[p.id]: e.target.checked}))} />
-                  <span className="text-sm">{p.label}</span>
-                </label>
-              ))}
-            </div>
-            <button onClick={apply} className="mt-3 px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700">Apply</button>
-          </div>
+          )}
         </div>
       );
     }
 
-    function HistoricalExamples({setScores, setMeta}){
-      const keys = Object.keys(EXAMPLES);
-      const [sel, setSel] = useState(keys[0] || "");
-      const ex = EXAMPLES[sel] || {scores:{Cognitive:0,Irreversibility:0,Disruption:0,Generative:0}, justification:"", sources:[]};
+    // ===== Test Your Idea (sub-indicators → rounded average per dimension) =====
+    const SUBS = {
+      Disruption: [
+        {k:"d1", name:"Enemy OODA disruption", hint:"Throws off OODA loop."},
+        {k:"d2", name:"Doctrinal breakpoints", hint:"Makes existing doctrine obsolete."},
+        {k:"d3", name:"Shift in kill-chain topology", hint:"Changes find–fix–finish order."},
+        {k:"d4", name:"Adversary scrambles to counter", hint:"Forces costly, urgent counters."},
+      ],
+      Irreversibility: [
+        {k:"i1", name:"Sunk training pipelines", hint:"Deep investments in new training."},
+        {k:"i2", name:"Logistics path dependence", hint:"New supply/infrastructure dependencies."},
+        {k:"i3", name:"Adversary compulsion to mirror", hint:"Competitors must adopt or lose out."},
+        {k:"i4", name:"Force-structure changes", hint:"Permanent org changes/TOE shifts."},
+      ],
+      Cognitive: [
+        {k:"c1", name:"Assumption reversal", hint:"Core premises visibly overturned."},
+        {k:"c2", name:"PME/doctrine rewrite", hint:"Syllabi and doctrine revised."},
+        {k:"c3", name:"Wargame result shifts", hint:"Different outcomes under same scenarios."},
+        {k:"c4", name:"New success metrics", hint:"Victory assessed with new measures."},
+      ],
+      Generative: [
+        {k:"g1", name:"New capability families", hint:"Spawns adjacent capability lines."},
+        {k:"g2", name:"Cross-domain spillovers", hint:"Transfers to other domains."},
+        {k:"g3", name:"Budget reallocation", hint:"Sustained ≥10% reallocation (≥2 FYs)."},
+        {k:"g4", name:"Conceptual platform", hint:"Base for further innovations."},
+      ]
+    };
+    function meanToInt(vals){ const m = vals.reduce((a,v)=>a+v,0)/vals.length; return Math.round(m); }
 
-      const load = ()=> { setScores({...ex.scores}); setMeta({label: sel}); };
-
-      return (
-        <div className="space-y-6">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold">Historical Examples</h2>
-              <p className="text-sm text-gray-600">Scores use the four dimensions. Explanations and references included.</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <label className="text-sm font-medium">Example</label>
-              <select value={sel} onChange={(e)=>setSel(e.target.value)} className="border rounded-md px-3 py-2 text-sm">
-                {keys.map(k=> <option key={k} value={k}>{k}</option>)}
-              </select>
-              <button onClick={load} className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Load</button>
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border shadow-sm">
-              <div className="px-5 py-4 border-b font-semibold">Scores</div>
-              <div className="p-5 text-sm space-y-2">
-                {DIMS.map(dim => (
-                  <div key={dim.key} className="flex items-center gap-3">
-                    <div className="w-56 font-medium">{dim.label}</div>
-                    <div className="w-8 text-right">{ex.scores[dim.key]}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl border shadow-sm">
-              <div className="px-5 py-4 border-b font-semibold">Explanation & References</div>
-              <div className="p-5 text-sm text-gray-700 space-y-4">
-                <div>{ex.justification}</div>
-                {(ex.sources||[]).map((r,i)=>(<div key={i}>• {r}</div>))}
-              </div>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ----- Test Your Idea (student input) -----
     function TestYourIdea(){
-      const [label, setLabel] = useState("");
-      const [scores, setScores] = useState({ Cognitive:0, Irreversibility:0, Disruption:0, Generative:0 });
-      const [notes, setNotes] = useState({ Cognitive:"", Irreversibility:"", Disruption:"", Generative:"" });
-      const [refs, setRefs] = useState("");
+      const [label,setLabel]=useState("");
+      const [sub,setSub]=useState({
+        d1:0,d2:0,d3:0,d4:0,
+        i1:0,i2:0,i3:0,i4:0,
+        c1:0,c2:0,c3:0,c4:0,
+        g1:0,g2:0,g3:0,g4:0
+      });
 
-      const idx = indexScore(scores);
-      const cls = classify(scores);
-      const th = thresholdOK(scores);
-
-      const missingJustification = ORDER.some(k => (scores[k]||0) > 0 && (notes[k]||"").trim().length === 0);
-
-      const warnings = [];
-      if (scores.Irreversibility >= 3 && scores.Cognitive < 2) warnings.push("High Irreversibility (I) with low Cognitive (C): lock-in without cognition is fragile.");
-      if (scores.Generative >= 3 && scores.Cognitive < 2 && scores.Disruption < 2) warnings.push("High Generative (G) with low Cognitive (C) and Disruption (D): supply-push without uptake.");
-
-      function copyJSON(){
-        const payload = {
-          label: label || "Untitled case",
-          scores,
-          notes,
-          references: refs.split("\n").map(s=>s.trim()).filter(Boolean),
-          index: idx,
-          class: cls,
-          threshold_met: th
-        };
-        navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-        alert("JSON copied to clipboard.");
-      }
-      function copyMarkdown(){
-        const lines = [];
-        lines.push(`# ${label || "Untitled case"}`);
-        lines.push("");
-        lines.push(`**Scores**`);
-        ORDER.forEach(k => lines.push(`- ${DIMS.find(d=>d.key===k).label}: ${scores[k]||0}`));
-        lines.push("");
-        lines.push(`**Index:** ${idx}  |  **Class:** ${cls}  |  **Threshold:** ${th ? "met" : "not met"}`);
-        lines.push("");
-        lines.push(`**Justifications**`);
-        ORDER.forEach(k => {
-          lines.push(`- ${DIMS.find(d=>d.key===k).label}: ${notes[k] ? notes[k].trim() : "_(none)_"}`);
-        });
-        if (refs.trim().length){
-          lines.push("");
-          lines.push(`**References**`);
-          refs.split("\n").map(s=>s.trim()).filter(Boolean).forEach(r => lines.push(`- ${r}`));
-        }
-        navigator.clipboard.writeText(lines.join("\n"));
-        alert("Markdown copied to clipboard.");
-      }
+      const dimScores = {
+        Disruption:      meanToInt([sub.d1,sub.d2,sub.d3,sub.d4]),
+        Irreversibility: meanToInt([sub.i1,sub.i2,sub.i3,sub.i4]),
+        Cognitive:       meanToInt([sub.c1,sub.c2,sub.c3,sub.c4]),
+        Generative:      meanToInt([sub.g1,sub.g2,sub.g3,sub.g4]),
+      };
 
       return (
         <div className="space-y-6">
@@ -444,128 +368,104 @@
             <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Test Your Idea</h2>
-                <p className="text-sm text-gray-600">
-                  Calibrate each dimension, justify your choices, and export for your presentation.
-                </p>
+                <p className="text-sm text-gray-600">Set sub-sliders; the tool aggregates to C/I/D/G. Charts and classification update live.</p>
               </div>
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium">Case title</label>
                 <input value={label} onChange={e=>setLabel(e.target.value)}
-                       className="border rounded-md px-3 py-2 text-sm w-72" placeholder="e.g., AI-enabled fires deconfliction" />
+                       className="border rounded-md px-3 py-2 text-sm w-72" placeholder="e.g., AI-enabled fires deconfliction"/>
               </div>
             </div>
 
             <div className="mt-5 grid md:grid-cols-2 gap-6">
-              {DIMS.map(dim => (
-                <div key={dim.key} className="border rounded-xl p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="font-medium">{dim.label}</div>
-                    <span className="info-dot" title={dim.def}>i</span>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <input type="range" min="0" max="4" value={scores[dim.key]||0}
-                           onChange={e=> setScores(s=>({...s,[dim.key]: Number(e.target.value)}))}
-                           className="flex-1" />
-                    <div className="w-6 text-right text-sm">{scores[dim.key]||0}</div>
-                  </div>
-                  <div className="anchor-hint mt-1">
-                    {dim.key==="Cognitive" && "0 none · 1 minor tweaks · 2 doctrinal updates · 3 syllabi/doctrine rewrite · 4 paradigm shift"}
-                    {dim.key==="Irreversibility" && "0 reversible · 1 costly to undo · 2 prior doctrine non-viable · 3 organization/path lock-in · 4 systemic no return"}
-                    {dim.key==="Disruption" && "0 none · 1 local inconvenience · 2 enemy adaptation needed · 3 enemy doctrine altered · 4 enemy core invalidated"}
-                    {dim.key==="Generative" && "0 none · 1 minor spin-offs · 2 enables new workflows · 3 new capability families · 4 platform for further innovations"}
-                  </div>
-                  <textarea
-                    value={notes[dim.key]}
-                    onChange={e=> setNotes(n=>({...n, [dim.key]: e.target.value}))}
-                    placeholder={`Why is ${dim.label} = ${scores[dim.key]||0}? Evidence or reasoning.`}
-                    className={`mt-3 w-full border rounded-md px-3 py-2 text-sm ${ (scores[dim.key]||0)>0 && (notes[dim.key]||"").trim()==="" ? "border-red-400" : "" }`}
-                    rows={3}
-                  />
-                  {(scores[dim.key]||0)>0 && (notes[dim.key]||"").trim()==="" &&
-                    <div className="text-xs text-red-600 mt-1">Justification required when score &gt; 0.</div>}
-                </div>
-              ))}
-            </div>
+              {["Disruption","Irreversibility","Cognitive","Generative"].map(dim=>{
+                const items = SUBS[dim];
+                const rated = items.filter(it=> sub[it.k]>0 ).length;
+                return (
+                  <div key={dim} className="border rounded-xl p-4 bg-white">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="font-semibold">{DIMS.find(d=>d.key===dim).label}</div>
+                        <div className="hint">{DIMS.find(d=>d.key===dim).def}</div>
+                      </div>
+                      <div className="text-sm text-gray-600">{rated}/4 rated</div>
+                    </div>
 
-            <div className="mt-4 grid md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 border rounded-xl p-4">
-                <div className="font-medium mb-2">Optional references</div>
-                <textarea value={refs} onChange={e=>setRefs(e.target.value)}
-                          placeholder="One per line"
-                          className="w-full border rounded-md px-3 py-2 text-sm" rows="5"></textarea>
-              </div>
-              <div className="flex flex-col gap-2 justify-end">
-                <div className="text-sm">
-                  <span className="font-semibold">Index:</span> {idx} &nbsp;|&nbsp;
-                  <span className="font-semibold">Class:</span> {cls} &nbsp;|&nbsp;
-                  <span className="font-semibold">Threshold:</span> {th ? "met" : "not met"}
-                </div>
-                {missingJustification &&
-                  <div className="text-xs text-amber-700">Some scores &gt; 0 lack justification.</div>}
-                {warnings.length>0 &&
-                  <ul className="text-sm list-disc list-inside text-amber-700">
-                    {warnings.map((w,i)=>(<li key={i}>{w}</li>))}
-                  </ul>}
-                <div className="flex gap-3 mt-2">
-                  <button onClick={copyJSON} className="px-3 py-2 rounded-md bg-slate-800 text-white hover:bg-slate-900 text-sm">Copy JSON</button>
-                  <button onClick={copyMarkdown} className="px-3 py-2 rounded-md bg-slate-800 text-white hover:bg-slate-900 text-sm">Copy Markdown</button>
-                </div>
-              </div>
+                    <div className="mt-3">
+                      {items.map(it=>(
+                        <div key={it.k} className="item-row">
+                          <div className="flex items-center justify-between">
+                            <div className="font-medium text-sm">{it.name}</div>
+                            <div className="text-xs text-gray-600">{sub[it.k]}/4</div>
+                          </div>
+                          <div className="hint">{it.hint}</div>
+                          <input type="range" min="0" max="4" value={sub[it.k]}
+                                 onChange={e=>setSub(s=>({...s,[it.k]:Number(e.target.value)}))}
+                                 className="w-full mt-2"/>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-3 text-sm">
+                      <span className="font-medium">Derived {dim} score:</span> {dimScores[dim]}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          <ChartsPanel scores={scores} meta={{label}} />
+          <ChartsPanel scores={dimScores} meta={{label}}/>
         </div>
       );
     }
 
-    // ----- Tabs -----
-    function Tabs({tab, setTab}){
-      const items = [
-        {k:'interactive', label:'Interactive Effects'},
-        {k:'charts', label:'Charts'},
-        {k:'examples', label:'Historical Examples'},
-        {k:'test', label:'Test Your Idea'}
+    // ===== App + Tabs =====
+    function Tabs({tab,setTab}){
+      const items=[
+        {k:'examples',label:'Historical Examples'},
+        {k:'charts',label:'Charts'},
+        {k:'test',label:'Test Your Idea'}
       ];
       return (
         <div className="big-tabs">
-          {items.map(t => (
+          {items.map(t=>(
             <button key={t.k} onClick={()=>setTab(t.k)}
-              className={`big-tab ${tab===t.k? 'big-tab-active':'big-tab-inactive'}`}>
-              {t.label}
-            </button>
+              className={`big-tab ${tab===t.k?'big-tab-active':'big-tab-inactive'}`}>{t.label}</button>
           ))}
         </div>
       );
     }
 
-    // ----- App -----
     function App(){
-      const [tab, setTab] = useState('charts');
-      const [scores, setScores] = useState({ Cognitive:0, Irreversibility:0, Disruption:0, Generative:0 });
-      const [meta, setMeta] = useState({label: ""});
+      const [tab,setTab]=useState('examples');
+      const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
+      const [meta,setMeta]=useState({label:""});
 
       return (
         <main>
-          <header className="text-center space-y-1">
-            <h1 className="text-3xl md:text-4xl font-extrabold">Military Innovation Assessment</h1>
-            <p className="text-gray-600">
-              Four dimensions (C/I/D/G). Non-sequential. Threshold = <span className="font-medium">Cognitive ≥ 2</span> & <span className="font-medium">Irreversibility ≥ 2</span>.
-            </p>
+          <header className="text-center space-y-1 mb-4">
+            <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
+              Military Innovation Assessment Framework
+            </h1>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+              A Four-Dimensional Recognition Tool
+            </h2>
+            <div className="italic text-md md:text-lg text-gray-700">
+              Based on "Military Innovation: Between the Knowns and the Unknowns"
+            </div>
+            <div className="text-xs text-gray-500 mt-1">(c) Manabrata Guha, 2025</div>
           </header>
 
-          <Tabs tab={tab} setTab={setTab} />
+          <Tabs tab={tab} setTab={setTab}/>
 
           <section className="space-y-6">
-            {tab === 'interactive' && (<><InteractiveEffects scores={scores} setScores={setScores} /><ChartsPanel scores={scores} meta={meta} /></>)}
-            {tab === 'charts' && (<ChartsPanel scores={scores} meta={meta} />)}
-            {tab === 'examples' && (<><HistoricalExamples setScores={setScores} setMeta={setMeta} /><ChartsPanel scores={scores} meta={meta} /></>)}
-            {tab === 'test' && (<TestYourIdea />)}
+            {tab==='examples' && (<><HistoricalExamples setScores={setScores} setMeta={setMeta}/><ChartsPanel scores={scores} meta={meta}/></>)}
+            {tab==='charts' && (<ChartsPanel scores={scores} meta={meta}/>)}
+            {tab==='test' && (<TestYourIdea/>)}
           </section>
 
-          <footer className="mt-10 text-center text-xs text-gray-500">
-            Single-file demo. Copy into your repo and open directly in a browser.
-          </footer>
+          <footer className="mt-10 text-center text-xs text-gray-500">Single-file. Copy into your repo and open in a browser.</footer>
         </main>
       );
     }
