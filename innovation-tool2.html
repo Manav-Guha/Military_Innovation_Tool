@@ -631,45 +631,46 @@
       
       let cls='green', title='Assessment Review', sub='Your scoring appears consistent across dimensions.';
       
-      if (majors || milds){
-        if (isHistoricalExample) {
-          // For historical examples - educational analysis
+      if (isHistoricalExample) {
+        // Always show educational analysis for historical examples
+        cls='blue'; 
+        title='Historical Case Analysis'; 
+        sub=`Analyzing the scoring patterns for ${meta.label}:`; 
+      } else if (majors || milds) {
+        // For user inputs - inconsistency checking
+        if (majors) { 
+          cls='red'; 
+          title='Assessment Review - Issues Found'; 
+          sub=`Found ${majors} major inconsistenc${majors>1?'ies':'y'} and ${milds} minor inconsistenc${milds>1?'ies':'y'}. Review the explanations below and consider adjusting your scores.`; 
+        } else { 
           cls='yellow'; 
-          title='Historical Case Analysis'; 
-          sub=`This case (${meta.label}) demonstrates interesting scoring patterns in the framework:`; 
-        } else {
-          // For user inputs - inconsistency checking
-          if (majors) { 
-            cls='red'; 
-            title='Assessment Review - Issues Found'; 
-            sub=`Found ${majors} major inconsistenc${majors>1?'ies':'y'} and ${milds} minor inconsistenc${milds>1?'ies':'y'}. Review the explanations below and consider adjusting your scores.`; 
-          } else { 
-            cls='yellow'; 
-            title='Assessment Review - Minor Issues'; 
-            sub=`Found ${milds} minor inconsistenc${milds>1?'ies':'y'}. These may indicate opportunities to refine your assessment.`; 
-          }
+          title='Assessment Review - Minor Issues'; 
+          sub=`Found ${milds} minor inconsistenc${milds>1?'ies':'y'}. These may indicate opportunities to refine your assessment.`; 
         }
       }
       
-      // Transform messages based on context
-      const contextualMessages = issues.map(issue => {
-        if (isHistoricalExample) {
-          return transformToEducationalInsight(issue, meta.label);
-        }
-        return issue.message;
-      });
+      // For historical examples, always provide educational content
+      let displayMessages = [];
+      if (isHistoricalExample) {
+        displayMessages = getEducationalAnalysis(meta.label, meta.ex);
+      } else if (majors || milds) {
+        displayMessages = issues.map(issue => issue.message);
+      }
       
       return (
         <div className="modal-bg" onClick={onClose}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
-            <div className={`modal-h ${cls}`}>{title}</div>
+            <div className={`modal-h ${cls === 'blue' ? 'bg-blue-50 text-blue-800' : cls}`}>
+              <style>{`.modal-h.bg-blue-50 { background: #eff6ff; color: #1e40af; }`}</style>
+              {title}
+            </div>
             <div className="px-4 pt-2 pb-1 text-sm text-gray-700">{sub}</div>
             <div className="p-4 max-h-[60vh] overflow-auto">
-              {majors||milds ? (
+              {isHistoricalExample || (majors||milds) ? (
                 <ul className="space-y-4">
-                  {contextualMessages.map((message,i)=>(
+                  {displayMessages.map((message,i)=>(
                     <li key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <span className={isHistoricalExample ? 'text-blue-600 font-bold' : (issues[i].severity==='major'?'flag-icon flag-major':'flag-icon flag-mild')}>
+                      <span className={isHistoricalExample ? 'text-blue-600 font-bold text-lg' : (issues[i]?.severity==='major'?'flag-icon flag-major':'flag-icon flag-mild')}>
                         {isHistoricalExample ? '•' : '!'}
                       </span>
                       <div className="text-sm text-gray-800 leading-relaxed">{message}</div>
@@ -679,10 +680,10 @@
               ) : (
                 <div className="text-sm text-gray-700">No inconsistencies detected. Your scoring appears well-balanced across the four dimensions.</div>
               )}
-              {isHistoricalExample && (majors||milds) && (
+              {isHistoricalExample && (
                 <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                  <div className="font-semibold mb-1">Learning Point:</div>
-                  These scoring patterns help illustrate how different types of military changes (upgradation, modernization, innovation) manifest across the four dimensions of your framework.
+                  <div className="font-semibold mb-1">Framework Learning:</div>
+                  This scoring pattern illustrates how {getInnovationType(meta.label)} manifests across the four dimensions, helping you understand the distinctions between upgradation, modernization, and genuine innovation.
                 </div>
               )}
             </div>
@@ -694,45 +695,167 @@
       );
     }
 
-    // ===== Transform contradiction messages for educational context =====
-    function transformToEducationalInsight(issue, caseName) {
-      const message = issue.message;
+    // ===== Comprehensive educational analysis for all historical cases =====
+    function getEducationalAnalysis(caseName, example) {
+      const scores = example.scores;
+      const analysis = [];
       
-      // Extract scores and dimensions from the message
-      const match = message.match(/(\w+) score \((\d+)\) significantly higher than (\w+) score \((\d+)\)/);
-      if (match) {
-        const [, higherDim, higherScore, lowerDim, lowerScore] = match;
-        
-        // Create educational insights based on the specific case and pattern
-        const insights = {
-          "Military Robotics": {
-            "Generative-Cognitive": "High Generative (3) with lower Cognitive (1): Military robotics extends human capabilities and opens new possibilities without fundamentally changing military doctrine or strategic thinking. This pattern is typical of modernization.",
-            "Generative-Disruption": "High Generative (3) with lower Disruption (1): Military robotics creates new capability families but operates within existing operational frameworks, rarely forcing enemies to abandon current methods."
-          },
-          "AI-Targeting": {
-            "Generative-Cognitive": "Higher Generative than Cognitive: AI-targeting speeds existing processes and creates new targeting capabilities while requiring minimal changes to doctrine or mental models.",
-            "Generative-Disruption": "Higher Generative than Disruption: AI systems enhance existing kill chains rather than fundamentally disrupting enemy operations."
-          }
-        };
-        
-        const caseInsights = insights[caseName];
-        const patternKey = `${higherDim}-${lowerDim}`;
-        
-        if (caseInsights && caseInsights[patternKey]) {
-          return caseInsights[patternKey];
-        }
-        
-        // Generic educational message if no specific insight exists
-        return `${higherDim} score (${higherScore}) higher than ${lowerDim} score (${lowerScore}): This scoring pattern reflects the specific nature of ${caseName} as an example of ${getInnovationType(caseName)}.`;
-      }
+      // Define educational insights for each historical case
+      const insights = {
+        "AI-Targeting": [
+          `**Modernization Pattern**: Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) remain low while Generative (${scores.Generative}) shows moderate development.`,
+          `**Key Insight**: AI-targeting accelerates existing targeting processes without fundamentally changing military doctrine or forcing enemies to abandon current methods.`,
+          `**Significance**: This demonstrates how technological improvements can enhance capabilities while operating within established paradigmatic frameworks.`
+        ],
+        "AIP Submarine": [
+          `**Balanced Modernization**: Moderate scores in Irreversibility (${scores.Irreversibility}) and Generative (${scores.Generative}) with lower Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}).`,
+          `**Key Insight**: AIP technology extends submarine endurance and creates new patrol patterns, requiring some organizational adaptation while operating within existing submarine warfare paradigms.`,
+          `**Significance**: Shows how incremental technological advances can create meaningful operational improvements without paradigmatic transformation.`
+        ],
+        "ASBM": [
+          `**Innovation Pattern**: High Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) scores indicate significant paradigmatic impact.`,
+          `**Key Insight**: Anti-ship ballistic missiles force fundamental rethinking of carrier operations and naval power projection while compelling adversaries to radically alter existing methods.`,
+          `**Significance**: Demonstrates how technological innovation can achieve genuine military innovation by challenging core operational assumptions.`
+        ],
+        "Barbed Wire": [
+          `**Innovation Pattern**: Balanced high scores across Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}).`,
+          `**Key Insight**: Barbed wire made existing offensive operational assumptions untenable, forcing fundamental revision of tactical frameworks and creating institutional resistance to reversion.`,
+          `**Significance**: Illustrates how simple technologies can achieve profound military transformation by fundamentally altering tactical possibilities.`
+        ],
+        "Blitzkrieg": [
+          `**Transformational Innovation**: Maximum or near-maximum scores across all dimensions, with Cognitive (${scores.Cognitive}), Disruption (${scores.Disruption}), and Generative (${scores.Generative}) at 4.`,
+          `**Key Insight**: Blitzkrieg represents complete paradigmatic transformation - making attrition warfare assumptions untenable while spawning numerous follow-on operational innovations.`,
+          `**Significance**: Exemplifies rare cases of total systemic military revolution that redefines warfare itself.`
+        ],
+        "Carrier Aviation": [
+          `**Complete Transformation**: Maximum scores (4) across all four dimensions indicate total paradigmatic revolution.`,
+          `**Key Insight**: Carrier aviation displaced battleship-centric thinking, created irreversible organizational changes, and enabled previously impossible global power projection concepts.`,
+          `**Significance**: Represents the gold standard for transformational military innovation with lasting impact across all aspects of naval warfare.`
+        ],
+        "Cyber Warfare": [
+          `**Emerging Modernization**: Moderate scores across all dimensions with highest Generative (${scores.Generative}) indicating new capability development.`,
+          `**Key Insight**: Cyber warfare creates new operational domains while operating alongside rather than replacing traditional military paradigms.`,
+          `**Significance**: Shows how new domains can emerge without immediately achieving full paradigmatic transformation.`
+        ],
+        "Deep Battle/Reconnaissance Strike Complex": [
+          `**Innovation Pattern**: High Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) with strong Generative (${scores.Generative}) effects.`,
+          `**Key Insight**: Deep Battle doctrine made frontal assault assumptions untenable and established operational art as permanent military thinking.`,
+          `**Significance**: Demonstrates how doctrinal innovations can achieve lasting transformation even when technological irreversibility is moderate.`
+        ],
+        "F-16 Block D": [
+          `**Pure Upgradation**: Minimal scores across all dimensions with only slight Irreversibility (${scores.Irreversibility}) and Generative (${scores.Generative}) effects.`,
+          `**Key Insight**: Block upgrades enhance performance within existing air superiority paradigms without challenging operational assumptions.`,
+          `**Significance**: Illustrates the distinction between technological improvement and genuine innovation.`
+        ],
+        "Hypersonics": [
+          `**Limited Modernization**: Low scores across most dimensions with moderate Generative (${scores.Generative}) potential.`,
+          `**Key Insight**: Hypersonic weapons accelerate existing missile paradigms without fundamentally challenging strategic assumptions about deterrence.`,
+          `**Significance**: Shows how advanced technology doesn't automatically translate to military innovation without paradigmatic change.`
+        ],
+        "Information Warfare": [
+          `**Innovation Pattern**: Balanced high scores with maximum Generative (${scores.Generative}) effects demonstrating broad impact.`,
+          `**Key Insight**: Information warfare challenges command and control assumptions while transcending traditional domain boundaries.`,
+          `**Significance**: Exemplifies how conceptual innovations can achieve transformation through cross-domain spillover effects.`
+        ],
+        "Lasers": [
+          `**Early Modernization**: Low scores across most dimensions indicating limited paradigmatic impact despite technological sophistication.`,
+          `**Key Insight**: Directed energy systems challenge some defensive assumptions but operate within existing frameworks with limited institutional embedding.`,
+          `**Significance**: Demonstrates that cutting-edge technology requires paradigmatic integration to achieve innovation status.`
+        ],
+        "Machine Gun": [
+          `**Complete Innovation**: Maximum scores across Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}) with strong Generative (${scores.Generative}) effects.`,
+          `**Key Insight**: Machine guns made linear tactics completely obsolete while creating irreversible organizational dependencies and forcing fundamental reconceptualization of infantry warfare.`,
+          `**Significance**: Classic example of technological innovation achieving complete military transformation.`
+        ],
+        "Military Robotics": [
+          `**Modernization Pattern**: Higher Generative (${scores.Generative}) score with lower Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) indicating capability extension without paradigmatic change.`,
+          `**Key Insight**: Military robotics extends human capabilities and opens new operational possibilities without fundamentally changing military doctrine or strategic thinking.`,
+          `**Significance**: Illustrates how advanced technology can create new capabilities while operating within established conceptual frameworks.`
+        ],
+        "Minie Ball/Conoidal Bullet": [
+          `**Innovation Pattern**: High and balanced scores across Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}).`,
+          `**Key Insight**: The Minie ball made Napoleonic linear tactics untenable and forced fundamental questioning of infantry effectiveness assumptions.`,
+          `**Significance**: Shows how seemingly simple technological improvements can trigger comprehensive tactical transformation.`
+        ],
+        "Multi-Domain Battle Concept": [
+          `**Conceptual Modernization**: Moderate Generative (${scores.Generative}) with lower other dimensions indicating incomplete paradigmatic embedding.`,
+          `**Key Insight**: Multi-Domain Operations challenges traditional service boundaries but remains conceptually emergent with incomplete institutional adoption.`,
+          `**Significance**: Demonstrates how military concepts may require time and institutional adaptation to achieve full innovative impact.`
+        ],
+        "Network-Centric Warfare": [
+          `**Conceptual Innovation**: High Cognitive (${scores.Cognitive}) and maximum Generative (${scores.Generative}) with moderate Irreversibility (${scores.Irreversibility}) indicating concept-led transformation.`,
+          `**Key Insight**: NCW represents conceptual innovation preceding full technological capability, irreversibly setting military thinking toward networked operations.`,
+          `**Significance**: Illustrates how powerful concepts can achieve innovative status even when implementation lags behind vision.`
+        ],
+        "Nuclear Weapons": [
+          `**Total Transformation**: Maximum scores (4) across all dimensions representing complete paradigmatic revolution.`,
+          `**Key Insight**: Nuclear weapons fundamentally redefined warfare's purpose, strategic logic, and international relations while creating irreversible institutional dependencies.`,
+          `**Significance**: The definitive example of complete military innovation with permanent global impact.`
+        ],
+        "PGMs": [
+          `**Targeted Modernization**: Low Cognitive (${scores.Cognitive}) with moderate other dimensions indicating enhanced capability within existing paradigms.`,
+          `**Key Insight**: Precision-guided munitions enable new targeting concepts and create new capability families while leaving strategic paradigms largely intact.`,
+          `**Significance**: Shows how technological precision can create significant operational improvements without fundamental conceptual transformation.`
+        ],
+        "Radar": [
+          `**Innovation Pattern**: Moderate Cognitive (${scores.Cognitive}) with high Irreversibility (${scores.Irreversibility}), Disruption (${scores.Disruption}), and Generative (${scores.Generative}) scores.`,
+          `**Key Insight**: Radar transformed air warfare by making surprise attacks untenable while creating permanent organizational changes in air defense thinking.`,
+          `**Significance**: Demonstrates how detection technologies can achieve innovation through operational transformation rather than conceptual revolution.`
+        ],
+        "Stealth": [
+          `**Limited Modernization**: Moderate scores across dimensions with minimal Cognitive (${scores.Cognitive}) impact indicating capability improvement within existing paradigms.`,
+          `**Key Insight**: Stealth technology improves existing air warfare capabilities while operating within established operational frameworks.`,
+          `**Significance**: Illustrates how sophisticated technology can enhance military effectiveness without achieving paradigmatic transformation.`
+        ],
+        "Stirrups": [
+          `**Complete Transformation**: Maximum scores (4) across all dimensions indicating total paradigmatic revolution.`,
+          `**Key Insight**: Stirrups enabled shock cavalry tactics while creating irreversible social and military organizational changes, including feudal military structures.`,
+          `**Significance**: Historical example of how simple technological innovation can achieve complete military and social transformation.`
+        ],
+        "Stosstrupp Tactics": [
+          `**Innovation Pattern**: Maximum Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) with high Irreversibility (${scores.Irreversibility}) and Generative (${scores.Generative}) scores.`,
+          `**Key Insight**: Storm troop tactics made linear assault assumptions untenable while embedding infiltration principles and opening conceptual space for combined arms thinking.`,
+          `**Significance**: Shows how tactical innovations can achieve strategic-level transformation through fundamental reconceptualization of combat methods.`
+        ],
+        "T-72B3M Main Battle Tank": [
+          `**Pure Upgradation**: Minimal scores across all dimensions indicating performance enhancement without paradigmatic change.`,
+          `**Key Insight**: Modernized tank systems improve capabilities within existing armored warfare paradigms without challenging operational assumptions.`,
+          `**Significance**: Clear example of upgradation - technological improvement that enhances existing capabilities without transformation.`
+        ],
+        "Tank": [
+          `**Complete Innovation**: Maximum scores (4) across all dimensions representing total paradigmatic transformation.`,
+          `**Key Insight**: Tanks made trench warfare assumptions untenable, created irreversible mechanized dependencies, and fundamentally reconceptualized land warfare around mobility and combined arms.`,
+          `**Significance**: Definitive example of technological innovation achieving complete military transformation with permanent institutional impact.`
+        ],
+        "Telegraph": [
+          `**Complete Transformation**: Maximum scores (4) across all dimensions indicating total paradigmatic revolution.`,
+          `**Key Insight**: Telegraph made courier-based command assumptions untenable while creating irreversible dependencies on communication networks and enabling real-time command coordination.`,
+          `**Significance**: Historical example of communication technology achieving complete transformation of military command and control paradigms.`
+        ],
+        "UAVs": [
+          `**Modernization Pattern**: Low Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) with moderate Irreversibility (${scores.Irreversibility}) and higher Generative (${scores.Generative}) scores.`,
+          `**Key Insight**: UAVs extend existing reconnaissance and strike paradigms while creating new operational concepts without fundamentally challenging core military assumptions.`,
+          `**Significance**: Illustrates how unmanned systems can create significant new capabilities while operating within established doctrinal frameworks.`
+        ]
+      };
       
-      // For non-gap messages, provide educational context
-      if (message.includes("All four dimensions at maximum")) {
-        return `Complete transformation across all dimensions: ${caseName} represents one of the rare cases of total systemic military revolution, demonstrating maximum scores across Cognitive, Irreversibility, Disruption, and Generative dimensions.`;
-      }
+      return insights[caseName] || [
+        `**Scoring Pattern**: This case shows ${getScorePattern(scores)} across the four dimensions.`,
+        `**Classification**: Represents an example of ${getInnovationType(caseName)} in military development.`,
+        `**Framework Application**: Demonstrates how the four-dimensional framework distinguishes between different types of military change.`
+      ];
+    }
+
+    function getScorePattern(scores) {
+      const vals = [scores.Cognitive, scores.Irreversibility, scores.Disruption, scores.Generative];
+      const high = vals.filter(v => v >= 3).length;
+      const moderate = vals.filter(v => v === 2).length;
+      const low = vals.filter(v => v <= 1).length;
       
-      // Default transformation
-      return message.replace(/Consider whether|Review whether/g, "This pattern illustrates how");
+      if (high >= 3) return "high scores";
+      if (moderate >= 2) return "moderate scores";
+      if (high >= 1 && moderate >= 1) return "mixed high and moderate scores";
+      return "low to moderate scores";
     }
 
     function getInnovationType(caseName) {
