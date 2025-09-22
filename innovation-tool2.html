@@ -16,8 +16,8 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
-    .big-tabs{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.25rem 0}
-    .big-tab{padding:.9rem 1.75rem;border-radius:1rem;font-weight:700;border:1px solid;transition:all .2s}
+    .big-tabs{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.25rem 0;width:100%}
+    .big-tab{padding:.9rem 1.75rem;border-radius:1rem;font-weight:700;border:1px solid;transition:all .2s;flex-shrink:0}
     .big-tab-inactive{background:#f3f4f6;border-color:#d1d5db;color:#374151}
     .big-tab-inactive:hover{background:#e5e7eb}
     .big-tab-active{background:#fff;border-color:#2563eb;color:#1d4ed8;box-shadow:0 20px 25px -5px rgba(0,0,0,.15),0 8px 10px -6px rgba(0,0,0,.12)}
@@ -107,35 +107,35 @@
       return "Modernization";
     }
 
-    // ===== Rule-driven contradictions =====
+    // ===== Enhanced contradiction messages =====
     const CONTRADICTION_RULES = [
       {
         id:"C_vs_I",
         dims:["Cognitive","Irreversibility"],
         conditions:[{dim:"Cognitive",min:3},{dim:"Irreversibility",max:1}],
         severity:"major",
-        message:"High Cognitive with very low Irreversibility is implausible. Major reframing embeds in training, logistics, and structure."
+        message:"High Cognitive score (3-4) with very low Irreversibility (0-1): If this innovation requires major changes in doctrine and mental models, it typically also creates permanent organizational changes. Consider whether the irreversibility effects are stronger than scored."
       },
       {
         id:"C_vs_D",
         dims:["Cognitive","Disruption"],
         conditions:[{dim:"Cognitive",min:3},{dim:"Disruption",max:1}],
         severity:"mild",
-        message:"Strong Cognitive with minimal Disruption is uncommon. If assumptions change, adversary patterns shift."
+        message:"High Cognitive score (3-4) with low Disruptive score (0-1): If this innovation changes how military thinks about problems, it usually also disrupts how adversaries operate. Review whether disruptive effects might be higher."
       },
       {
         id:"D_vs_I",
         dims:["Disruption","Irreversibility"],
         conditions:[{dim:"Disruption",min:3},{dim:"Irreversibility",max:1}],
         severity:"major",
-        message:"High Disruption rarely leaves institutions free to revert. Consider Irreversibility effects."
+        message:"High Disruptive score (3-4) with very low Irreversibility (0-1): If this innovation significantly disrupts enemy operations, militaries rarely remain free to abandon it. Consider whether permanent organizational changes are stronger than scored."
       },
       {
         id:"I_vs_G",
         dims:["Irreversibility","Generative"],
         conditions:[{dim:"Irreversibility",min:3},{dim:"Generative",max:1}],
         severity:"mild",
-        message:"Lock-in without follow-on capability growth is atypical. Strong Irreversibility tends to enable Generative families."
+        message:"High Irreversibility (3-4) with low Generative score (0-1): Permanent organizational changes typically enable new capabilities and follow-on innovations. Consider whether generative effects are stronger than scored."
       },
       {
         id:"G_vs_G3",
@@ -143,23 +143,46 @@
         subs:["g3"],
         conditions:[{dim:"Generative",min:3},{sub:"g3",max:1}],
         severity:"mild",
-        message:"High Generative with minimal Organizational Implications is unlikely. Family-forming innovations alter units, procurement, or schools."
+        message:"High Generative score (3-4) with low Organizational Implications: Innovations that create new capability families typically require new organizational structures. Review the g3 sub-indicator scoring."
       },
       {
         id:"All_Max",
         dims:["Cognitive","Irreversibility","Disruption","Generative"],
         conditions:[{dim:"Cognitive",min:4},{dim:"Irreversibility",min:4},{dim:"Disruption",min:4},{dim:"Generative",min:4}],
         severity:"major",
-        message:"All four dimensions at maximum implies total systemic revolution. Extraordinary claims require extraordinary justification."
+        message:"All four dimensions at maximum (4/4): This indicates complete systemic transformation across all aspects of warfare. Such total revolution is extremely rare - verify this assessment with strong historical evidence."
       },
       {
         id:"All_Min",
         dims:["Cognitive","Irreversibility","Disruption","Generative"],
         conditions:[{dim:"Cognitive",max:0},{dim:"Irreversibility",max:0},{dim:"Disruption",max:0},{dim:"Generative",max:0}],
         severity:"mild",
-        message:"All dimensions at zero indicates trivial change. Re-examine whether the case belongs in this framework."
+        message:"All dimensions scored at zero: This suggests the case represents minimal change that may not warrant analysis using this innovation framework. Consider whether a different analytical approach is more appropriate."
       }
     ];
+
+    // ===== Enhanced gradient gap messages =====
+    function createGapMessage(dim1, score1, dim2, score2) {
+      const explanations = {
+        "Cognitive-Disruption": "If this innovation changes military thinking, it typically also disrupts how adversaries operate.",
+        "Cognitive-Generative": "Innovations that change doctrine and mental models usually also create new capabilities and follow-on developments.",
+        "Cognitive-Irreversibility": "Major changes in thinking typically require permanent organizational adaptations.",
+        "Disruption-Irreversibility": "Innovations that disrupt enemy operations usually create permanent changes that prevent easy reversal.",
+        "Disruption-Generative": "Disruptive innovations typically spawn new capability families and cross-domain effects.",
+        "Generative-Irreversibility": "Innovations that create new capabilities usually require permanent organizational changes to sustain them."
+      };
+      
+      const key1 = `${dim1}-${dim2}`;
+      const key2 = `${dim2}-${dim1}`;
+      const explanation = explanations[key1] || explanations[key2] || "These dimensions typically show related effects.";
+      
+      const higher = score1 > score2 ? dim1 : dim2;
+      const lower = score1 > score2 ? dim2 : dim1;
+      const higherScore = Math.max(score1, score2);
+      const lowerScore = Math.min(score1, score2);
+      
+      return `${higher} score (${higherScore}) significantly higher than ${lower} score (${lowerScore}): ${explanation} Consider whether the ${lower} effects might be stronger than currently scored.`;
+    }
 
     // ===== Examples (full library) =====
     const EXAMPLES = {
@@ -222,7 +245,7 @@
           const da=dims[a], db=dims[b];
           const va=+dimScores[da]||0, vb=+dimScores[db]||0;
           if (Math.abs(va-vb)>=2){
-            const msg = `Large gap: ${da}=${va} vs ${db}=${vb}. Consider systemic alignment.`;
+            const msg = createGapMessage(da, va, db, vb);
             issues.push({id:`Gap_${da}_${db}`,severity:"mild",message:msg,dims:[da,db],subs:[]});
           }
         }
@@ -597,16 +620,25 @@
       );
     }
 
-    // ===== Modal =====
+    // ===== Enhanced Modal with clearer explanations =====
     function IssuesModal({issues,onClose}){
       if(!issues) return null;
       const majors = issues.filter(x=>x.severity==='major').length;
       const milds  = issues.filter(x=>x.severity==='mild').length;
-      let cls='green', title='No Contradictions Found', sub='Your scoring is internally consistent. Proceed to justification outside the tool.';
+      let cls='green', title='Assessment Review', sub='Your scoring appears consistent across dimensions.';
+      
       if (majors || milds){
-        if (majors) { cls='red'; title='Major Contradictions Detected'; sub=`${majors} major, ${milds} mild.`; }
-        else        { cls='yellow'; title='Potential Inconsistencies Detected'; sub=`${milds} mild.`; }
+        if (majors) { 
+          cls='red'; 
+          title='Assessment Review - Issues Found'; 
+          sub=`Found ${majors} major inconsistenc${majors>1?'ies':'y'} and ${milds} minor inconsistenc${milds>1?'ies':'y'}. Review the explanations below and consider adjusting your scores.`; 
+        } else { 
+          cls='yellow'; 
+          title='Assessment Review - Minor Issues'; 
+          sub=`Found ${milds} minor inconsistenc${milds>1?'ies':'y'}. These may indicate opportunities to refine your assessment.`; 
+        }
       }
+      
       return (
         <div className="modal-bg" onClick={onClose}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -614,16 +646,16 @@
             <div className="px-4 pt-2 pb-1 text-sm text-gray-700">{sub}</div>
             <div className="p-4 max-h-[60vh] overflow-auto">
               {majors||milds ? (
-                <ul className="space-y-3">
+                <ul className="space-y-4">
                   {issues.map((it,i)=>(
-                    <li key={i} className="flex items-start gap-2">
+                    <li key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                       <span className={it.severity==='major'?'flag-icon flag-major':'flag-icon flag-mild'}>!</span>
-                      <div className="text-sm text-gray-800">{it.message}</div>
+                      <div className="text-sm text-gray-800 leading-relaxed">{it.message}</div>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <div className="text-sm text-gray-700">No contradictions detected.</div>
+                <div className="text-sm text-gray-700">No inconsistencies detected. Your scoring appears well-balanced across the four dimensions.</div>
               )}
             </div>
             <div className="p-4 border-t text-right">
