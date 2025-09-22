@@ -620,24 +620,44 @@
       );
     }
 
-    // ===== Enhanced Modal with clearer explanations =====
-    function IssuesModal({issues,onClose}){
+    // ===== Enhanced Modal with context-aware messaging =====
+    function IssuesModal({issues,meta,onClose}){
       if(!issues) return null;
       const majors = issues.filter(x=>x.severity==='major').length;
       const milds  = issues.filter(x=>x.severity==='mild').length;
+      
+      // Check if this is a historical example vs user input
+      const isHistoricalExample = meta && meta.ex && EXAMPLES[meta.label];
+      
       let cls='green', title='Assessment Review', sub='Your scoring appears consistent across dimensions.';
       
       if (majors || milds){
-        if (majors) { 
-          cls='red'; 
-          title='Assessment Review - Issues Found'; 
-          sub=`Found ${majors} major inconsistenc${majors>1?'ies':'y'} and ${milds} minor inconsistenc${milds>1?'ies':'y'}. Review the explanations below and consider adjusting your scores.`; 
-        } else { 
+        if (isHistoricalExample) {
+          // For historical examples - educational analysis
           cls='yellow'; 
-          title='Assessment Review - Minor Issues'; 
-          sub=`Found ${milds} minor inconsistenc${milds>1?'ies':'y'}. These may indicate opportunities to refine your assessment.`; 
+          title='Historical Case Analysis'; 
+          sub=`This case (${meta.label}) demonstrates interesting scoring patterns in the framework:`; 
+        } else {
+          // For user inputs - inconsistency checking
+          if (majors) { 
+            cls='red'; 
+            title='Assessment Review - Issues Found'; 
+            sub=`Found ${majors} major inconsistenc${majors>1?'ies':'y'} and ${milds} minor inconsistenc${milds>1?'ies':'y'}. Review the explanations below and consider adjusting your scores.`; 
+          } else { 
+            cls='yellow'; 
+            title='Assessment Review - Minor Issues'; 
+            sub=`Found ${milds} minor inconsistenc${milds>1?'ies':'y'}. These may indicate opportunities to refine your assessment.`; 
+          }
         }
       }
+      
+      // Transform messages based on context
+      const contextualMessages = issues.map(issue => {
+        if (isHistoricalExample) {
+          return transformToEducationalInsight(issue, meta.label);
+        }
+        return issue.message;
+      });
       
       return (
         <div className="modal-bg" onClick={onClose}>
@@ -647,15 +667,23 @@
             <div className="p-4 max-h-[60vh] overflow-auto">
               {majors||milds ? (
                 <ul className="space-y-4">
-                  {issues.map((it,i)=>(
+                  {contextualMessages.map((message,i)=>(
                     <li key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <span className={it.severity==='major'?'flag-icon flag-major':'flag-icon flag-mild'}>!</span>
-                      <div className="text-sm text-gray-800 leading-relaxed">{it.message}</div>
+                      <span className={isHistoricalExample ? 'text-blue-600 font-bold' : (issues[i].severity==='major'?'flag-icon flag-major':'flag-icon flag-mild')}>
+                        {isHistoricalExample ? '•' : '!'}
+                      </span>
+                      <div className="text-sm text-gray-800 leading-relaxed">{message}</div>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <div className="text-sm text-gray-700">No inconsistencies detected. Your scoring appears well-balanced across the four dimensions.</div>
+              )}
+              {isHistoricalExample && (majors||milds) && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                  <div className="font-semibold mb-1">Learning Point:</div>
+                  These scoring patterns help illustrate how different types of military changes (upgradation, modernization, innovation) manifest across the four dimensions of your framework.
+                </div>
               )}
             </div>
             <div className="p-4 border-t text-right">
@@ -664,6 +692,61 @@
           </div>
         </div>
       );
+    }
+
+    // ===== Transform contradiction messages for educational context =====
+    function transformToEducationalInsight(issue, caseName) {
+      const message = issue.message;
+      
+      // Extract scores and dimensions from the message
+      const match = message.match(/(\w+) score \((\d+)\) significantly higher than (\w+) score \((\d+)\)/);
+      if (match) {
+        const [, higherDim, higherScore, lowerDim, lowerScore] = match;
+        
+        // Create educational insights based on the specific case and pattern
+        const insights = {
+          "Military Robotics": {
+            "Generative-Cognitive": "High Generative (3) with lower Cognitive (1): Military robotics extends human capabilities and opens new possibilities without fundamentally changing military doctrine or strategic thinking. This pattern is typical of modernization.",
+            "Generative-Disruption": "High Generative (3) with lower Disruption (1): Military robotics creates new capability families but operates within existing operational frameworks, rarely forcing enemies to abandon current methods."
+          },
+          "AI-Targeting": {
+            "Generative-Cognitive": "Higher Generative than Cognitive: AI-targeting speeds existing processes and creates new targeting capabilities while requiring minimal changes to doctrine or mental models.",
+            "Generative-Disruption": "Higher Generative than Disruption: AI systems enhance existing kill chains rather than fundamentally disrupting enemy operations."
+          }
+        };
+        
+        const caseInsights = insights[caseName];
+        const patternKey = `${higherDim}-${lowerDim}`;
+        
+        if (caseInsights && caseInsights[patternKey]) {
+          return caseInsights[patternKey];
+        }
+        
+        // Generic educational message if no specific insight exists
+        return `${higherDim} score (${higherScore}) higher than ${lowerDim} score (${lowerScore}): This scoring pattern reflects the specific nature of ${caseName} as an example of ${getInnovationType(caseName)}.`;
+      }
+      
+      // For non-gap messages, provide educational context
+      if (message.includes("All four dimensions at maximum")) {
+        return `Complete transformation across all dimensions: ${caseName} represents one of the rare cases of total systemic military revolution, demonstrating maximum scores across Cognitive, Irreversibility, Disruption, and Generative dimensions.`;
+      }
+      
+      // Default transformation
+      return message.replace(/Consider whether|Review whether/g, "This pattern illustrates how");
+    }
+
+    function getInnovationType(caseName) {
+      const ex = EXAMPLES[caseName];
+      if (!ex) return "military change";
+      
+      const scores = ex.scores;
+      const vals = [scores.Cognitive, scores.Irreversibility, scores.Disruption, scores.Generative];
+      const strong = vals.filter(v => v >= 3).length;
+      
+      if (strong >= 3) return "transformational innovation";
+      if (strong >= 2) return "innovation"; 
+      if (vals.some(v => v >= 2)) return "modernization";
+      return "upgradation";
     }
 
     // ===== App =====
@@ -744,7 +827,7 @@
 
           <footer className="mt-10 text-center text-xs text-gray-500">Single-file. Copy into your repo and open in a browser.</footer>
 
-          {modalOpen && <IssuesModal issues={issues} onClose={closeModal}/>}
+          {modalOpen && <IssuesModal issues={issues} meta={meta} onClose={closeModal}/>}
         </main>
       );
     }
