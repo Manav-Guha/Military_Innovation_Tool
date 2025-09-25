@@ -45,6 +45,7 @@
     .modal-h.red{background:#fee2e2;color:#7f1d1d}
     .modal-h.bg-blue-50{background:#eff6ff;color:#1e40af}
     .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
+    .interaction-indicator{background:#e0f2fe;border:1px solid #0288d1;color:#01579b;padding:.125rem .375rem;border-radius:.25rem;font-size:.7rem;margin-left:.5rem}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -55,7 +56,7 @@
 
     // ===== Qualitative Labels =====
     const LABELS = ["None", "Minimal", "Moderate", "Significant", "Transformative"];
-    const getLabel = (value) => LABELS[value] || "None";
+    const getLabel = (value) => LABELS[Math.round(value)] || "None";
     const getValue = (label) => LABELS.indexOf(label);
 
     // ===== Dimensions (C/I/D/G) =====
@@ -82,7 +83,7 @@
         {k:"i4", name:"Force Structure Changes", hint:"Units/Tables of Organization and Equipment (TO&E) likely to be created or reconfigured."}
       ],
       Disruption: [
-        {k:"d1", name:"Enemy Observe–Orient–Decide–Act (OODA) Disruption", hint:"OODA cycle likely to be broken?"},
+        {k:"d1", name:"Enemy Observe—Orient—Decide—Act (OODA) Disruption", hint:"OODA cycle likely to be broken?"},
         {k:"d2", name:"Doctrinal Breakpoints", hint:"Old doctrine likely to be rendered unusable?"},
         {k:"d3", name:"Kill-Chain / Topology Shifts", hint:"Sequencing/roles likely to fundamentally change?"},
         {k:"d4", name:"Adversary Scramble", hint:"Urgent, costly countermeasures likely?"}
@@ -101,8 +102,47 @@
       Generative: SUBS.Generative.map(x=>x.k)
     };
 
-    // ===== Scoring helpers with updated thresholds =====
+    // ===== Enhanced aggregation with interactive effects =====
     const meanToInt = arr => Math.round(arr.reduce((a,v)=>a+v,0)/arr.length);
+    
+    function aggregateWithInteractions(subVals) {
+      const base = {
+        Disruption:      meanToInt([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
+        Irreversibility: meanToInt([subVals.i1,subVals.i2,subVals.i3,subVals.i4]),
+        Cognitive:       meanToInt([subVals.c1,subVals.c2,subVals.c3,subVals.c4]),
+        Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
+      };
+      
+      // Apply interactive effects (multiplicative bonuses for high co-occurrence)
+      const interactions = {
+        // Cognitive-Irreversibility reinforcement
+        cognitiveBoost: (base.Cognitive >= 3 && base.Irreversibility >= 3) ? 
+          Math.min(0.5, (base.Cognitive + base.Irreversibility - 6) * 0.1) : 0,
+        
+        // Disruption-Generative synergy  
+        disruptiveBoost: (base.Disruption >= 2 && base.Generative >= 2) ?
+          Math.min(0.3, (base.Disruption + base.Generative - 4) * 0.1) : 0,
+          
+        // Threshold amplification (all dimensions ≥2 creates emergent effects)
+        thresholdBoost: Object.values(base).filter(v => v >= 2).length === 4 ? 0.2 : 0
+      };
+      
+      // Apply boosts while maintaining 0-4 bounds
+      const enhanced = {
+        Cognitive: Math.min(4, base.Cognitive + interactions.cognitiveBoost),
+        Irreversibility: Math.min(4, base.Irreversibility + interactions.cognitiveBoost),
+        Disruption: Math.min(4, base.Disruption + interactions.disruptiveBoost + interactions.thresholdBoost),
+        Generative: Math.min(4, base.Generative + interactions.disruptiveBoost + interactions.thresholdBoost)
+      };
+      
+      // Store interaction metadata for display
+      enhanced._interactions = interactions;
+      enhanced._hasInteractions = Object.values(interactions).some(v => v > 0);
+      
+      return enhanced;
+    }
+
+    // ===== Scoring helpers with updated thresholds =====
     const thresholdOK = s => (s.Cognitive||0) >= 3 && (s.Irreversibility||0) >= 3;
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
     function classify(s){
@@ -113,7 +153,7 @@
       return "Modernization";
     }
 
-    // ===== Updated Examples with ASBM rescoring =====
+    // ===== Updated Examples with F-16 correction =====
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
       "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
@@ -123,7 +163,7 @@
       "Carrier Aviation": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Shift from battleships; aviation embedded.", sources: ["Friedman, 1983"] },
       "Cyber Warfare": { scores: { Cognitive:2, Irreversibility:2, Disruption:2, Generative:3 }, justification: "New domain operating alongside existing paradigms.", sources: ["Libicki, 2012"] },
       "Deep Battle/Reconnaissance Strike Complex": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Frontal assaults untenable; operational art entrenched.", sources: ["Habeck, 2003"] },
-      "F-16 Block D": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Upgradation within existing paradigm.", sources: ["USAF Fact Sheets"] },
+      "F-16 Block D": { scores: { Cognitive:0, Irreversibility:1, Disruption:1, Generative:1 }, justification: "Upgradation within existing paradigm, but superior capabilities compel adversary responses and procurement adjustments.", sources: ["USAF Fact Sheets"] },
       "Hypersonics": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "Accelerates missiles; limited conceptual shift.", sources: ["Mahnken, 2007"] },
       "Information Warfare": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 }, justification: "Challenges C2 assumptions; cross-boundary effects.", sources: ["Ricks, 2012"] },
       "Lasers": { scores: { Cognitive:1, Irreversibility:1, Disruption:2, Generative:2 }, justification: "Within existing frameworks; limited embedding.", sources: ["AFRL Primer, 2019"] },
@@ -159,16 +199,21 @@
           return `${sub.name.replace(/Enemy |Adversary |New |Doctrinal /g, '').toLowerCase()}: ${getLabel(score).toLowerCase()}`;
         }).join(', ');
         
-        feedback.push(`**${dimData.label}**: You assessed ${subDetails}. This resulted in a cumulative ${getLabel(dimScore).toLowerCase()} level (${dimScore}/4) for the ${dim} dimension.`);
+        feedback.push(`**${dimData.label}**: You assessed ${subDetails}. This resulted in a cumulative ${getLabel(dimScore).toLowerCase()} level (${Math.round(dimScore*10)/10}/4) for the ${dim} dimension.`);
       });
+      
+      // Add interaction effects explanation if present
+      if (dimScores._hasInteractions) {
+        feedback.push(`**Interactive Effects**: Your assessment triggered dimensional synergies - certain combinations of high scores create reinforcement effects that amplify the overall innovation potential.`);
+      }
       
       // Add conclusion
       const total = ORDER.reduce((sum, dim) => sum + (dimScores[dim] || 0), 0);
-      feedback.push(`**Conclusion**: Based on your assessment across all four dimensions (total score: ${total}/16), your innovation concept is classified as **${classification}**.`);
+      feedback.push(`**Conclusion**: Based on your assessment across all four dimensions (total score: ${Math.round(total*10)/10}/16), your innovation concept is classified as **${classification}**.`);
       
       // Add threshold explanation
       if (!thresholdOK(dimScores)) {
-        feedback.push(`*Note: Innovation classification requires both Cognitive ≥ Significant (3) and Irreversibility ≥ Significant (3). Your current scores are Cognitive: ${getLabel(dimScores.Cognitive || 0)} (${dimScores.Cognitive || 0}) and Irreversibility: ${getLabel(dimScores.Irreversibility || 0)} (${dimScores.Irreversibility || 0}).*`);
+        feedback.push(`*Note: Innovation classification requires both Cognitive ≥ Significant (3) and Irreversibility ≥ Significant (3). Your current scores are Cognitive: ${getLabel(dimScores.Cognitive || 0)} (${Math.round((dimScores.Cognitive || 0)*10)/10}) and Irreversibility: ${getLabel(dimScores.Irreversibility || 0)} (${Math.round((dimScores.Irreversibility || 0)*10)/10}).*`);
       }
       
       return feedback;
@@ -237,7 +282,7 @@
               
               <div className="mt-6 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
                 <div className="font-semibold mb-1">Methodological Note:</div>
-                Numerical values (0-4) are used for computational purposes only. Assessment is based on qualitative evidence levels: None, Minimal, Moderate, Significant, Transformative.
+                Numerical values (0-4) are used for computational purposes only. Assessment is based on qualitative evidence levels: None, Minimal, Moderate, Significant, Transformative. Interactive effects may create fractional scores when dimensional synergies are detected.
               </div>
             </div>
             <div className="p-4 border-t text-right">
@@ -263,6 +308,11 @@
           `**Key Insight**: Military robotics extends human capabilities and opens new operational possibilities without fundamentally changing military doctrine or strategic thinking.`,
           `**Significance**: Illustrates how advanced technology can create new capabilities while operating within established conceptual frameworks.`
         ],
+        "F-16 Block D": [
+          `**Upgradation with Disruptive Elements**: Minimal Disruption (${scores.Disruption}) score reflects adversarial response compulsion despite operating within existing paradigms.`,
+          `**Key Insight**: Even capability upgrades can trigger adversarial scramble - Pakistan's F-16 acquisition forced India's immediate procurement responses (MiG-29, Su-30 MKI).`,
+          `**Significance**: Demonstrates that disruption can manifest at tactical-operational level even when strategic paradigms remain unchanged.`
+        ],
         "Blitzkrieg": [
           `**Innovation Pattern**: Maximum or near-maximum scores across Cognitive (${scores.Cognitive}), Disruption (${scores.Disruption}), and Generative (${scores.Generative}) dimensions.`,
           `**Key Insight**: Blitzkrieg represents complete paradigmatic transformation - making attrition warfare assumptions untenable while spawning numerous follow-on operational innovations.`,
@@ -277,19 +327,35 @@
       ];
     }
 
-    // ===== Sub Panel with Qualitative Labels =====
-    function SubPanel({dim, values, setValue, locked=false}) {
+    // ===== Sub Panel with Enhanced Display =====
+    function SubPanel({dim, values, setValue, locked=false, showInteractions=false}) {
       const items = SUBS[dim];
       const rated = items.filter(it => (values[it.k]||0) > 0).length;
-      const agg = meanToInt(items.map(it => values[it.k]||0));
+      
+      // Calculate both base and enhanced scores for comparison
+      const baseScore = meanToInt(items.map(it => values[it.k]||0));
+      const enhancedResult = showInteractions ? aggregateWithInteractions(values) : null;
+      const displayScore = showInteractions && enhancedResult ? enhancedResult[dim] : baseScore;
+      const hasBoost = showInteractions && enhancedResult && Math.abs(displayScore - baseScore) > 0.05;
+      
       const dMeta = DIMS.find(d=>d.key===dim);
       
       return (
         <div className="panel">
           <div className="panel-h">
-            <div className="dim-title"><span>{dMeta.label}</span></div>
+            <div className="dim-title">
+              <span>{dMeta.label}</span>
+              {hasBoost && (
+                <span className="interaction-indicator" title="Score enhanced by dimensional interactions">
+                  +{Math.round((displayScore - baseScore)*100)/100}
+                </span>
+              )}
+            </div>
             <div className="hint">{dMeta.def}</div>
-            <div className="text-sm text-gray-600 mt-1">{rated}/4 rated • Score: {getLabel(agg)} ({agg})</div>
+            <div className="text-sm text-gray-600 mt-1">
+              {rated}/4 rated • Score: {getLabel(displayScore)} ({Math.round(displayScore*10)/10})
+              {hasBoost && <span className="text-xs text-blue-600 ml-1">(base: {baseScore})</span>}
+            </div>
           </div>
           <div className="panel-b">
             {items.map(it=>(
@@ -340,13 +406,14 @@
             labels: DIMS.map(d => d.label),
             datasets: [
               {
-                label: 'Current',
+                label: 'Current Assessment',
                 data: values,
                 fill: true,
                 backgroundColor: 'rgba(37,99,235,0.2)',
                 borderColor: 'rgba(37,99,235,1)',
                 borderWidth: 2,
-                pointRadius: 3
+                pointRadius: 4,
+                pointBackgroundColor: 'rgba(37,99,235,1)'
               },
               {
                 label: 'Innovation Threshold (C≥3, I≥3)',
@@ -362,7 +429,19 @@
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { legend: { position: 'top' } },
+            plugins: { 
+              legend: { position: 'top' },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.dataset.label || '';
+                    const value = context.parsed.r;
+                    const qualitative = getLabel(value);
+                    return `${label}: ${qualitative} (${Math.round(value*10)/10})`;
+                  }
+                }
+              }
+            },
             scales: {
               r: {
                 beginAtZero: true,
@@ -373,6 +452,9 @@
                   callback: function(value) {
                     return getLabel(value);
                   }
+                },
+                grid: {
+                  color: 'rgba(0,0,0,0.1)'
                 }
               }
             }
@@ -399,13 +481,26 @@
             datasets:[{
               label:'Dimension Scores',
               data:values,
-              backgroundColor:values.map(colorFor)
+              backgroundColor:values.map(colorFor),
+              borderColor:values.map(colorFor),
+              borderWidth: 1
             }]
           },
           options:{
             responsive:true,
             maintainAspectRatio:false,
-            plugins:{legend:{display:false}},
+            plugins:{
+              legend:{display:false},
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const value = context.parsed.y;
+                    const qualitative = getLabel(value);
+                    return `${qualitative} (${Math.round(value*10)/10})`;
+                  }
+                }
+              }
+            },
             scales:{
               y:{
                 beginAtZero:true,
@@ -416,6 +511,14 @@
                   callback: function(value) {
                     return getLabel(value);
                   }
+                },
+                grid: {
+                  color: 'rgba(0,0,0,0.1)'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
                 }
               }
             }
@@ -442,20 +545,19 @@
         return s;
       }
 
-      function aggregate(subVals){
-        return {
-          Disruption:      meanToInt([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
-          Irreversibility: meanToInt([subVals.i1,subVals.i2,subVals.i3,subVals.i4]),
-          Cognitive:       meanToInt([subVals.c1,subVals.c2,subVals.c3,subVals.c4]),
-          Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
-        };
-      }
-
       function runEval(nextSubs){
-        const dim = aggregate(nextSubs);
+        const dim = aggregateWithInteractions(nextSubs);
         setScores(dim);
         setSubScores(nextSubs);
         setIssues([]);
+      }
+
+      function setValue(k,v){
+        setSubs(function(prev){
+          const next = Object.assign({}, prev, { [k]: v });
+          runEval(next);
+          return next;
+        });
       }
 
       function loadFromSelection(v){
@@ -466,14 +568,6 @@
         const subVals = buildSubFromExample(ex);
         setSubs(subVals);
         runEval(subVals);
-      }
-
-      function setValue(k,v){
-        setSubs(function(prev){
-          const next = Object.assign({}, prev, { [k]: v });
-          runEval(next);
-          return next;
-        });
       }
 
       const ex = sel ? EXAMPLES[sel] : null;
@@ -497,13 +591,13 @@
 
           {ex && (
             <div className="grid md:grid-cols-2 gap-6">
-              {["Disruption","Irreversibility","Cognitive","Generative"].map(dim=>{
+              {ORDER.map(dim=>{
                 const pick = {};
                 for (let i=0;i<SUB_KEYS[dim].length;i++){
                   const key = SUB_KEYS[dim][i];
                   pick[key] = subs && (key in subs) ? subs[key] : ex.scores[dim] || 0;
                 }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} />;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={true} />;
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
                 <div className="font-semibold mb-1">Explanation & References</div>
@@ -526,17 +620,8 @@
         g1:0,g2:0,g3:0,g4:0
       });
 
-      function aggregate(s){
-        return {
-          Disruption:      meanToInt([s.d1,s.d2,s.d3,s.d4]),
-          Irreversibility: meanToInt([s.i1,s.i2,s.i3,s.i4]),
-          Cognitive:       meanToInt([s.c1,s.c2,s.c3,s.c4]),
-          Generative:      meanToInt([s.g1,s.g2,s.g3,s.g4]),
-        };
-      }
-
       function runEval(nextSub){
-        const dim = aggregate(nextSub);
+        const dim = aggregateWithInteractions(nextSub);
         setScores(dim);
         setSubScores(nextSub);
         setIssues([]);
@@ -572,13 +657,13 @@
             </div>
 
             <div className="mt-6 grid md:grid-cols-2 gap-6">
-              {["Disruption","Irreversibility","Cognitive","Generative"].map(dim=>{
+              {ORDER.map(dim=>{
                 const pick = {};
                 for (let i=0;i<SUB_KEYS[dim].length;i++){
                   const key = SUB_KEYS[dim][i];
                   pick[key] = sub[key];
                 }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} />;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={true} />;
               })}
             </div>
           </div>
@@ -588,6 +673,8 @@
 
     // ===== Charts panel =====
     function ChartsPanel({scores,meta,openModal}){
+      const hasInteractions = scores._hasInteractions;
+      
       return (
         <div className="grid md:grid-cols-2 gap-6">
           <div className="panel">
@@ -605,6 +692,7 @@
               <div>{thresholdOK(scores)
                 ? <span className="badge bg-green-100 text-green-800">Innovation Threshold Met (C≥3 & I≥3)</span>
                 : <span className="badge bg-yellow-100 text-yellow-800">Innovation Threshold Not Met</span>}</div>
+              {hasInteractions && <div className="badge bg-blue-100 text-blue-800">Interactive Effects Active</div>}
               {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
               <button onClick={openModal} className="ml-auto px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
                 View Analysis
@@ -613,7 +701,7 @@
             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
               {DIMS.map(d=>(
                 <div key={d.key} className="text-sm">
-                  <span className="font-semibold">{d.label}:</span> {getLabel(scores[d.key] || 0)} ({scores[d.key] || 0})
+                  <span className="font-semibold">{d.label}:</span> {getLabel(scores[d.key] || 0)} ({Math.round((scores[d.key] || 0)*10)/10})
                 </div>
               ))}
             </div>
@@ -660,8 +748,8 @@
           </div>
 
           <div className="panel panel-b text-sm mb-6">
-            <div className="font-semibold mb-2">Assessment Scale</div>
-            <div className="grid grid-cols-5 gap-2 text-center">
+            <div className="font-semibold mb-2">Assessment Scale & Interactive Effects</div>
+            <div className="grid grid-cols-5 gap-2 text-center mb-4">
               {LABELS.map((label, idx) => (
                 <div key={idx} className="p-2 bg-gray-50 rounded">
                   <div className="font-medium">{label}</div>
@@ -669,8 +757,15 @@
                 </div>
               ))}
             </div>
-            <div className="mt-3 text-xs text-gray-600">
-              <strong>Methodological Note:</strong> Numerical values (0-4) are used for computational purposes only. Assessment is based on qualitative evidence levels.
+            <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg">
+              <div className="font-semibold mb-1">Enhanced Methodology:</div>
+              <div className="space-y-1">
+                <div>• <strong>Base Scoring:</strong> Each dimension calculated as mean of four sub-indicators</div>
+                <div>• <strong>Interactive Effects:</strong> High scores in related dimensions trigger synergistic bonuses</div>
+                <div>• <strong>Cognitive-Irreversibility:</strong> Both ≥3 creates reinforcement (+0.5 max)</div>
+                <div>• <strong>Disruption-Generative:</strong> Both ≥2 creates synergy (+0.3 max)</div>
+                <div>• <strong>Threshold Amplification:</strong> All dimensions ≥2 creates emergent effects (+0.2)</div>
+              </div>
             </div>
           </div>
 
@@ -700,7 +795,7 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework - Recognition tool for systematic analysis of military change patterns.
+            Military Innovation Assessment Framework v2.0 - Enhanced with interactive effects modeling
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={closeModal}/>}
