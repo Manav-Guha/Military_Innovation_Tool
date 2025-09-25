@@ -128,24 +128,24 @@
         Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
       };
       
-      // Check if definitional thresholds are met
-      const meetsDefinitionalThreshold = base.Cognitive >= 3 && base.Irreversibility >= 3;
+      // Check if primary threshold is met
+      const meetsPrimaryThreshold = base.Cognitive >= 3 && base.Irreversibility >= 3;
       
       let interactions = {
         disruptiveBoost: 0,
         contextualElevation: 0
       };
       
-      if (meetsDefinitionalThreshold) {
-        // Above threshold: only D-G synergy applies (contextual refinement)
+      if (meetsPrimaryThreshold) {
+        // Above primary threshold: only D-G synergy applies
         interactions.disruptiveBoost = (base.Disruption >= 2 && base.Generative >= 2) ?
           Math.min(0.3, (base.Disruption + base.Generative - 4) * 0.1) : 0;
       } else {
-        // Below threshold: contextual effects might elevate to innovation status
+        // Below primary threshold: contextual framework may reveal innovation
         const dgSynergy = (base.Disruption >= 2 && base.Generative >= 2) ?
           Math.min(0.5, (base.Disruption + base.Generative - 4) * 0.15) : 0;
         
-        // Apply contextual elevation to C and I if close to threshold and strong D-G
+        // Apply contextual elevation if close to threshold with strong D-G
         if (dgSynergy > 0 && (base.Cognitive >= 2.5 || base.Irreversibility >= 2.5)) {
           interactions.contextualElevation = dgSynergy * 0.6;
         }
@@ -164,8 +164,8 @@
       // Store metadata
       enhanced._interactions = interactions;
       enhanced._hasInteractions = Object.values(interactions).some(v => v > 0);
-      enhanced._meetsThreshold = meetsDefinitionalThreshold;
-      enhanced._contextuallyElevated = !meetsDefinitionalThreshold && enhanced.Cognitive >= 3 && enhanced.Irreversibility >= 3;
+      enhanced._meetsPrimaryThreshold = meetsPrimaryThreshold;
+      enhanced._contextuallyRevealed = !meetsPrimaryThreshold && enhanced.Cognitive >= 3 && enhanced.Irreversibility >= 3;
       enhanced._isHistoricalExample = false;
       
       return enhanced;
@@ -191,28 +191,28 @@
           return vals.some(v => v >= 2) ? "Modernization" : "Upgradation";
         }
       } else {
-        // For user inputs, check both base and enhanced scores
+        // For user inputs, check both primary threshold and contextual framework
         const enhancedMeets = (dimScores.Cognitive||0) >= 3 && (dimScores.Irreversibility||0) >= 3;
         
         if (enhancedMeets) {
-          if (dimScores._meetsThreshold) {
-            // Definitionally innovation - classify by strength
+          if (dimScores._meetsPrimaryThreshold) {
+            // Primary threshold recognition - classify by strength
             const strong = vals.filter(v=>v>=3).length;
             if (strong === 4) return "Transformative Innovation";
             if (strong >= 3) return "Revolutionary Innovation";
             return "Innovation";
           } else {
-            // Contextually elevated to innovation
+            // Contextual framework recognition
             return "Contextual Innovation";
           }
         } else {
-          // Below innovation threshold
+          // Below recognition criteria
           return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
         }
       }
     }
 
-    // ===== CORRECTED Historical Examples =====
+    // ===== Complete Historical Examples =====
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
       "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
@@ -224,7 +224,7 @@
       "Deep Battle/Reconnaissance Strike Complex": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Frontal assaults untenable; operational art entrenched.", sources: ["Habeck, 2003"] },
       "F-16 Block D": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Modernization within existing air superiority paradigm. Enhanced capabilities trigger competitive procurement but no doctrinal transformation.", sources: ["USAF Fact Sheets"] },
       "Hypersonics": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "Accelerates missiles; limited conceptual shift.", sources: ["Mahnken, 2007"] },
-      "Information Warfare": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 }, justification: "Challenges C2 assumptions; cross-boundary effects.", sources: ["Ricks, 2012"] },
+      "Information Warfare": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 }, justification: "Digital-age transformation of ancient concept - epistemic innovation through digital-informatic mediation.", sources: ["Ricks, 2012"] },
       "Lasers": { scores: { Cognitive:1, Irreversibility:1, Disruption:2, Generative:2 }, justification: "Within existing frameworks; limited embedding.", sources: ["AFRL Primer, 2019"] },
       "Machine Gun": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:3 }, justification: "Linear tactics obsolete; irreversible organization.", sources: ["Ellis, 1975"] },
       "Military Robotics": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends human capability; limited reconceptualization.", sources: ["Singer, 2009"] },
@@ -235,13 +235,56 @@
       "PGMs": { scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:3 }, justification: "Enables new targeting; paradigm intact.", sources: ["Hallion, 1995"] },
       "Radar": { scores: { Cognitive:2, Irreversibility:3, Disruption:3, Generative:3 }, justification: "Transforms air defense; org shifts.", sources: ["Fisher, 1988"] },
       "Stealth": { scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:2 }, justification: "Improves capabilities within paradigm.", sources: ["Sweetman, 1986"] },
-      "Stirrups": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Paradigmatic transformation; feudal structures.", sources: ["Lynn White Jr., 1962"] },
-      "Stosstrupp Tactics": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Linear assault untenable; infiltration embedded.", sources: ["Gudmundsson, 1989"] },
+      "Stirrups": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Paradigmatic transformation; feudal structures - epistemic innovation through weaponized integration of human-terrain-speed relationships.", sources: ["Lynn White Jr., 1962"] },
+      "Stosstrupp Tactics": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Linear assault untenable; infiltration embedded - epistemic innovation redefining human-terrain-speed relationships.", sources: ["Gudmundsson, 1989"] },
       "T-72B3M Main Battle Tank": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Upgradation.", sources: ["Bartles, 2015"] },
       "Tank": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Transformed land warfare; org change; new thinking.", sources: ["Harris, 1995"] },
       "Telegraph": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Courier assumptions untenable; networked command.", sources: ["Hochfelder, 2012"] },
       "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends recon/strike; limited paradigm challenge.", sources: ["Singer, 2009"] }
     };
+
+    // ===== Educational Analysis =====
+    function getEducationalAnalysis(caseName, example) {
+      const scores = example.scores;
+      
+      const insights = {
+        "Network-Centric Warfare": [
+          `**Corrected Assessment**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} reflect lack of institutional acceptance and doctrinal embedding.`,
+          `**Theoretical vs. Practical**: While NCW theory exists, military institutions remain platform-centric and cannot conceptualize network-centric approaches.`,
+          `**Implementation Gap**: What exists in practice are System of Systems implementations rather than true Network-Centric Warfare concepts from CCRP literature.`,
+          `**Recognition Framework Application**: Scores below C≥3, I≥3 threshold classify this as Upgradation rather than innovation, distinguishing failed experiments from successful transformations.`
+        ],
+        "Stirrups": [
+          `**Transformative Innovation**: Maximum scores across all four dimensions (C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative}) represent complete paradigmatic transformation.`,
+          `**Epistemic Innovation**: Created feudal military structures through technological enablement of heavy cavalry tactics - weaponized integration of human-terrain-speed relationships.`,
+          `**Strategic Revolution**: Fundamentally transformed medieval warfare organization and social structures.`
+        ],
+        "Information Warfare": [
+          `**Revolutionary Innovation**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} indicate significant paradigmatic transformation.`,
+          `**Epistemic Innovation**: Digital-informatic mediation transforms the ontological nature of "information" itself, not just its weaponization.`,
+          `**Conceptual Transformation**: From propaganda and deception to digital-epistemic warfare affecting knowledge structures themselves.`
+        ],
+        "F-16 Block D": [
+          `**Platform vs Component Analysis**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} reflect platform-level assessment rather than individual component innovations.`,
+          `**Modernization Classification**: Enhanced capabilities within unchanged air superiority paradigms - no doctrinal transformation required.`,
+          `**Competitive Procurement vs Strategic Disruption**: Adversary responses represent capability matching rather than paradigm adaptation.`,
+          `**Framework Application**: Demonstrates distinction between technological sophistication and strategic innovation.`
+        ],
+        "ASBM": [
+          `**Conceptual Innovation**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} represent creative integration of existing technologies into new strategic concept.`,
+          `**Naval Operational Art**: Fundamentally altered Pacific naval operations through anti-access/area-denial capabilities.`,
+          `**System Integration**: Combined OTH radar, SAR satellites, MRBMs, and MIRV warheads into coherent anti-ship capability.`,
+          `**Strategic Effect**: Forces fundamental reconsideration of carrier strike group operations and fleet composition.`
+        ]
+      };
+      
+      return insights[caseName] || [
+        `**Historical Analysis**: This innovation scored C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} across the four dimensions.`,
+        `**Classification**: ${classify(scores, true)} based on dimensional analysis and recognition criteria.`,
+        `**Justification**: ${example.justification}`,
+        `**Sources**: Based on analysis from ${example.sources.join(', ')}.`
+      ];
+    }
 
     // ===== Enhanced user feedback generation =====
     function generateUserFeedback(subScores, dimScores, classification) {
@@ -265,30 +308,30 @@
         }
       });
       
-      // Add theoretical explanation
-      if (dimScores._meetsThreshold) {
-        feedback.push(`**Definitional Innovation**: Your assessment meets the theoretical threshold (C≥3, I≥3), qualifying this as innovation by definition.`);
-      } else if (dimScores._contextuallyElevated) {
-        feedback.push(`**Contextual Innovation**: While base scores were below the definitional threshold, strong Disruption-Generative interactions elevated Cognitive and Irreversibility dimensions to innovation levels.`);
+      // Add recognition criteria explanation
+      if (dimScores._meetsPrimaryThreshold) {
+        feedback.push(`**Primary Threshold Recognition**: Assessment meets the primary recognition criteria (C≥3, I≥3), revealing innovation through necessary manifestation patterns.`);
+      } else if (dimScores._contextuallyRevealed) {
+        feedback.push(`**Contextual Framework Recognition**: While base scores were below the primary threshold, strong Disruption-Generative interactions revealed innovation through contextual manifestation patterns.`);
       } else {
-        feedback.push(`**Below Innovation Threshold**: Current assessment does not meet the minimum Cognitive (≥3) and Irreversibility (≥3) requirements for innovation classification.`);
+        feedback.push(`**Below Recognition Criteria**: Current assessment does not meet the primary threshold (C≥3, I≥3) or contextual framework requirements for innovation recognition.`);
       }
       
       // Add interaction effects explanation if present
       if (dimScores._hasInteractions) {
-        feedback.push(`**Interactive Effects**: Your assessment triggered contextual synergies between dimensions, reflecting the dynamic nature of military innovation.`);
+        feedback.push(`**Interactive Effects**: Assessment triggered contextual synergies between dimensions, reflecting the dynamic nature of military innovation manifestation.`);
       }
       
       // Add conclusion
       const total = ORDER.reduce((sum, dim) => sum + (dimScores[dim] || 0), 0);
-      feedback.push(`**Final Classification**: Based on your assessment (total score: ${Math.round(total*10)/10}/16), this concept is classified as **${classification}**.`);
+      feedback.push(`**Final Classification**: Based on assessment patterns (total score: ${Math.round(total*10)/10}/16), this concept is classified as **${classification}**.`);
       
       return feedback;
     }
 
     // ===== Enhanced Modal =====
     function IssuesModal({issues,meta,subScores,dimScores,onClose}){
-      if(!issues) return null;
+      if(!issues && !meta) return null;
       
       const isHistoricalExample = meta && meta.ex && EXAMPLES[meta.label];
       const isUserInput = !isHistoricalExample && meta && meta.label && Object.values(subScores || {}).some(v => v > 0);
@@ -332,8 +375,8 @@
               )}
               
               <div className="mt-6 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                <div className="font-semibold mb-1">Theoretical Framework:</div>
-                <div>Innovation requires both conceptual transformation (C≥3) AND irreversible norm establishment (I≥3). Strong Disruption-Generative interactions may elevate borderline cases to innovation status.</div>
+                <div className="font-semibold mb-1">Recognition Framework:</div>
+                <div>The framework provides systematic criteria for recognizing innovation manifestation patterns. Innovation requires both conceptual transformation (C≥3) AND irreversible norm establishment (I≥3), with contextual framework recognition possible through strong Disruption-Generative interactions.</div>
               </div>
             </div>
             <div className="p-4 border-t text-right">
@@ -344,482 +387,155 @@
       );
     }
 
-    // ===== Educational Analysis =====
-    function getEducationalAnalysis(caseName, example) {
-      const scores = example.scores;
+    // ===== Charts Panel with Chart.js Integration =====
+    function ChartsPanel({scores, meta, openModal}) {
+      const radarChartRef = useRef();
+      const barChartRef = useRef();
+      const dimensionChartRef = useRef();
       
-      const insights = {
-        "Network-Centric Warfare": [
-          `**Corrected Assessment**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} reflect lack of institutional acceptance and doctrinal embedding.`,
-          `**Theoretical vs. Practical**: While NCW theory exists, military institutions remain platform-centric and cannot conceptualize network-centric approaches.`,
-          `**Implementation Gap**: What exists in practice are System of Systems implementations rather than true Network-Centric Warfare concepts from CCRP literature.`,
-          `**Classification Logic**: Scores below C≥3, I≥3 threshold classify this as Upgradation rather than innovation, distinguishing failed experiments from successful transformations.`
-        ],
-        "Stirrups": [
-          `**Transformative Innovation**: Maximum scores across all four dimensions (C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative}) represent complete paradigmatic transformation.`,
-          `**Historical Exemplar**: Created feudal military structures through technological enablement of heavy cavalry tactics.`,
-          `**Strategic Revolution**: Fundamentally transformed medieval warfare organization and social structures.`
-        ],
-        "F-16 Block D": [
-          `**Upgradation Pattern**: All dimensions score ≤1, indicating capability enhancement without paradigmatic impact.`,
-          `**Platform Analysis**: While individual subsystems may be innovative, the integrated platform represents evolutionary advancement within existing air superiority paradigms.`,
-          `**Competitive Response**: Triggers adversarial procurement responses without forcing doctrinal abandonment or paradigmatic shifts.`
-        ]
-      };
-      
-      return insights[caseName] || [
-        `**Scoring Pattern**: C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative}`,
-        `**Classification Logic**: ${scores.Cognitive >= 3 && scores.Irreversibility >= 3 ? 'Meets definitional innovation threshold (C≥3, I≥3)' : 'Below innovation threshold - classified by contextual factors'}`,
-        `**Theoretical Application**: Demonstrates how the framework distinguishes between technological advancement and strategic transformation.`
-      ];
-    }
-
-    // ===== Enhanced Sub Panel with C2 Composite Structure =====
-    function SubPanel({dim, values, setValue, locked=false, showInteractions=false, isHistorical=false}) {
-      const items = SUBS[dim];
-      const rated = items.filter(it => {
-        if (it.composite) {
-          return it.subElements.some(subEl => (values[subEl.k]||0) > 0);
-        }
-        return (values[it.k]||0) > 0;
-      }).length;
-      
-      // Calculate base score
-      let baseScore;
-      if (dim === 'Cognitive') {
-        baseScore = meanToInt([values.c1||0, aggregateC2(values), values.c3||0, values.c4||0]);
-      } else {
-        baseScore = meanToInt(items.map(it => values[it.k]||0));
-      }
-      
-      // Calculate enhanced score if interactions are enabled
-      let displayScore = baseScore;
-      let hasBoost = false;
-      
-      if (showInteractions && !isHistorical) {
-        const enhancedResult = aggregateWithContextualEffects(values);
-        displayScore = enhancedResult[dim];
-        hasBoost = Math.abs(displayScore - baseScore) > 0.05;
-      }
-      
-      const dMeta = DIMS.find(d=>d.key===dim);
-      
-      return (
-        <div className="panel">
-          <div className="panel-h">
-            <div className="dim-title">
-              <span>{dMeta.label}</span>
-              {hasBoost && (
-                <span className="interaction-indicator" title="Score enhanced by contextual interactions">
-                  +{Math.round((displayScore - baseScore)*100)/100}
-                </span>
-              )}
-            </div>
-            <div className="hint">{dMeta.def}</div>
-            <div className="text-sm text-gray-600 mt-1">
-              {isHistorical ? `Historical Score: ${getLabel(displayScore)} (${Math.round(displayScore*10)/10})` :
-               `${rated}/${items.length} rated • Score: ${getLabel(displayScore)} (${Math.round(displayScore*10)/10})`}
-              {hasBoost && <span className="text-xs text-blue-600 ml-1">(base: {baseScore})</span>}
-            </div>
-          </div>
-          <div className="panel-b">
-            {items.map(it=>(
-              <div key={it.k} className="item-row">
-                <div className="flex items-center justify-between">
-                  <div className="font-medium text-sm">
-                    <span>{it.name}</span>
-                  </div>
-                  {!it.composite && !isHistorical && (
-                    <div className="text-xs text-gray-600">{getLabel(values[it.k]||0)}</div>
-                  )}
-                  {it.composite && !isHistorical && (
-                    <div className="text-xs text-gray-600">{getLabel(aggregateC2(values))}</div>
-                  )}
-                </div>
-                <div className="hint">{it.hint}</div>
-                
-                {it.composite && isHistorical && (
-                  <div className="c2-composite">
-                    <div className="text-xs font-medium text-gray-700 mb-2">Process Logic Components:</div>
-                    {it.subElements.map(subEl => (
-                      <div key={subEl.k} className="sub-item-row">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="text-sm font-medium">{subEl.name}</div>
-                          <div className="text-xs text-gray-600">{getLabel(values[it.k]||0)} ({values[it.k]||0})</div>
-                        </div>
-                        <div className="text-xs text-gray-600 mb-2">{subEl.hint}</div>
-                        <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
-                        <div className="text-[10px] text-gray-500 mt-1">Historical case assessment</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {!it.composite && isHistorical && (
-                  <>
-                    <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
-                    <div className="text-[10px] text-gray-500 mt-1">Historical case assessment</div>
-                  </>
-                )}
-                
-                {it.composite && !isHistorical && (
-                  <div className="c2-composite">
-                    <div className="text-xs font-medium text-gray-700 mb-2">Process Logic Components:</div>
-                    {it.subElements.map(subEl => (
-                      <div key={subEl.k} className="sub-item-row">
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="text-sm font-medium">{subEl.name}</div>
-                          <div className="text-xs text-gray-600">{getLabel(values[subEl.k]||0)}</div>
-                        </div>
-                        <div className="text-xs text-gray-600 mb-2">{subEl.hint}</div>
-                        <input type="range" min="0" max="4" value={values[subEl.k]||0}
-                          onChange={e=> setValue(subEl.k, Number(e.target.value))}
-                          className="w-full"/>
-                        <div className="flex justify-between text-xs text-gray-500 mt-1">
-                          {LABELS.map((label, idx) => (
-                            <span key={idx} className={values[subEl.k] === idx ? 'font-bold text-blue-600' : ''}>{label}</span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {!it.composite && locked && (
-                  <>
-                    <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
-                    <div className="text-[10px] text-gray-500 mt-1">Locked from historical case</div>
-                  </>
-                )}
-                
-                {!it.composite && !locked && !isHistorical && (
-                  <div className="mt-3">
-                    <input type="range" min="0" max="4" value={values[it.k]||0}
-                      onChange={e=> setValue(it.k, Number(e.target.value))}
-                      className="w-full"/>
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      {LABELS.map((label, idx) => (
-                        <span key={idx} className={values[it.k] === idx ? 'font-bold text-blue-600' : ''}>{label}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    // ===== Charts =====
-    function RadarChart({scores}) {
-      const ref = useRef(null);
-      const chart = useRef(null);
-      const values = useMemo(() => ORDER.map(k => +scores[k] || 0), [scores]);
-
       useEffect(() => {
-        const ctx = ref.current.getContext('2d');
-        if (chart.current) chart.current.destroy();
-        chart.current = new Chart(ctx, {
-          type: 'radar',
-          data: {
-            labels: DIMS.map(d => d.label),
-            datasets: [
-              {
-                label: 'Current Assessment',
-                data: values,
-                fill: true,
-                backgroundColor: 'rgba(37,99,235,0.2)',
-                borderColor: 'rgba(37,99,235,1)',
-                borderWidth: 2,
-                pointRadius: 4,
-                pointBackgroundColor: 'rgba(37,99,235,1)'
-              },
-              {
-                label: 'Innovation Threshold (C≥3, I≥3)',
-                data: [3,3,0,0],
-                fill: false,
-                borderColor: 'rgba(239,68,68,0.8)',
-                borderDash: [6, 4],
-                borderWidth: 2,
-                pointRadius: 0
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { 
-              legend: { position: 'top' },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const label = context.dataset.label || '';
-                    const value = context.parsed.r;
-                    const qualitative = getLabel(value);
-                    return `${label}: ${qualitative} (${Math.round(value*10)/10})`;
-                  }
-                }
-              }
-            },
-            scales: {
-              r: {
-                beginAtZero: true,
-                min: 0,
-                max: 4,
-                ticks: { 
-                  stepSize: 1,
-                  callback: function(value) {
-                    return getLabel(value);
-                  }
-                },
-                grid: {
-                  color: 'rgba(0,0,0,0.1)'
-                }
-              }
-            }
+        // Radar Chart
+        if (radarChartRef.current) {
+          const ctx = radarChartRef.current.getContext('2d');
+          if (radarChartRef.current.chartInstance) {
+            radarChartRef.current.chartInstance.destroy();
           }
-        });
-        return () => { if (chart.current) chart.current.destroy(); };
-      }, [values]);
-
-      return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
-    }
-
-    function BarChart({scores}){
-      const ref=useRef(null), chart=useRef(null);
-      const values = useMemo(()=> ORDER.map(k => +scores[k]||0), [scores]);
-      const colorFor=v=> v>=3?'rgba(22,163,74,0.85)':v>=2?'rgba(234,179,8,0.95)':'rgba(239,68,68,0.95)';
-      
-      useEffect(()=>{
-        const ctx=ref.current.getContext('2d');
-        if(chart.current) chart.current.destroy();
-        chart.current=new Chart(ctx,{
-          type:'bar',
-          data:{
-            labels:DIMS.map(d=>d.label),
-            datasets:[{
-              label:'Dimension Scores',
-              data:values,
-              backgroundColor:values.map(colorFor),
-              borderColor:values.map(colorFor),
-              borderWidth: 1
-            }]
-          },
-          options:{
-            responsive:true,
-            maintainAspectRatio:false,
-            plugins:{
-              legend:{display:false},
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    const value = context.parsed.y;
-                    const qualitative = getLabel(value);
-                    return `${qualitative} (${Math.round(value*10)/10})`;
-                  }
-                }
-              }
+          
+          radarChartRef.current.chartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+              labels: DIMS.map(d => d.abbr),
+              datasets: [{
+                label: 'Innovation Scores',
+                data: DIMS.map(d => scores[d.key] || 0),
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 2,
+                pointBackgroundColor: 'rgb(59, 130, 246)',
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: 'rgb(59, 130, 246)'
+              }]
             },
-            scales:{
-              y:{
-                beginAtZero:true,
-                min:0,
-                max:4,
-                ticks:{
-                  stepSize:1,
-                  callback: function(value) {
-                    return getLabel(value);
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                r: {
+                  beginAtZero: true,
+                  max: 4,
+                  ticks: {
+                    stepSize: 1
                   }
-                },
-                grid: {
-                  color: 'rgba(0,0,0,0.1)'
                 }
               },
-              x: {
-                grid: {
+              plugins: {
+                legend: {
                   display: false
                 }
               }
             }
+          });
+        }
+
+        // Bar Chart
+        if (barChartRef.current) {
+          const ctx = barChartRef.current.getContext('2d');
+          if (barChartRef.current.chartInstance) {
+            barChartRef.current.chartInstance.destroy();
           }
-        });
-        return ()=> chart.current && chart.current.destroy();
-      },[values]);
-      return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
-    }
-
-    // ===== Historical Examples with Full Breakdown =====
-    function HistoricalExamples({setScores,setMeta,setSubScores,setIssues}){
-      const keys=Object.keys(EXAMPLES);
-      const [sel,setSel]=useState("");
-
-      function loadFromSelection(v){
-        setSel(v);
-        if (!v) return;
-        const ex = EXAMPLES[v];
-        setMeta({label: v, ex:ex});
-        
-        // For historical examples, use direct dimensional scores
-        const directScores = {
-          ...ex.scores,
-          _isHistoricalExample: true
-        };
-        
-        setScores(directScores);
-        setSubScores({});
-        setIssues([]);
-      }
-
-      const ex = sel ? EXAMPLES[sel] : null;
-
-      return (
-        <div className="space-y-6">
-          <div>
-            <h2 className="text-2xl font-semibold">Historical Examples</h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Select a case to explore how different types of military changes manifest across the four dimensions.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <label className="text-sm font-medium">Example</label>
-            <select value={sel} onChange={e=>loadFromSelection(e.target.value)} className="border rounded-md px-3 py-2 text-sm min-w-[20rem]">
-              <option value="">— choose a case —</option>
-              {keys.map(k=><option key={k} value={k}>{k}</option>)}
-            </select>
-          </div>
-
-          {ex && (
-            <div className="grid md:grid-cols-2 gap-6">
-              {ORDER.map(dim => {
-                const historicalValues = {};
-                // For historical examples, show dimensional scores directly
-                SUB_KEYS[dim].forEach(key => {
-                  historicalValues[key] = ex.scores[dim] || 0;
-                });
-                
-                return <SubPanel key={dim} dim={dim} values={historicalValues} setValue={() => {}} locked={false} showInteractions={false} isHistorical={true} />;
-              })}
-              
-              <div className="md:col-span-2 panel panel-b text-sm">
-                <div className="font-semibold mb-1">Explanation & References</div>
-                <div className="text-gray-700 mb-3">{ex.justification}</div>
-                <div className="font-semibold mb-1">Sources:</div>
-                {(ex.sources||[]).map((r,i)=>(<div key={i}>• {r}</div>))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // ===== Test Your Idea (enhanced) =====
-    function TestYourIdea({setScores,setMeta,setSubScores,setIssues}){
-      const [label,setLabel]=useState("");
-      const [sub,setSub]=useState({
-        // Cognitive
-        c1:0, c2a:0, c2b:0, c2c:0, c2d:0, c3:0, c4:0,
-        // Irreversibility  
-        i1:0, i2:0, i3:0, i4:0,
-        // Disruption
-        d1:0, d2:0, d3:0, d4:0,
-        // Generative
-        g1:0, g2:0, g3:0, g4:0
-      });
-
-      function runEval(nextSub){
-        const dim = aggregateWithContextualEffects(nextSub);
-        setScores(dim);
-        setSubScores(nextSub);
-        setIssues([]);
-      }
-
-      function setValue(k,v){
-        setSub(function(prev){
-          const next = Object.assign({}, prev, { [k]: v });
-          runEval(next);
-          return next;
-        });
-      }
-
-      useEffect(()=>{ setMeta({label}); },[label]);
-
-      return (
-        <div className="space-y-6">
-          <div className="theoretical-note">
-            <div className="font-semibold mb-2">Theoretical Framework</div>
-            <div className="space-y-1 text-sm">
-              <div><strong>Innovation Definition:</strong> Must be conceptual transformation (C≥3) AND establish irreversible new norms (I≥3)</div>
-              <div><strong>Contextual Effects:</strong> Strong Disruption-Generative interactions may elevate borderline cases to innovation status</div>
-              <div><strong>Assessment Approach:</strong> Evidence-based evaluation of likely manifestation levels across sub-indicators</div>
-            </div>
-          </div>
           
-          <div className="panel panel-b">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold">Test Your Idea</h2>
-                <p className="text-sm text-gray-600 mt-2">
-                  Assess your innovation concept across the four dimensions. Use the sliders to indicate the likely manifestation level for each sub-indicator. Justify your assessments with evidence outside this tool.
-                </p>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-gray-700">Innovation Concept Title</label>
-                <input value={label} onChange={e=>setLabel(e.target.value)}
-                       className="case-title-input w-80" 
-                       placeholder="e.g., AI-enabled autonomous logistics coordination"/>
-                {!label && <div className="text-xs text-blue-600">Enter a descriptive title for your innovation concept</div>}
-              </div>
-            </div>
+          barChartRef.current.chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: DIMS.map(d => d.abbr),
+              datasets: [{
+                label: 'Scores',
+                data: DIMS.map(d => scores[d.key] || 0),
+                backgroundColor: [
+                  'rgba(99, 102, 241, 0.8)',
+                  'rgba(245, 158, 11, 0.8)',
+                  'rgba(239, 68, 68, 0.8)',
+                  'rgba(34, 197, 94, 0.8)'
+                ],
+                borderColor: [
+                  'rgb(99, 102, 241)',
+                  'rgb(245, 158, 11)',
+                  'rgb(239, 68, 68)',
+                  'rgb(34, 197, 94)'
+                ],
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 4,
+                  ticks: {
+                    stepSize: 1
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  display: false
+                }
+              }
+            }
+          });
+        }
+        
+        return () => {
+          if (radarChartRef.current?.chartInstance) {
+            radarChartRef.current.chartInstance.destroy();
+          }
+          if (barChartRef.current?.chartInstance) {
+            barChartRef.current.chartInstance.destroy();
+          }
+          if (dimensionChartRef.current?.chartInstance) {
+            dimensionChartRef.current.chartInstance.destroy();
+          }
+        };
+      }, [scores]);
 
-            <div className="mt-6 grid md:grid-cols-2 gap-6">
-              {ORDER.map(dim=>{
-                return <SubPanel key={dim} dim={dim} values={sub} setValue={setValue} locked={false} showInteractions={true} isHistorical={false} />;
-              })}
-            </div>
-          </div>
-        </div>
-      );
-    }
+      const recognitionCriteria = useMemo(() => {
+        const c = scores.Cognitive || 0;
+        const i = scores.Irreversibility || 0;
+        const d = scores.Disruption || 0;
+        const g = scores.Generative || 0;
+        
+        const primaryThreshold = c >= 3 && i >= 3;
+        const contextuallyRevealed = (d >= 2.5 && g >= 2.5 && (d + g) >= 6);
+        const hasInteractions = (d * g) >= 6 || (c * i) >= 9;
+        
+        return { primaryThreshold, contextuallyRevealed, hasInteractions };
+      }, [scores]);
 
-    // ===== Charts panel =====
-    function ChartsPanel({scores,meta,openModal}){
-      const hasInteractions = scores._hasInteractions;
-      const meetsThreshold = scores._meetsThreshold;
-      const contextuallyElevated = scores._contextuallyElevated;
-      const isHistorical = scores._isHistoricalExample;
-      
+      const classification = classify(scores, scores._isHistoricalExample);
+      const avgScore = Object.values(scores).filter(v => typeof v === 'number').reduce((a, b) => a + b, 0) / 4;
+
       return (
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="panel">
-            <div className="panel-h">Radar Chart</div>
-            <div className="panel-b"><RadarChart scores={scores}/></div>
-          </div>
-          <div className="panel">
-            <div className="panel-h">Bar Chart (Qualitative Scale)</div>
-            <div className="panel-b"><BarChart scores={scores}/></div>
-          </div>
-          <div className="md:col-span-2 panel panel-b text-sm">
-            <div className="flex flex-wrap items-center gap-4">
-              <div><span className="font-semibold">Index:</span> {indexScore(scores)}</div>
-              <div><span className="font-semibold">Class:</span> {classify(scores, isHistorical)}</div>
-              <div>
-                {isHistorical ? (
-                  <span className="badge bg-gray-100 text-gray-800">Historical Example</span>
-                ) : meetsThreshold ? (
-                  <span className="badge bg-green-100 text-green-800">Definitional Innovation (C≥3 & I≥3)</span>
-                ) : contextuallyElevated ? (
-                  <span className="badge bg-blue-100 text-blue-800">Contextual Innovation (D-G Elevated)</span>
+        <div className="panel">
+          <div className="panel-h">
+            <div className="flex justify-between items-center">
+              <span>Innovation Analysis Dashboard</span>
+              <div className="flex gap-2">
+                {recognitionCriteria.primaryThreshold ? (
+                  <span className="badge bg-green-100 text-green-800">Primary Threshold Recognition (C≥3 & I≥3)</span>
+                ) : recognitionCriteria.contextuallyRevealed ? (
+                  <span className="badge bg-blue-100 text-blue-800">Contextual Framework Recognition</span>
                 ) : (
-                  <span className="badge bg-yellow-100 text-yellow-800">Below Innovation Threshold</span>
+                  <span className="badge bg-yellow-100 text-yellow-800">Below Recognition Criteria</span>
                 )}
+                {recognitionCriteria.hasInteractions && <div className="badge bg-purple-100 text-purple-800">Interactive Effects Active</div>}
+                {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
+                <button onClick={openModal} className="ml-auto px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                  View Analysis
+                </button>
               </div>
-              {hasInteractions && <div className="badge bg-purple-100 text-purple-800">Interactive Effects Active</div>}
-              {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
-              <button onClick={openModal} className="ml-auto px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                View Analysis
-              </button>
             </div>
             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
               {DIMS.map(d=>(
@@ -829,11 +545,279 @@
               ))}
             </div>
           </div>
+          <div className="panel-b">
+            <div className="grid lg:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-lg font-semibold mb-3">Dimensional Radar</h4>
+                <div style={{height: '300px'}}>
+                  <canvas ref={radarChartRef}></canvas>
+                </div>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold mb-3">Comparative Analysis</h4>
+                <div style={{height: '300px'}}>
+                  <canvas ref={barChartRef}></canvas>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-blue-600">{classification}</div>
+                  <div className="text-sm text-gray-600">Classification</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-green-600">{avgScore.toFixed(1)}/4.0</div>
+                  <div className="text-sm text-gray-600">Overall Score</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-purple-600">{Math.round(indexScore(scores))}/100</div>
+                  <div className="text-sm text-gray-600">Index Score</div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }
 
-    // ===== App =====
+    // ===== Test Your Idea Component =====
+    function TestYourIdea({ setScores, setMeta, setSubScores, setIssues }) {
+      const [subVals, setSubVals] = useState({});
+      const [caseTitle, setCaseTitle] = useState('');
+      
+      const handleSubChange = (key, value) => {
+        const newSubVals = { ...subVals, [key]: parseInt(value) || 0 };
+        setSubVals(newSubVals);
+        setSubScores(newSubVals);
+        
+        const enhanced = aggregateWithContextualEffects(newSubVals);
+        setScores(enhanced);
+        
+        const meta = { label: caseTitle || 'Your Innovation' };
+        setMeta(meta);
+        setIssues(generateUserFeedback(newSubVals, enhanced, classify(enhanced, false)));
+      };
+
+      const handleCaseTitleChange = (e) => {
+        setCaseTitle(e.target.value);
+        const meta = { label: e.target.value || 'Your Innovation' };
+        setMeta(meta);
+      };
+
+      return (
+        <div className="panel">
+          <div className="panel-h">Test Your Innovation Idea</div>
+          <div className="panel-b">
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Innovation Case Name
+              </label>
+              <input
+                type="text"
+                value={caseTitle}
+                onChange={handleCaseTitleChange}
+                className="case-title-input w-full"
+                placeholder="Enter your innovation concept name..."
+              />
+            </div>
+            
+            <div className="space-y-8">
+              {DIMS.map(dim => (
+                <div key={dim.key} className="border-l-4 pl-4" style={{ borderColor: dim.key === 'Cognitive' ? '#6366f1' : dim.key === 'Irreversibility' ? '#f59e0b' : dim.key === 'Disruption' ? '#ef4444' : '#22c55e' }}>
+                  <div className="dim-title">
+                    <h3 className="text-lg font-bold" style={{ color: dim.key === 'Cognitive' ? '#6366f1' : dim.key === 'Irreversibility' ? '#f59e0b' : dim.key === 'Disruption' ? '#ef4444' : '#22c55e' }}>
+                      {dim.label}
+                    </h3>
+                    <div className="tooltip">
+                      <span className="text-gray-400 cursor-help">ⓘ</span>
+                      <div className="tip">{dim.def}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 mt-4">
+                    {SUBS[dim.key].map(sub => (
+                      <div key={sub.k} className={sub.composite ? "c2-composite" : ""}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700">
+                              {sub.name}
+                              <div className="tooltip ml-1 inline-block">
+                                <span className="text-gray-400 cursor-help text-xs">ⓘ</span>
+                                <div className="tip">{sub.hint}</div>
+                              </div>
+                            </label>
+                          </div>
+                          <select
+                            value={subVals[sub.k] || 0}
+                            onChange={(e) => handleSubChange(sub.k, e.target.value)}
+                            className="ml-3 px-3 py-1 border border-gray-300 rounded text-sm"
+                          >
+                            {LABELS.map((label, idx) => (
+                              <option key={idx} value={idx}>{idx} - {label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        {sub.composite && sub.subElements && (
+                          <div className="ml-4 space-y-2 border-l-2 border-gray-200 pl-3">
+                            <div className="text-xs font-medium text-gray-600 mb-2">C2 Composite Sub-Elements:</div>
+                            {sub.subElements.map(subEl => (
+                              <div key={subEl.k} className="sub-item-row">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <label className="block text-xs font-medium text-gray-600">
+                                      {subEl.name}
+                                      <div className="tooltip ml-1 inline-block">
+                                        <span className="text-gray-400 cursor-help text-xs">ⓘ</span>
+                                        <div className="tip">{subEl.hint}</div>
+                                      </div>
+                                    </label>
+                                  </div>
+                                  <select
+                                    value={subVals[subEl.k] || 0}
+                                    onChange={(e) => handleSubChange(subEl.k, e.target.value)}
+                                    className="ml-3 px-2 py-1 border border-gray-300 rounded text-xs"
+                                  >
+                                    {LABELS.map((label, idx) => (
+                                      <option key={idx} value={idx}>{idx} - {label}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-8 p-4 theoretical-note">
+              <strong>Interactive Effects:</strong> High scores in related dimensions trigger synergistic bonuses - 
+              Cognitive-Irreversibility reinforcement above C≥3 & I≥3, and Disruption-Generative synergy above D≥2 & G≥2. 
+              The framework captures non-linear manifestation patterns in military innovation recognition.
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== Historical Examples Component =====
+    function HistoricalExamples({ setScores, setMeta, setSubScores, setIssues }) {
+      const [selectedExample, setSelectedExample] = useState('');
+
+      const loadExample = (exampleName) => {
+        if (!exampleName) {
+          setScores({});
+          setMeta({});
+          setSubScores({});
+          setIssues([]);
+          return;
+        }
+
+        const example = EXAMPLES[exampleName];
+        if (!example) return;
+
+        const enhancedScores = { 
+          ...example.scores, 
+          _isHistoricalExample: true,
+          _meetsPrimaryThreshold: (example.scores.Cognitive >= 3 && example.scores.Irreversibility >= 3)
+        };
+        
+        setScores(enhancedScores);
+        setMeta({ 
+          label: exampleName, 
+          ex: example,
+          justification: example.justification,
+          sources: example.sources
+        });
+        setSubScores({});
+        setIssues(getEducationalAnalysis(exampleName, example));
+      };
+
+      return (
+        <div className="panel">
+          <div className="panel-h">Historical Military Innovation Examples</div>
+          <div className="panel-b">
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Historical Case
+              </label>
+              <select
+                value={selectedExample}
+                onChange={(e) => {
+                  setSelectedExample(e.target.value);
+                  loadExample(e.target.value);
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Choose a historical example...</option>
+                {Object.keys(EXAMPLES).sort().map(name => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedExample && EXAMPLES[selectedExample] && (
+              <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <h4 className="font-bold text-lg mb-2">{selectedExample}</h4>
+                <p className="text-sm text-gray-700 mb-3">
+                  <strong>Analysis:</strong> {EXAMPLES[selectedExample].justification}
+                </p>
+                <p className="text-xs text-gray-600">
+                  <strong>Sources:</strong> {EXAMPLES[selectedExample].sources.join(', ')}
+                </p>
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {DIMS.map(d => (
+                    <div key={d.key} className="text-center p-2 bg-white rounded">
+                      <div className="text-lg font-bold" style={{ color: d.key === 'Cognitive' ? '#6366f1' : d.key === 'Irreversibility' ? '#f59e0b' : d.key === 'Disruption' ? '#ef4444' : '#22c55e' }}>
+                        {EXAMPLES[selectedExample].scores[d.key]}
+                      </div>
+                      <div className="text-xs text-gray-600">{d.abbr}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Object.entries(EXAMPLES).sort().map(([name, example]) => {
+                const classification = classify(example.scores, true);
+                const avgScore = Object.values(example.scores).reduce((a, b) => a + b, 0) / 4;
+                
+                return (
+                  <button
+                    key={name}
+                    onClick={() => {
+                      setSelectedExample(name);
+                      loadExample(name);
+                    }}
+                    className={`p-3 rounded-lg border text-left transition-all ${
+                      selectedExample === name 
+                        ? 'border-blue-500 bg-blue-50' 
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                    }`}
+                  >
+                    <div className="font-medium text-sm mb-1">{name}</div>
+                    <div className="text-xs text-gray-600 mb-2">{classification}</div>
+                    <div className="flex justify-between text-xs">
+                      <span>Avg Score:</span>
+                      <span className="font-medium">{avgScore.toFixed(1)}/4.0</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ===== Main App Component =====
     function App(){
       const [tab,setTab]=useState('test');
       const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
@@ -866,33 +850,13 @@
               {k:'examples',label:'Historical Examples'}
             ].map(t=>(
               <button key={t.k} onClick={()=>setTab(t.k)}
-                className={'big-tab ' + (tab===t.k?'big-tab-active':'big-tab-inactive')}>{t.label}</button>
+                className={'big-tab ' + (tab===t.k?'big-tab-active':'big-tab-inactive')}>
+                {t.label}
+              </button>
             ))}
           </div>
 
-          <div className="panel panel-b text-sm mb-6">
-            <div className="font-semibold mb-2">Assessment Scale & Theoretical Logic</div>
-            <div className="grid grid-cols-5 gap-2 text-center mb-4">
-              {LABELS.map((label, idx) => (
-                <div key={idx} className="p-2 bg-gray-50 rounded">
-                  <div className="font-medium">{label}</div>
-                  <div className="text-xs text-gray-600">({idx})</div>
-                </div>
-              ))}
-            </div>
-            <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg">
-              <div className="font-semibold mb-1">Enhanced Methodology:</div>
-              <div className="space-y-1">
-                <div>• <strong>Definitional Innovation:</strong> Both Cognitive ≥3 AND Irreversibility ≥3 (necessary conditions)</div>
-                <div>• <strong>Contextual Innovation:</strong> Strong Disruption-Generative interactions may elevate borderline cases</div>
-                <div>• <strong>Interactive Effects:</strong> Primarily operate below definitional threshold to capture contextual dynamics</div>
-                <div>• <strong>Process Logic Assessment:</strong> C2 includes detailed evaluation of procedural, architectural, interface, and skill transformations</div>
-                <div>• <strong>Irreversibility Test:</strong> Both institutional lock-in AND adversarial validation required to distinguish innovation from experiment</div>
-              </div>
-            </div>
-          </div>
-
-          <section className="space-y-6">
+          <div className="space-y-6">
             {tab==='test' && (
               <>
                 <TestYourIdea
@@ -915,10 +879,10 @@
                 <ChartsPanel scores={scores} meta={meta} openModal={openModal}/>
               </>
             )}
-          </section>
+          </div>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v3.0 - Complete Theoretical Revision
+            Military Innovation Assessment Framework v3.1 - Recognition Framework Implementation
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={closeModal}/>}
