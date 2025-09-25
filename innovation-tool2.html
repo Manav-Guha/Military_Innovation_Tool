@@ -153,36 +153,54 @@
       enhanced._hasInteractions = Object.values(interactions).some(v => v > 0);
       enhanced._meetsThreshold = meetsDefinitionalThreshold;
       enhanced._contextuallyElevated = !meetsDefinitionalThreshold && enhanced.Cognitive >= 3 && enhanced.Irreversibility >= 3;
+      enhanced._isHistoricalExample = false;
       
       return enhanced;
     }
 
-    // ===== Theoretically Correct Classification =====
+    // ===== FIXED Classification Logic =====
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
     
-    function classify(s){
-      const vals = ORDER.map(k => +s[k]||0);
+    function classify(dimScores, isHistoricalExample = false) {
+      const vals = ORDER.map(k => +(dimScores[k]||0));
       
-      // Check definitional thresholds (before enhancement)
-      const baseC = meanToInt([s.c1||0, s.c2||0, s.c3||0, s.c4||0]);
-      const baseI = meanToInt([s.i1||0, s.i2||0, s.i3||0, s.i4||0]);
-      const meetsBase = baseC >= 3 && baseI >= 3;
-      
-      // Check enhanced scores
-      const enhancedMeets = (s.Cognitive||0) >= 3 && (s.Irreversibility||0) >= 3;
-      
-      if (enhancedMeets) {
-        if (meetsBase) {
-          // Definitionally innovation - classify by strength
-          const strong = vals.filter(v=>v>=3).length;
-          return strong >= 3 ? "Transformative Innovation" : "Innovation";
+      if (isHistoricalExample) {
+        // For historical examples, use direct dimensional scores
+        const cognitiveScore = dimScores.Cognitive || 0;
+        const irreversibilityScore = dimScores.Irreversibility || 0;
+        
+        if (cognitiveScore >= 3 && irreversibilityScore >= 3) {
+          const strong = vals.filter(v => v >= 3).length;
+          if (strong === 4) return "Transformative Innovation";
+          if (strong >= 3) return "Revolutionary Innovation";
+          return "Innovation";
         } else {
-          // Contextually elevated to innovation
-          return "Contextual Innovation";
+          return vals.some(v => v >= 2) ? "Modernization" : "Upgradation";
         }
       } else {
-        // Below innovation threshold - traditional modernization logic
-        return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
+        // For user inputs, check both base and enhanced scores
+        const baseC = dimScores._baseScores ? dimScores._baseScores.Cognitive : (dimScores.Cognitive || 0);
+        const baseI = dimScores._baseScores ? dimScores._baseScores.Irreversibility : (dimScores.Irreversibility || 0);
+        const meetsBase = baseC >= 3 && baseI >= 3;
+        
+        // Check enhanced scores
+        const enhancedMeets = (dimScores.Cognitive||0) >= 3 && (dimScores.Irreversibility||0) >= 3;
+        
+        if (enhancedMeets) {
+          if (meetsBase) {
+            // Definitionally innovation - classify by strength
+            const strong = vals.filter(v=>v>=3).length;
+            if (strong === 4) return "Transformative Innovation";
+            if (strong >= 3) return "Revolutionary Innovation";
+            return "Innovation";
+          } else {
+            // Contextually elevated to innovation
+            return "Contextual Innovation";
+          }
+        } else {
+          // Below innovation threshold - traditional modernization logic
+          return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
+        }
       }
     }
 
@@ -270,7 +288,7 @@
         cls = 'blue';
         title = 'Your Innovation Assessment';
         sub = `Analysis of your innovation concept: "${meta.label}"`;
-        displayMessages = generateUserFeedback(subScores, dimScores, classify(dimScores));
+        displayMessages = generateUserFeedback(subScores, dimScores, classify(dimScores, false));
       } else if (isHistoricalExample) {
         cls = 'blue';
         title = 'Historical Case Analysis';
@@ -321,24 +339,29 @@
       
       const insights = {
         "ASBM": [
-          `**Definitional Innovation**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility} both meet the ≥3 threshold, qualifying as innovation by theoretical definition.`,
-          `**Conceptual Integration**: ASBM demonstrates how creative synthesis of existing technologies (OTH radar, SAR satellites, MRBMs) creates paradigmatic transformation.`,
+          `**Revolutionary Innovation**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption} all meet the ≥3 threshold, with three dimensions at innovation levels.`,
+          `**Conceptual Integration**: ASBM demonstrates how creative synthesis of existing technologies creates paradigmatic transformation.`,
           `**Strategic Impact**: Fundamentally altered naval operational art in the Pacific theater, establishing new strategic baselines.`
         ],
         "Military Robotics": [
-          `**Below Innovation Threshold**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility} both below ≥3, classifying as Modernization despite advanced technology.`,
+          `**Modernization**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility} both below ≥3, classifying as capability enhancement despite advanced technology.`,
           `**Capability Extension Pattern**: Extends human capabilities without forcing conceptual transformation or irreversible doctrinal change.`,
           `**High Generative Potential**: Score G:${scores.Generative} indicates significant follow-on possibilities within existing paradigms.`
         ],
         "F-16 Block D": [
-          `**Pure Upgradation**: All dimensions score ≤1, indicating capability enhancement without paradigmatic impact.`,
-          `**Platform vs. Component Analysis**: While individual subsystems may be innovative, the integrated platform represents evolutionary advancement.`,
-          `**Competitive but Not Transformative**: Triggers adversarial procurement responses without forcing doctrinal abandonment.`
+          `**Upgradation**: All dimensions score ≤1, indicating capability enhancement without paradigmatic impact.`,
+          `**Platform Analysis**: While individual subsystems may be innovative, the integrated platform represents evolutionary advancement.`,
+          `**Competitive Response**: Triggers adversarial procurement responses without forcing doctrinal abandonment.`
+        ],
+        "Stirrups": [
+          `**Transformative Innovation**: Maximum scores across all four dimensions (C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative}) represent complete paradigmatic transformation.`,
+          `**Historical Exemplar**: Created feudal military structures through technological enablement of heavy cavalry tactics.`,
+          `**Strategic Revolution**: Fundamentally transformed medieval warfare organization and social structures.`
         ],
         "Blitzkrieg": [
-          `**Transformative Innovation**: Maximum scores across C:${scores.Cognitive}, D:${scores.Disruption}, G:${scores.Generative} demonstrate complete paradigmatic transformation.`,
-          `**Theoretical Exemplar**: Meets definitional requirements (C≥3, I≥3) while exhibiting strong contextual effects.`,
-          `**Strategic Revolution**: Rendered attrition warfare assumptions untenable while generating new operational concepts.`
+          `**Revolutionary Innovation**: Near-maximum scores demonstrate complete paradigmatic transformation in land warfare.`,
+          `**Operational Innovation**: Created new operational art combining armor, aviation, and communications.`,
+          `**Strategic Impact**: Rendered attrition warfare assumptions untenable while generating new strategic concepts.`
         ]
       };
       
@@ -562,41 +585,22 @@
     function HistoricalExamples({setScores,setMeta,setSubScores,setIssues}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
-      const [subs,setSubs]=useState(null);
-
-      function buildSubFromExample(ex) {
-        const s = {};
-        function rep(keys,val){ for (let i=0;i<keys.length;i++) s[keys[i]]=val; }
-        rep(SUB_KEYS.Disruption,      ex.scores.Disruption);
-        rep(SUB_KEYS.Irreversibility, ex.scores.Irreversibility);
-        rep(SUB_KEYS.Cognitive,       ex.scores.Cognitive);
-        rep(SUB_KEYS.Generative,      ex.scores.Generative);
-        return s;
-      }
-
-      function runEval(nextSubs){
-        const dim = aggregateWithContextualEffects(nextSubs);
-        setScores(dim);
-        setSubScores(nextSubs);
-        setIssues([]);
-      }
-
-      function setValue(k,v){
-        setSubs(function(prev){
-          const next = Object.assign({}, prev, { [k]: v });
-          runEval(next);
-          return next;
-        });
-      }
 
       function loadFromSelection(v){
         setSel(v);
         if (!v) return;
         const ex = EXAMPLES[v];
         setMeta({label: v, ex:ex});
-        const subVals = buildSubFromExample(ex);
-        setSubs(subVals);
-        runEval(subVals);
+        
+        // For historical examples, use direct dimensional scores
+        const directScores = {
+          ...ex.scores,
+          _isHistoricalExample: true
+        };
+        
+        setScores(directScores);
+        setSubScores({});
+        setIssues([]);
       }
 
       const ex = sel ? EXAMPLES[sel] : null;
@@ -619,16 +623,22 @@
           </div>
 
           {ex && (
-            <div className="grid md:grid-cols-2 gap-6">
-              {ORDER.map(dim=>{
-                const pick = {};
-                for (let i=0;i<SUB_KEYS[dim].length;i++){
-                  const key = SUB_KEYS[dim][i];
-                  pick[key] = subs && (key in subs) ? subs[key] : ex.scores[dim] || 0;
-                }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={true} />;
-              })}
-              <div className="md:col-span-2 panel panel-b text-sm">
+            <div className="grid md:grid-cols-1 gap-6">
+              <div className="panel panel-b text-sm">
+                <div className="font-semibold mb-3">Historical Analysis: {sel}</div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  {ORDER.map(dim => {
+                    const dimData = DIMS.find(d => d.key === dim);
+                    const score = ex.scores[dim] || 0;
+                    return (
+                      <div key={dim} className="text-center p-3 bg-gray-50 rounded">
+                        <div className="font-semibold text-sm">{dimData.abbr}</div>
+                        <div className="text-lg font-bold">{getLabel(score)}</div>
+                        <div className="text-xs text-gray-600">({score}/4)</div>
+                      </div>
+                    );
+                  })}
+                </div>
                 <div className="font-semibold mb-1">Explanation & References</div>
                 <div className="text-gray-700 mb-3">{ex.justification}</div>
                 {(ex.sources||[]).map((r,i)=>(<div key={i}>• {r}</div>))}
@@ -714,6 +724,7 @@
       const hasInteractions = scores._hasInteractions;
       const meetsThreshold = scores._meetsThreshold;
       const contextuallyElevated = scores._contextuallyElevated;
+      const isHistorical = scores._isHistoricalExample;
       
       return (
         <div className="grid md:grid-cols-2 gap-6">
@@ -728,14 +739,17 @@
           <div className="md:col-span-2 panel panel-b text-sm">
             <div className="flex flex-wrap items-center gap-4">
               <div><span className="font-semibold">Index:</span> {indexScore(scores)}</div>
-              <div><span className="font-semibold">Class:</span> {classify(scores)}</div>
+              <div><span className="font-semibold">Class:</span> {classify(scores, isHistorical)}</div>
               <div>
-                {meetsThreshold ? 
-                  <span className="badge bg-green-100 text-green-800">Definitional Innovation (C≥3 & I≥3)</span> :
-                  contextuallyElevated ?
-                  <span className="badge bg-blue-100 text-blue-800">Contextual Innovation (D-G Elevated)</span> :
+                {isHistorical ? (
+                  <span className="badge bg-gray-100 text-gray-800">Historical Example</span>
+                ) : meetsThreshold ? (
+                  <span className="badge bg-green-100 text-green-800">Definitional Innovation (C≥3 & I≥3)</span>
+                ) : contextuallyElevated ? (
+                  <span className="badge bg-blue-100 text-blue-800">Contextual Innovation (D-G Elevated)</span>
+                ) : (
                   <span className="badge bg-yellow-100 text-yellow-800">Below Innovation Threshold</span>
-                }
+                )}
               </div>
               {hasInteractions && <div className="badge bg-purple-100 text-purple-800">Interactive Effects Active</div>}
               {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
@@ -839,7 +853,7 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v2.1 - Theoretically Corrected Implementation
+            Military Innovation Assessment Framework v2.2 - Classification Bug Fixed
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={closeModal}/>}
