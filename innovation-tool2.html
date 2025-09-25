@@ -46,6 +46,7 @@
     .modal-h.bg-blue-50{background:#eff6ff;color:#1e40af}
     .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
     .interaction-indicator{background:#e0f2fe;border:1px solid #0288d1;color:#01579b;padding:.125rem .375rem;border-radius:.25rem;font-size:.7rem;margin-left:.5rem}
+    .theoretical-note{background:#f0f9ff;border:1px solid #0ea5e9;color:#0c4a6e;padding:.75rem 1rem;border-radius:.5rem;font-size:.8rem;line-height:1.4}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -102,10 +103,10 @@
       Generative: SUBS.Generative.map(x=>x.k)
     };
 
-    // ===== Enhanced aggregation with interactive effects =====
+    // ===== Aggregation with Contextual Interactive Effects =====
     const meanToInt = arr => Math.round(arr.reduce((a,v)=>a+v,0)/arr.length);
     
-    function aggregateWithInteractions(subVals) {
+    function aggregateWithContextualEffects(subVals) {
       const base = {
         Disruption:      meanToInt([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
         Irreversibility: meanToInt([subVals.i1,subVals.i2,subVals.i3,subVals.i4]),
@@ -113,47 +114,79 @@
         Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
       };
       
-      // Apply interactive effects (multiplicative bonuses for high co-occurrence)
-      const interactions = {
-        // Cognitive-Irreversibility reinforcement
-        cognitiveBoost: (base.Cognitive >= 3 && base.Irreversibility >= 3) ? 
-          Math.min(0.5, (base.Cognitive + base.Irreversibility - 6) * 0.1) : 0,
+      // Check if definitional thresholds are met
+      const meetsDefinitionalThreshold = base.Cognitive >= 3 && base.Irreversibility >= 3;
+      
+      let interactions = {
+        disruptiveBoost: 0,
+        contextualElevation: 0
+      };
+      
+      if (meetsDefinitionalThreshold) {
+        // Above threshold: only D-G synergy applies (contextual refinement)
+        interactions.disruptiveBoost = (base.Disruption >= 2 && base.Generative >= 2) ?
+          Math.min(0.3, (base.Disruption + base.Generative - 4) * 0.1) : 0;
+      } else {
+        // Below threshold: contextual effects might elevate to innovation status
+        // Strong D-G interaction can compensate for weaker C-I performance
+        const dgSynergy = (base.Disruption >= 2 && base.Generative >= 2) ?
+          Math.min(0.5, (base.Disruption + base.Generative - 4) * 0.15) : 0;
         
-        // Disruption-Generative synergy  
-        disruptiveBoost: (base.Disruption >= 2 && base.Generative >= 2) ?
-          Math.min(0.3, (base.Disruption + base.Generative - 4) * 0.1) : 0,
-          
-        // Threshold amplification (all dimensions ≥2 creates emergent effects)
-        thresholdBoost: Object.values(base).filter(v => v >= 2).length === 4 ? 0.2 : 0
-      };
+        // Apply contextual elevation to C and I if close to threshold and strong D-G
+        if (dgSynergy > 0 && (base.Cognitive >= 2.5 || base.Irreversibility >= 2.5)) {
+          interactions.contextualElevation = dgSynergy * 0.6; // Smaller boost than definitional cases
+        }
+        
+        interactions.disruptiveBoost = dgSynergy;
+      }
       
-      // Apply boosts while maintaining 0-4 bounds
+      // Apply enhancements while maintaining bounds
       const enhanced = {
-        Cognitive: Math.min(4, base.Cognitive + interactions.cognitiveBoost),
-        Irreversibility: Math.min(4, base.Irreversibility + interactions.cognitiveBoost),
-        Disruption: Math.min(4, base.Disruption + interactions.disruptiveBoost + interactions.thresholdBoost),
-        Generative: Math.min(4, base.Generative + interactions.disruptiveBoost + interactions.thresholdBoost)
+        Cognitive: Math.min(4, base.Cognitive + interactions.contextualElevation),
+        Irreversibility: Math.min(4, base.Irreversibility + interactions.contextualElevation),
+        Disruption: Math.min(4, base.Disruption + interactions.disruptiveBoost),
+        Generative: Math.min(4, base.Generative + interactions.disruptiveBoost)
       };
       
-      // Store interaction metadata for display
+      // Store metadata
       enhanced._interactions = interactions;
       enhanced._hasInteractions = Object.values(interactions).some(v => v > 0);
+      enhanced._meetsThreshold = meetsDefinitionalThreshold;
+      enhanced._contextuallyElevated = !meetsDefinitionalThreshold && enhanced.Cognitive >= 3 && enhanced.Irreversibility >= 3;
       
       return enhanced;
     }
 
-    // ===== Scoring helpers with updated thresholds =====
-    const thresholdOK = s => (s.Cognitive||0) >= 3 && (s.Irreversibility||0) >= 3;
+    // ===== Theoretically Correct Classification =====
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
+    
     function classify(s){
       const vals = ORDER.map(k => +s[k]||0);
-      if (!thresholdOK(s)) return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
-      const strong = vals.filter(v=>v>=3).length;
-      if (strong >= 3) return "Innovation";
-      return "Modernization";
+      
+      // Check definitional thresholds (before enhancement)
+      const baseC = meanToInt([s.c1||0, s.c2||0, s.c3||0, s.c4||0]);
+      const baseI = meanToInt([s.i1||0, s.i2||0, s.i3||0, s.i4||0]);
+      const meetsBase = baseC >= 3 && baseI >= 3;
+      
+      // Check enhanced scores
+      const enhancedMeets = (s.Cognitive||0) >= 3 && (s.Irreversibility||0) >= 3;
+      
+      if (enhancedMeets) {
+        if (meetsBase) {
+          // Definitionally innovation - classify by strength
+          const strong = vals.filter(v=>v>=3).length;
+          return strong >= 3 ? "Transformative Innovation" : "Innovation";
+        } else {
+          // Contextually elevated to innovation
+          return "Contextual Innovation";
+        }
+      } else {
+        // Below innovation threshold - traditional modernization logic
+        return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
+      }
     }
 
-    // ===== Updated Examples with F-16 correction =====
+    // ===== Updated Examples =====
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
       "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
@@ -163,7 +196,7 @@
       "Carrier Aviation": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Shift from battleships; aviation embedded.", sources: ["Friedman, 1983"] },
       "Cyber Warfare": { scores: { Cognitive:2, Irreversibility:2, Disruption:2, Generative:3 }, justification: "New domain operating alongside existing paradigms.", sources: ["Libicki, 2012"] },
       "Deep Battle/Reconnaissance Strike Complex": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Frontal assaults untenable; operational art entrenched.", sources: ["Habeck, 2003"] },
-      "F-16 Block D": { scores: { Cognitive:0, Irreversibility:1, Disruption:1, Generative:1 }, justification: "Upgradation within existing paradigm, but superior capabilities compel adversary responses and procurement adjustments.", sources: ["USAF Fact Sheets"] },
+      "F-16 Block D": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Modernization within existing air superiority paradigm. Enhanced capabilities trigger competitive procurement but no doctrinal transformation.", sources: ["USAF Fact Sheets"] },
       "Hypersonics": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "Accelerates missiles; limited conceptual shift.", sources: ["Mahnken, 2007"] },
       "Information Warfare": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 }, justification: "Challenges C2 assumptions; cross-boundary effects.", sources: ["Ricks, 2012"] },
       "Lasers": { scores: { Cognitive:1, Irreversibility:1, Disruption:2, Generative:2 }, justification: "Within existing frameworks; limited embedding.", sources: ["AFRL Primer, 2019"] },
@@ -202,19 +235,23 @@
         feedback.push(`**${dimData.label}**: You assessed ${subDetails}. This resulted in a cumulative ${getLabel(dimScore).toLowerCase()} level (${Math.round(dimScore*10)/10}/4) for the ${dim} dimension.`);
       });
       
+      // Add theoretical explanation
+      if (dimScores._meetsThreshold) {
+        feedback.push(`**Definitional Innovation**: Your assessment meets the theoretical threshold (C≥3, I≥3), qualifying this as innovation by definition.`);
+      } else if (dimScores._contextuallyElevated) {
+        feedback.push(`**Contextual Innovation**: While base scores were below the definitional threshold, strong Disruption-Generative interactions elevated Cognitive and Irreversibility dimensions to innovation levels.`);
+      } else {
+        feedback.push(`**Below Innovation Threshold**: Current assessment does not meet the minimum Cognitive (≥3) and Irreversibility (≥3) requirements for innovation classification.`);
+      }
+      
       // Add interaction effects explanation if present
       if (dimScores._hasInteractions) {
-        feedback.push(`**Interactive Effects**: Your assessment triggered dimensional synergies - certain combinations of high scores create reinforcement effects that amplify the overall innovation potential.`);
+        feedback.push(`**Interactive Effects**: Your assessment triggered contextual synergies between dimensions, reflecting the dynamic nature of military innovation.`);
       }
       
       // Add conclusion
       const total = ORDER.reduce((sum, dim) => sum + (dimScores[dim] || 0), 0);
-      feedback.push(`**Conclusion**: Based on your assessment across all four dimensions (total score: ${Math.round(total*10)/10}/16), your innovation concept is classified as **${classification}**.`);
-      
-      // Add threshold explanation
-      if (!thresholdOK(dimScores)) {
-        feedback.push(`*Note: Innovation classification requires both Cognitive ≥ Significant (3) and Irreversibility ≥ Significant (3). Your current scores are Cognitive: ${getLabel(dimScores.Cognitive || 0)} (${Math.round((dimScores.Cognitive || 0)*10)/10}) and Irreversibility: ${getLabel(dimScores.Irreversibility || 0)} (${Math.round((dimScores.Irreversibility || 0)*10)/10}).*`);
-      }
+      feedback.push(`**Final Classification**: Based on your assessment (total score: ${Math.round(total*10)/10}/16), this concept is classified as **${classification}**.`);
       
       return feedback;
     }
@@ -230,33 +267,18 @@
       let displayMessages = [];
       
       if (isUserInput) {
-        // Enhanced feedback for user inputs
         cls = 'blue';
         title = 'Your Innovation Assessment';
         sub = `Analysis of your innovation concept: "${meta.label}"`;
         displayMessages = generateUserFeedback(subScores, dimScores, classify(dimScores));
       } else if (isHistoricalExample) {
-        // Educational analysis for historical examples
         cls = 'blue';
         title = 'Historical Case Analysis';
         sub = `Educational analysis of ${meta.label}:`;
         displayMessages = getEducationalAnalysis(meta.label, meta.ex);
       } else {
-        // Standard contradiction analysis
-        const majors = issues.filter(x=>x.severity==='major').length;
-        const milds = issues.filter(x=>x.severity==='mild').length;
-        if (majors || milds) {
-          if (majors) {
-            cls = 'red';
-            title = 'Assessment Review - Issues Found';
-            sub = `Found ${majors} major issue${majors>1?'s':''} and ${milds} minor issue${milds>1?'s':''}.`;
-          } else {
-            cls = 'yellow';
-            title = 'Assessment Review - Minor Issues';
-            sub = `Found ${milds} minor issue${milds>1?'s':''}.`;
-          }
-          displayMessages = issues.map(issue => issue.message);
-        }
+        cls = 'green';
+        displayMessages = ["Assessment completed successfully."];
       }
       
       return (
@@ -277,12 +299,12 @@
                   ))}
                 </ul>
               ) : (
-                <div className="text-sm text-gray-700">No issues detected. Your scoring appears well-balanced across the four dimensions.</div>
+                <div className="text-sm text-gray-700">Assessment completed.</div>
               )}
               
               <div className="mt-6 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                <div className="font-semibold mb-1">Methodological Note:</div>
-                Numerical values (0-4) are used for computational purposes only. Assessment is based on qualitative evidence levels: None, Minimal, Moderate, Significant, Transformative. Interactive effects may create fractional scores when dimensional synergies are detected.
+                <div className="font-semibold mb-1">Theoretical Framework:</div>
+                <div>Innovation requires both conceptual transformation (C≥3) AND irreversible norm establishment (I≥3). Contextual interactions between Disruption and Generative dimensions may elevate borderline cases to innovation status.</div>
               </div>
             </div>
             <div className="p-4 border-t text-right">
@@ -299,31 +321,31 @@
       
       const insights = {
         "ASBM": [
-          `**Conceptual Innovation Pattern**: High Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}) scores indicate significant paradigmatic impact.`,
-          `**Key Insight**: ASBM represents conceptual innovation - the creative integration of existing technologies (OTH radar, SAR satellites, MRBMs, MIRV warheads) to create capabilities that fundamentally altered naval operational art.`,
-          `**Significance**: Demonstrates how conceptual breakthroughs can achieve transformation through intellectual integration rather than technological advancement, showing that military advantage can emerge from thinking differently about available tools.`
+          `**Definitional Innovation**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility} both meet the ≥3 threshold, qualifying as innovation by theoretical definition.`,
+          `**Conceptual Integration**: ASBM demonstrates how creative synthesis of existing technologies (OTH radar, SAR satellites, MRBMs) creates paradigmatic transformation.`,
+          `**Strategic Impact**: Fundamentally altered naval operational art in the Pacific theater, establishing new strategic baselines.`
         ],
         "Military Robotics": [
-          `**Modernization Pattern**: Higher Generative (${scores.Generative}) score with lower Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) indicating capability extension without paradigmatic change.`,
-          `**Key Insight**: Military robotics extends human capabilities and opens new operational possibilities without fundamentally changing military doctrine or strategic thinking.`,
-          `**Significance**: Illustrates how advanced technology can create new capabilities while operating within established conceptual frameworks.`
+          `**Below Innovation Threshold**: Scores C:${scores.Cognitive}, I:${scores.Irreversibility} both below ≥3, classifying as Modernization despite advanced technology.`,
+          `**Capability Extension Pattern**: Extends human capabilities without forcing conceptual transformation or irreversible doctrinal change.`,
+          `**High Generative Potential**: Score G:${scores.Generative} indicates significant follow-on possibilities within existing paradigms.`
         ],
         "F-16 Block D": [
-          `**Upgradation with Disruptive Elements**: Minimal Disruption (${scores.Disruption}) score reflects adversarial response compulsion despite operating within existing paradigms.`,
-          `**Key Insight**: Even capability upgrades can trigger adversarial scramble - Pakistan's F-16 acquisition forced India's immediate procurement responses (MiG-29, Su-30 MKI).`,
-          `**Significance**: Demonstrates that disruption can manifest at tactical-operational level even when strategic paradigms remain unchanged.`
+          `**Pure Upgradation**: All dimensions score ≤1, indicating capability enhancement without paradigmatic impact.`,
+          `**Platform vs. Component Analysis**: While individual subsystems may be innovative, the integrated platform represents evolutionary advancement.`,
+          `**Competitive but Not Transformative**: Triggers adversarial procurement responses without forcing doctrinal abandonment.`
         ],
         "Blitzkrieg": [
-          `**Innovation Pattern**: Maximum or near-maximum scores across Cognitive (${scores.Cognitive}), Disruption (${scores.Disruption}), and Generative (${scores.Generative}) dimensions.`,
-          `**Key Insight**: Blitzkrieg represents complete paradigmatic transformation - making attrition warfare assumptions untenable while spawning numerous follow-on operational innovations.`,
-          `**Significance**: Exemplifies rare cases of total systemic military revolution that redefines warfare itself.`
+          `**Transformative Innovation**: Maximum scores across C:${scores.Cognitive}, D:${scores.Disruption}, G:${scores.Generative} demonstrate complete paradigmatic transformation.`,
+          `**Theoretical Exemplar**: Meets definitional requirements (C≥3, I≥3) while exhibiting strong contextual effects.`,
+          `**Strategic Revolution**: Rendered attrition warfare assumptions untenable while generating new operational concepts.`
         ]
       };
       
       return insights[caseName] || [
-        `**Scoring Pattern**: This case shows scores of C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} across the four dimensions.`,
-        `**Classification**: Represents an example of ${classify(scores)} in military development.`,
-        `**Framework Application**: Demonstrates how the four-dimensional framework distinguishes between different types of military change.`
+        `**Scoring Pattern**: C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative}`,
+        `**Classification Logic**: ${scores.Cognitive >= 3 && scores.Irreversibility >= 3 ? 'Meets definitional innovation threshold (C≥3, I≥3)' : 'Below innovation threshold - classified by contextual factors'}`,
+        `**Theoretical Application**: Demonstrates how the framework distinguishes between technological advancement and strategic transformation.`
       ];
     }
 
@@ -332,11 +354,18 @@
       const items = SUBS[dim];
       const rated = items.filter(it => (values[it.k]||0) > 0).length;
       
-      // Calculate both base and enhanced scores for comparison
+      // Calculate base score
       const baseScore = meanToInt(items.map(it => values[it.k]||0));
-      const enhancedResult = showInteractions ? aggregateWithInteractions(values) : null;
-      const displayScore = showInteractions && enhancedResult ? enhancedResult[dim] : baseScore;
-      const hasBoost = showInteractions && enhancedResult && Math.abs(displayScore - baseScore) > 0.05;
+      
+      // Calculate enhanced score if interactions are enabled
+      let displayScore = baseScore;
+      let hasBoost = false;
+      
+      if (showInteractions) {
+        const enhancedResult = aggregateWithContextualEffects(values);
+        displayScore = enhancedResult[dim];
+        hasBoost = Math.abs(displayScore - baseScore) > 0.05;
+      }
       
       const dMeta = DIMS.find(d=>d.key===dim);
       
@@ -346,7 +375,7 @@
             <div className="dim-title">
               <span>{dMeta.label}</span>
               {hasBoost && (
-                <span className="interaction-indicator" title="Score enhanced by dimensional interactions">
+                <span className="interaction-indicator" title="Score enhanced by contextual interactions">
                   +{Math.round((displayScore - baseScore)*100)/100}
                 </span>
               )}
@@ -417,11 +446,11 @@
               },
               {
                 label: 'Innovation Threshold (C≥3, I≥3)',
-                data: [3,3,3,3],
+                data: [3,3,0,0],
                 fill: false,
-                borderColor: 'rgba(107,114,128,0.8)',
+                borderColor: 'rgba(239,68,68,0.8)',
                 borderDash: [6, 4],
-                borderWidth: 1,
+                borderWidth: 2,
                 pointRadius: 0
               }
             ]
@@ -546,7 +575,7 @@
       }
 
       function runEval(nextSubs){
-        const dim = aggregateWithInteractions(nextSubs);
+        const dim = aggregateWithContextualEffects(nextSubs);
         setScores(dim);
         setSubScores(nextSubs);
         setIssues([]);
@@ -621,7 +650,7 @@
       });
 
       function runEval(nextSub){
-        const dim = aggregateWithInteractions(nextSub);
+        const dim = aggregateWithContextualEffects(nextSub);
         setScores(dim);
         setSubScores(nextSub);
         setIssues([]);
@@ -639,6 +668,15 @@
 
       return (
         <div className="space-y-6">
+          <div className="theoretical-note">
+            <div className="font-semibold mb-2">Theoretical Framework</div>
+            <div className="space-y-1 text-sm">
+              <div><strong>Innovation Definition:</strong> Must be conceptual transformation (C≥3) AND establish irreversible new norms (I≥3)</div>
+              <div><strong>Contextual Effects:</strong> Strong Disruption-Generative interactions may elevate borderline cases to innovation status</div>
+              <div><strong>Assessment Approach:</strong> Evidence-based evaluation of likely manifestation levels across sub-indicators</div>
+            </div>
+          </div>
+          
           <div className="panel panel-b">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -674,6 +712,8 @@
     // ===== Charts panel =====
     function ChartsPanel({scores,meta,openModal}){
       const hasInteractions = scores._hasInteractions;
+      const meetsThreshold = scores._meetsThreshold;
+      const contextuallyElevated = scores._contextuallyElevated;
       
       return (
         <div className="grid md:grid-cols-2 gap-6">
@@ -689,10 +729,15 @@
             <div className="flex flex-wrap items-center gap-4">
               <div><span className="font-semibold">Index:</span> {indexScore(scores)}</div>
               <div><span className="font-semibold">Class:</span> {classify(scores)}</div>
-              <div>{thresholdOK(scores)
-                ? <span className="badge bg-green-100 text-green-800">Innovation Threshold Met (C≥3 & I≥3)</span>
-                : <span className="badge bg-yellow-100 text-yellow-800">Innovation Threshold Not Met</span>}</div>
-              {hasInteractions && <div className="badge bg-blue-100 text-blue-800">Interactive Effects Active</div>}
+              <div>
+                {meetsThreshold ? 
+                  <span className="badge bg-green-100 text-green-800">Definitional Innovation (C≥3 & I≥3)</span> :
+                  contextuallyElevated ?
+                  <span className="badge bg-blue-100 text-blue-800">Contextual Innovation (D-G Elevated)</span> :
+                  <span className="badge bg-yellow-100 text-yellow-800">Below Innovation Threshold</span>
+                }
+              </div>
+              {hasInteractions && <div className="badge bg-purple-100 text-purple-800">Interactive Effects Active</div>}
               {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
               <button onClick={openModal} className="ml-auto px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
                 View Analysis
@@ -748,7 +793,7 @@
           </div>
 
           <div className="panel panel-b text-sm mb-6">
-            <div className="font-semibold mb-2">Assessment Scale & Interactive Effects</div>
+            <div className="font-semibold mb-2">Assessment Scale & Theoretical Logic</div>
             <div className="grid grid-cols-5 gap-2 text-center mb-4">
               {LABELS.map((label, idx) => (
                 <div key={idx} className="p-2 bg-gray-50 rounded">
@@ -760,11 +805,10 @@
             <div className="text-xs text-gray-600 bg-blue-50 p-3 rounded-lg">
               <div className="font-semibold mb-1">Enhanced Methodology:</div>
               <div className="space-y-1">
-                <div>• <strong>Base Scoring:</strong> Each dimension calculated as mean of four sub-indicators</div>
-                <div>• <strong>Interactive Effects:</strong> High scores in related dimensions trigger synergistic bonuses</div>
-                <div>• <strong>Cognitive-Irreversibility:</strong> Both ≥3 creates reinforcement (+0.5 max)</div>
-                <div>• <strong>Disruption-Generative:</strong> Both ≥2 creates synergy (+0.3 max)</div>
-                <div>• <strong>Threshold Amplification:</strong> All dimensions ≥2 creates emergent effects (+0.2)</div>
+                <div>• <strong>Definitional Innovation:</strong> Both Cognitive ≥3 AND Irreversibility ≥3 (necessary conditions)</div>
+                <div>• <strong>Contextual Innovation:</strong> Strong Disruption-Generative interactions may elevate borderline cases</div>
+                <div>• <strong>Interactive Effects:</strong> Primarily operate below definitional threshold to capture contextual dynamics</div>
+                <div>• <strong>Classification Logic:</strong> Theoretical requirements determine innovation status, not mathematical optimization</div>
               </div>
             </div>
           </div>
@@ -795,7 +839,7 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v2.0 - Enhanced with interactive effects modeling
+            Military Innovation Assessment Framework v2.1 - Theoretically Corrected Implementation
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={closeModal}/>}
