@@ -31,8 +31,8 @@
     .meter{height:.5rem;background:#e5e7eb;border-radius:.375rem;overflow:hidden}
     .meter-fill{height:100%;background:#2563eb}
     .flag-icon{display:inline-flex;width:16px;height:16px;align-items:center;justify-content:center;border-radius:2px;margin-left:.35rem;cursor:default}
-    .flag-mild{background:#f59e0b;color:#111;border:1px solid #7c2d12} /* yellow */
-    .flag-major{background:#ef4444;color:#111;border:1px solid #111}    /* red */
+    .flag-mild{background:#f59e0b;color:#111;border:1px solid #7c2d12}
+    .flag-major{background:#ef4444;color:#111;border:1px solid #111}
     .tooltip{position:relative;display:inline-block}
     .tooltip .tip{visibility:hidden;opacity:0;transition:opacity .15s;position:absolute;z-index:20;top:130%;left:50%;transform:translateX(-50%);background:#111;color:#fff;border-radius:.4rem;font-size:.75rem;padding:.4rem .55rem;max-width:320px;white-space:normal}
     .tooltip:hover .tip{visibility:visible;opacity:1}
@@ -43,6 +43,8 @@
     .modal-h.green{background:#ecfdf5;color:#065f46}
     .modal-h.yellow{background:#fffbeb;color:#78350f}
     .modal-h.red{background:#fee2e2;color:#7f1d1d}
+    .modal-h.bg-blue-50{background:#eff6ff;color:#1e40af}
+    .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -50,6 +52,11 @@
 
   <script type="text/babel">
     const {useState,useMemo,useEffect,useRef} = React;
+
+    // ===== Qualitative Labels =====
+    const LABELS = ["None", "Minimal", "Moderate", "Significant", "Transformative"];
+    const getLabel = (value) => LABELS[value] || "None";
+    const getValue = (label) => LABELS.indexOf(label);
 
     // ===== Dimensions (C/I/D/G) =====
     const DIMS = [
@@ -60,31 +67,31 @@
     ];
     const ORDER = DIMS.map(d=>d.key);
 
-    // ===== Sub-indicator scaffold (0–4 uniform scale) =====
+    // ===== Sub-indicator scaffold =====
     const SUBS = {
       Cognitive: [
-        {k:"c1", name:"Core Assumptions Challenged", hint:"Prospective: which assumptions break? Retrospective: records show assumptions seen as broken."},
-        {k:"c2", name:"Doctrine / Professional Military Education (PME) Revision", hint:"Prospective: plan for Tactics, Techniques, and Procedures (TTPs)/modules. Retrospective: embedded in manuals, SOPs, curricula."},
-        {k:"c3", name:"Shift in Command Attention", hint:"Prospective: new variables monitored. Retrospective: orders/After-Action Reports (AARs) show new focus."},
-        {k:"c4", name:"New Criteria for Success", hint:"Prospective: requires new criteria. Retrospective: success defined and measured differently."}
+        {k:"c1", name:"Core Assumptions Challenged", hint:"Prospective: which assumptions might break? Retrospective: records show assumptions seen as broken."},
+        {k:"c2", name:"Doctrine / Professional Military Education (PME) Revision", hint:"Prospective: likely need for new Tactics, Techniques, and Procedures (TTPs)/modules. Retrospective: embedded in manuals, SOPs, curricula."},
+        {k:"c3", name:"Shift in Command Attention", hint:"Prospective: new variables likely to be monitored. Retrospective: orders/After-Action Reports (AARs) show new focus."},
+        {k:"c4", name:"New Criteria for Success", hint:"Prospective: likely to require new criteria. Retrospective: success defined and measured differently."}
       ],
       Irreversibility: [
-        {k:"i1", name:"Training and Skill Path Dependence", hint:"New long-term pipelines vs none."},
-        {k:"i2", name:"Logistics and Infrastructure Path Dependence", hint:"Supply, maintenance, infrastructure reconfigured."},
-        {k:"i3", name:"Adversary Compulsion to Mirror", hint:"Extent of rival adoption."},
-        {k:"i4", name:"Force Structure Changes", hint:"Units/Tables of Organization and Equipment (TO&E) created or reconfigured."}
+        {k:"i1", name:"Training and Skill Path Dependence", hint:"New long-term pipelines likely vs none."},
+        {k:"i2", name:"Logistics and Infrastructure Path Dependence", hint:"Supply, maintenance, infrastructure likely to be reconfigured."},
+        {k:"i3", name:"Adversary Compulsion to Mirror", hint:"Likely extent of rival adoption."},
+        {k:"i4", name:"Force Structure Changes", hint:"Units/Tables of Organization and Equipment (TO&E) likely to be created or reconfigured."}
       ],
       Disruption: [
-        {k:"d1", name:"Enemy Observe–Orient–Decide–Act (OODA) Disruption", hint:"OODA cycle broken?"},
-        {k:"d2", name:"Doctrinal Breakpoints", hint:"Old doctrine rendered unusable?"},
-        {k:"d3", name:"Kill-Chain / Topology Shifts", hint:"Sequencing/roles fundamentally change?"},
-        {k:"d4", name:"Adversary Scramble", hint:"Urgent, costly countermeasures?"}
+        {k:"d1", name:"Enemy Observe–Orient–Decide–Act (OODA) Disruption", hint:"OODA cycle likely to be broken?"},
+        {k:"d2", name:"Doctrinal Breakpoints", hint:"Old doctrine likely to be rendered unusable?"},
+        {k:"d3", name:"Kill-Chain / Topology Shifts", hint:"Sequencing/roles likely to fundamentally change?"},
+        {k:"d4", name:"Adversary Scramble", hint:"Urgent, costly countermeasures likely?"}
       ],
       Generative: [
-        {k:"g1", name:"New Capability Families", hint:"Follow-on families and branches?"},
-        {k:"g2", name:"Cross-Domain Spillovers", hint:"Visible transfer across domains?"},
-        {k:"g3", name:"Organizational Implications", hint:"New formations, schools, procurement categories?"},
-        {k:"g4", name:"Conceptual Platform", hint:"Becomes base for further innovations?"}
+        {k:"g1", name:"New Capability Families", hint:"Follow-on families and branches likely?"},
+        {k:"g2", name:"Cross-Domain Spillovers", hint:"Visible transfer across domains likely?"},
+        {k:"g3", name:"Organizational Implications", hint:"New formations, schools, procurement categories likely?"},
+        {k:"g4", name:"Conceptual Platform", hint:"Likely to become base for further innovations?"}
       ]
     };
     const SUB_KEYS = {
@@ -94,101 +101,23 @@
       Generative: SUBS.Generative.map(x=>x.k)
     };
 
-    // ===== Scoring helpers =====
+    // ===== Scoring helpers with updated thresholds =====
     const meanToInt = arr => Math.round(arr.reduce((a,v)=>a+v,0)/arr.length);
-    const thresholdOK = s => (s.Cognitive||0) >= 2 && (s.Irreversibility||0) >= 2;
+    const thresholdOK = s => (s.Cognitive||0) >= 3 && (s.Irreversibility||0) >= 3;
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
     function classify(s){
       const vals = ORDER.map(k => +s[k]||0);
       if (!thresholdOK(s)) return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
       const strong = vals.filter(v=>v>=3).length;
-      if (strong >= 3) return "Transformational Innovation";
-      if (strong >= 2) return "Innovation";
+      if (strong >= 3) return "Innovation";
       return "Modernization";
     }
 
-    // ===== Enhanced contradiction messages =====
-    const CONTRADICTION_RULES = [
-      {
-        id:"C_vs_I",
-        dims:["Cognitive","Irreversibility"],
-        conditions:[{dim:"Cognitive",min:3},{dim:"Irreversibility",max:1}],
-        severity:"major",
-        message:"High Cognitive score (3-4) with very low Irreversibility (0-1): If this innovation requires major changes in doctrine and mental models, it typically also creates permanent organizational changes. Consider whether the irreversibility effects are stronger than scored."
-      },
-      {
-        id:"C_vs_D",
-        dims:["Cognitive","Disruption"],
-        conditions:[{dim:"Cognitive",min:3},{dim:"Disruption",max:1}],
-        severity:"mild",
-        message:"High Cognitive score (3-4) with low Disruptive score (0-1): If this innovation changes how military thinks about problems, it usually also disrupts how adversaries operate. Review whether disruptive effects might be higher."
-      },
-      {
-        id:"D_vs_I",
-        dims:["Disruption","Irreversibility"],
-        conditions:[{dim:"Disruption",min:3},{dim:"Irreversibility",max:1}],
-        severity:"major",
-        message:"High Disruptive score (3-4) with very low Irreversibility (0-1): If this innovation significantly disrupts enemy operations, militaries rarely remain free to abandon it. Consider whether permanent organizational changes are stronger than scored."
-      },
-      {
-        id:"I_vs_G",
-        dims:["Irreversibility","Generative"],
-        conditions:[{dim:"Irreversibility",min:3},{dim:"Generative",max:1}],
-        severity:"mild",
-        message:"High Irreversibility (3-4) with low Generative score (0-1): Permanent organizational changes typically enable new capabilities and follow-on innovations. Consider whether generative effects are stronger than scored."
-      },
-      {
-        id:"G_vs_G3",
-        dims:["Generative"],
-        subs:["g3"],
-        conditions:[{dim:"Generative",min:3},{sub:"g3",max:1}],
-        severity:"mild",
-        message:"High Generative score (3-4) with low Organizational Implications: Innovations that create new capability families typically require new organizational structures. Review the g3 sub-indicator scoring."
-      },
-      {
-        id:"All_Max",
-        dims:["Cognitive","Irreversibility","Disruption","Generative"],
-        conditions:[{dim:"Cognitive",min:4},{dim:"Irreversibility",min:4},{dim:"Disruption",min:4},{dim:"Generative",min:4}],
-        severity:"major",
-        message:"All four dimensions at maximum (4/4): This indicates complete systemic transformation across all aspects of warfare. Such total revolution is extremely rare - verify this assessment with strong historical evidence."
-      },
-      {
-        id:"All_Min",
-        dims:["Cognitive","Irreversibility","Disruption","Generative"],
-        conditions:[{dim:"Cognitive",max:0},{dim:"Irreversibility",max:0},{dim:"Disruption",max:0},{dim:"Generative",max:0}],
-        severity:"mild",
-        message:"All dimensions scored at zero: This suggests the case represents minimal change that may not warrant analysis using this innovation framework. Consider whether a different analytical approach is more appropriate."
-      }
-    ];
-
-    // ===== Enhanced gradient gap messages =====
-    function createGapMessage(dim1, score1, dim2, score2) {
-      const explanations = {
-        "Cognitive-Disruption": "If this innovation changes military thinking, it typically also disrupts how adversaries operate.",
-        "Cognitive-Generative": "Innovations that change doctrine and mental models usually also create new capabilities and follow-on developments.",
-        "Cognitive-Irreversibility": "Major changes in thinking typically require permanent organizational adaptations.",
-        "Disruption-Irreversibility": "Innovations that disrupt enemy operations usually create permanent changes that prevent easy reversal.",
-        "Disruption-Generative": "Disruptive innovations typically spawn new capability families and cross-domain effects.",
-        "Generative-Irreversibility": "Innovations that create new capabilities usually require permanent organizational changes to sustain them."
-      };
-      
-      const key1 = `${dim1}-${dim2}`;
-      const key2 = `${dim2}-${dim1}`;
-      const explanation = explanations[key1] || explanations[key2] || "These dimensions typically show related effects.";
-      
-      const higher = score1 > score2 ? dim1 : dim2;
-      const lower = score1 > score2 ? dim2 : dim1;
-      const higherScore = Math.max(score1, score2);
-      const lowerScore = Math.min(score1, score2);
-      
-      return `${higher} score (${higherScore}) significantly higher than ${lower} score (${lowerScore}): ${explanation} Consider whether the ${lower} effects might be stronger than currently scored.`;
-    }
-
-    // ===== Examples (full library) =====
+    // ===== Updated Examples with ASBM rescoring =====
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
       "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
-      "ASBM": { scores: { Cognitive:3, Irreversibility:2, Disruption:3, Generative:2 }, justification: "Rethinks carrier ops and projection.", sources: ["Erickson, 2013"] },
+      "ASBM": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Conceptual innovation that fundamentally altered naval operational art in the Pacific through creative integration of existing technologies (OTH radar, SAR satellites, MRBMs, MIRV warheads).", sources: ["Erickson, 2013"] },
       "Barbed Wire": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Offensive assumptions untenable; defensive shift.", sources: ["Bull, 2013"] },
       "Blitzkrieg": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:4 }, justification: "Transformed land warfare; follow-ons; new strategy.", sources: ["Liddell Hart; Guderian"] },
       "Carrier Aviation": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Shift from battleships; aviation embedded.", sources: ["Friedman, 1983"] },
@@ -215,72 +144,185 @@
       "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends recon/strike; limited paradigm challenge.", sources: ["Singer, 2009"] }
     };
 
-    // ===== Contradiction engine =====
-    function evaluateContradictions(dimScores, subScores){
-      const issues=[];
-      // 1) Hard rules
-      for (let r=0;r<CONTRADICTION_RULES.length;r++){
-        const rule = CONTRADICTION_RULES[r];
-        let ok=true;
-        for (let i=0;i<rule.conditions.length;i++){
-          const c = rule.conditions[i];
-          if (c.dim){
-            const v = +dimScores[c.dim]||0;
-            if (c.min!=null && v < c.min){ ok=false; break; }
-            if (c.max!=null && v > c.max){ ok=false; break; }
-          } else if (c.sub){
-            const v2 = +subScores[c.sub]||0;
-            if (c.min!=null && v2 < c.min){ ok=false; break; }
-            if (c.max!=null && v2 > c.max){ ok=false; break; }
+    // ===== Enhanced user feedback generation =====
+    function generateUserFeedback(subScores, dimScores, classification) {
+      const feedback = [];
+      
+      // Generate dimensional feedback
+      ORDER.forEach(dim => {
+        const dimData = DIMS.find(d => d.key === dim);
+        const subIndicators = SUBS[dim];
+        const dimScore = dimScores[dim] || 0;
+        
+        const subDetails = subIndicators.map(sub => {
+          const score = subScores[sub.k] || 0;
+          return `${sub.name.replace(/Enemy |Adversary |New |Doctrinal /g, '').toLowerCase()}: ${getLabel(score).toLowerCase()}`;
+        }).join(', ');
+        
+        feedback.push(`**${dimData.label}**: You assessed ${subDetails}. This resulted in a cumulative ${getLabel(dimScore).toLowerCase()} level (${dimScore}/4) for the ${dim} dimension.`);
+      });
+      
+      // Add conclusion
+      const total = ORDER.reduce((sum, dim) => sum + (dimScores[dim] || 0), 0);
+      feedback.push(`**Conclusion**: Based on your assessment across all four dimensions (total score: ${total}/16), your innovation concept is classified as **${classification}**.`);
+      
+      // Add threshold explanation
+      if (!thresholdOK(dimScores)) {
+        feedback.push(`*Note: Innovation classification requires both Cognitive ≥ Significant (3) and Irreversibility ≥ Significant (3). Your current scores are Cognitive: ${getLabel(dimScores.Cognitive || 0)} (${dimScores.Cognitive || 0}) and Irreversibility: ${getLabel(dimScores.Irreversibility || 0)} (${dimScores.Irreversibility || 0}).*`);
+      }
+      
+      return feedback;
+    }
+
+    // ===== Enhanced Modal =====
+    function IssuesModal({issues,meta,subScores,dimScores,onClose}){
+      if(!issues) return null;
+      
+      const isHistoricalExample = meta && meta.ex && EXAMPLES[meta.label];
+      const isUserInput = !isHistoricalExample && meta && meta.label && Object.values(subScores || {}).some(v => v > 0);
+      
+      let cls='green', title='Assessment Review', sub='Your scoring appears consistent across dimensions.';
+      let displayMessages = [];
+      
+      if (isUserInput) {
+        // Enhanced feedback for user inputs
+        cls = 'blue';
+        title = 'Your Innovation Assessment';
+        sub = `Analysis of your innovation concept: "${meta.label}"`;
+        displayMessages = generateUserFeedback(subScores, dimScores, classify(dimScores));
+      } else if (isHistoricalExample) {
+        // Educational analysis for historical examples
+        cls = 'blue';
+        title = 'Historical Case Analysis';
+        sub = `Educational analysis of ${meta.label}:`;
+        displayMessages = getEducationalAnalysis(meta.label, meta.ex);
+      } else {
+        // Standard contradiction analysis
+        const majors = issues.filter(x=>x.severity==='major').length;
+        const milds = issues.filter(x=>x.severity==='mild').length;
+        if (majors || milds) {
+          if (majors) {
+            cls = 'red';
+            title = 'Assessment Review - Issues Found';
+            sub = `Found ${majors} major issue${majors>1?'s':''} and ${milds} minor issue${milds>1?'s':''}.`;
+          } else {
+            cls = 'yellow';
+            title = 'Assessment Review - Minor Issues';
+            sub = `Found ${milds} minor issue${milds>1?'s':''}.`;
           }
-        }
-        if (ok){
-          issues.push({id:rule.id,severity:rule.severity,message:rule.message, dims:rule.dims||[], subs:rule.subs||[]});
+          displayMessages = issues.map(issue => issue.message);
         }
       }
-      // 2) Gradient checks (pairwise gaps ≥2 between dimensions) -> mild
-      const dims = ORDER;
-      for (let a=0;a<dims.length;a++){
-        for (let b=a+1;b<dims.length;b++){
-          const da=dims[a], db=dims[b];
-          const va=+dimScores[da]||0, vb=+dimScores[db]||0;
-          if (Math.abs(va-vb)>=2){
-            const msg = createGapMessage(da, va, db, vb);
-            issues.push({id:`Gap_${da}_${db}`,severity:"mild",message:msg,dims:[da,db],subs:[]});
-          }
-        }
-      }
+      
+      return (
+        <div className="modal-bg" onClick={onClose}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div className={`modal-h ${cls === 'blue' ? 'bg-blue-50' : cls}`}>
+              {title}
+            </div>
+            <div className="px-4 pt-2 pb-1 text-sm text-gray-700">{sub}</div>
+            <div className="p-4 max-h-[60vh] overflow-auto">
+              {displayMessages.length > 0 ? (
+                <ul className="space-y-4">
+                  {displayMessages.map((message,i)=>(
+                    <li key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                      <span className="text-blue-600 font-bold text-lg">•</span>
+                      <div className="text-sm text-gray-800 leading-relaxed" dangerouslySetInnerHTML={{__html: message.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<em>$1</em>')}}></div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-sm text-gray-700">No issues detected. Your scoring appears well-balanced across the four dimensions.</div>
+              )}
+              
+              <div className="mt-6 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                <div className="font-semibold mb-1">Methodological Note:</div>
+                Numerical values (0-4) are used for computational purposes only. Assessment is based on qualitative evidence levels: None, Minimal, Moderate, Significant, Transformative.
+              </div>
+            </div>
+            <div className="p-4 border-t text-right">
+              <button onClick={onClose} className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">OK</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
-      // Aggregate flags per dimension and per sub
-      const flagsDim = { Cognitive:null, Irreversibility:null, Disruption:null, Generative:null };
-      const flagsSub = {}; // { subKey: {severity, messages[]} }
-      const rank = {mild:1,major:2};
-      const bump = (curr,sev)=> !curr?sev:(rank[sev]>rank[curr]?sev:curr);
+    // ===== Educational Analysis =====
+    function getEducationalAnalysis(caseName, example) {
+      const scores = example.scores;
+      
+      const insights = {
+        "ASBM": [
+          `**Conceptual Innovation Pattern**: High Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}) scores indicate significant paradigmatic impact.`,
+          `**Key Insight**: ASBM represents conceptual innovation - the creative integration of existing technologies (OTH radar, SAR satellites, MRBMs, MIRV warheads) to create capabilities that fundamentally altered naval operational art.`,
+          `**Significance**: Demonstrates how conceptual breakthroughs can achieve transformation through intellectual integration rather than technological advancement, showing that military advantage can emerge from thinking differently about available tools.`
+        ],
+        "Military Robotics": [
+          `**Modernization Pattern**: Higher Generative (${scores.Generative}) score with lower Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) indicating capability extension without paradigmatic change.`,
+          `**Key Insight**: Military robotics extends human capabilities and opens new operational possibilities without fundamentally changing military doctrine or strategic thinking.`,
+          `**Significance**: Illustrates how advanced technology can create new capabilities while operating within established conceptual frameworks.`
+        ],
+        "Blitzkrieg": [
+          `**Innovation Pattern**: Maximum or near-maximum scores across Cognitive (${scores.Cognitive}), Disruption (${scores.Disruption}), and Generative (${scores.Generative}) dimensions.`,
+          `**Key Insight**: Blitzkrieg represents complete paradigmatic transformation - making attrition warfare assumptions untenable while spawning numerous follow-on operational innovations.`,
+          `**Significance**: Exemplifies rare cases of total systemic military revolution that redefines warfare itself.`
+        ]
+      };
+      
+      return insights[caseName] || [
+        `**Scoring Pattern**: This case shows scores of C:${scores.Cognitive}, I:${scores.Irreversibility}, D:${scores.Disruption}, G:${scores.Generative} across the four dimensions.`,
+        `**Classification**: Represents an example of ${classify(scores)} in military development.`,
+        `**Framework Application**: Demonstrates how the four-dimensional framework distinguishes between different types of military change.`
+      ];
+    }
 
-      for (let k=0;k<issues.length;k++){
-        const it = issues[k];
-        // dimension flags
-        for (let d of it.dims||[]){
-          flagsDim[d] = bump(flagsDim[d], it.severity);
-          // attach to each slider under that dimension
-          for (let sk of SUB_KEYS[d]) {
-            if (!flagsSub[sk]) flagsSub[sk]={severity:null,messages:[]};
-            flagsSub[sk].severity = bump(flagsSub[sk].severity, it.severity);
-            flagsSub[sk].messages.push(it.message);
-          }
-        }
-        // sub-specific flags
-        for (let s of it.subs||[]){
-          if (!flagsSub[s]) flagsSub[s]={severity:null,messages:[]};
-          flagsSub[s].severity = bump(flagsSub[s].severity, it.severity);
-          flagsSub[s].messages.push(it.message);
-          // also mark parent dimension for that sub
-          const parentDim = Object.keys(SUBS).find(dim => SUBS[dim].some(x=>x.k===s));
-          if (parentDim) flagsDim[parentDim] = bump(flagsDim[parentDim], it.severity);
-        }
-      }
-
-      return { issues, flagsDim, flagsSub };
+    // ===== Sub Panel with Qualitative Labels =====
+    function SubPanel({dim, values, setValue, locked=false}) {
+      const items = SUBS[dim];
+      const rated = items.filter(it => (values[it.k]||0) > 0).length;
+      const agg = meanToInt(items.map(it => values[it.k]||0));
+      const dMeta = DIMS.find(d=>d.key===dim);
+      
+      return (
+        <div className="panel">
+          <div className="panel-h">
+            <div className="dim-title"><span>{dMeta.label}</span></div>
+            <div className="hint">{dMeta.def}</div>
+            <div className="text-sm text-gray-600 mt-1">{rated}/4 rated • Score: {getLabel(agg)} ({agg})</div>
+          </div>
+          <div className="panel-b">
+            {items.map(it=>(
+              <div key={it.k} className="item-row">
+                <div className="flex items-center justify-between">
+                  <div className="font-medium text-sm">
+                    <span>{it.name}</span>
+                  </div>
+                  <div className="text-xs text-gray-600">{getLabel(values[it.k]||0)}</div>
+                </div>
+                <div className="hint">{it.hint}</div>
+                {locked ? (
+                  <>
+                    <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
+                    <div className="text-[10px] text-gray-500 mt-1">Locked from historical case</div>
+                  </>
+                ) : (
+                  <div className="mt-3">
+                    <input type="range" min="0" max="4" value={values[it.k]||0}
+                      onChange={e=> setValue(it.k, Number(e.target.value))}
+                      className="w-full"/>
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      {LABELS.map((label, idx) => (
+                        <span key={idx} className={values[it.k] === idx ? 'font-bold text-blue-600' : ''}>{label}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
     }
 
     // ===== Charts =====
@@ -307,8 +349,8 @@
                 pointRadius: 3
               },
               {
-                label: 'Threshold (C≥2, I≥2)',
-                data: [2,2,2,2],
+                label: 'Innovation Threshold (C≥3, I≥3)',
+                data: [3,3,3,3],
                 fill: false,
                 borderColor: 'rgba(107,114,128,0.8)',
                 borderDash: [6, 4],
@@ -326,7 +368,12 @@
                 beginAtZero: true,
                 min: 0,
                 max: 4,
-                ticks: { stepSize: 1 }
+                ticks: { 
+                  stepSize: 1,
+                  callback: function(value) {
+                    return getLabel(value);
+                  }
+                }
               }
             }
           }
@@ -341,84 +388,46 @@
       const ref=useRef(null), chart=useRef(null);
       const values = useMemo(()=> ORDER.map(k => +scores[k]||0), [scores]);
       const colorFor=v=> v>=3?'rgba(22,163,74,0.85)':v>=2?'rgba(234,179,8,0.95)':'rgba(239,68,68,0.95)';
+      
       useEffect(()=>{
         const ctx=ref.current.getContext('2d');
         if(chart.current) chart.current.destroy();
         chart.current=new Chart(ctx,{
           type:'bar',
-          data:{labels:DIMS.map(d=>d.label),
-                datasets:[{label:'Dimension Scores',data:values,backgroundColor:values.map(colorFor)}]},
-          options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-                   scales:{y:{beginAtZero:true,min:0,max:4,ticks:{stepSize:1}}}}
+          data:{
+            labels:DIMS.map(d=>d.label),
+            datasets:[{
+              label:'Dimension Scores',
+              data:values,
+              backgroundColor:values.map(colorFor)
+            }]
+          },
+          options:{
+            responsive:true,
+            maintainAspectRatio:false,
+            plugins:{legend:{display:false}},
+            scales:{
+              y:{
+                beginAtZero:true,
+                min:0,
+                max:4,
+                ticks:{
+                  stepSize:1,
+                  callback: function(value) {
+                    return getLabel(value);
+                  }
+                }
+              }
+            }
+          }
         });
         return ()=> chart.current && chart.current.destroy();
       },[values]);
       return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
     }
 
-    // ===== Flag icon =====
-    function FlagIcon({sev, children}) {
-      if (!sev) return null;
-      const cls = sev==='major'?'flag-icon flag-major':'flag-icon flag-mild';
-      return (
-        <span className={"tooltip"}>
-          <span className={cls}>!</span>
-          {children? <span className="tip">{children}</span> : null}
-        </span>
-      );
-    }
-
-    // ===== Sub panel (real-time flags) =====
-    function SubPanel({dim, values, setValue, flagsSub, locked=false}) {
-      const items = SUBS[dim];
-      const rated = items.filter(it => (values[it.k]||0) > 0).length;
-      const agg = meanToInt(items.map(it => values[it.k]||0));
-      const dMeta = DIMS.find(d=>d.key===dim);
-      return (
-        <div className="panel">
-          <div className="panel-h">
-            <div className="dim-title"><span>{dMeta.label}</span></div>
-            <div className="hint">{dMeta.def}</div>
-            <div className="text-sm text-gray-600 mt-1">{rated}/4 rated</div>
-          </div>
-          <div className="panel-b">
-            {items.map(it=>{
-              const fs = flagsSub[it.k];
-              return (
-                <div key={it.k} className="item-row">
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium text-sm flex items-center gap-1">
-                      <span>{it.name}</span>
-                      <FlagIcon sev={fs?.severity}>
-                        {(fs?.messages||[]).join(" ")}
-                      </FlagIcon>
-                    </div>
-                    <div className="text-xs text-gray-600">{values[it.k]||0}/4</div>
-                  </div>
-                  <div className="hint">{it.hint}</div>
-                  {locked ? (
-                    <>
-                      <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
-                      <div className="text-[10px] text-gray-500 mt-1">Locked from historical case</div>
-                    </>
-                  ) : (
-                    <input type="range" min="0" max="4" value={values[it.k]||0}
-                      onChange={e=> setValue(it.k, Number(e.target.value))}
-                      className="w-full mt-2"/>
-                  )}
-                </div>
-              );
-            })}
-            <div className="mt-3 text-sm">
-              <span className="font-medium">Derived {dim} score:</span> {agg}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ===== Historical Examples (real-time checks) =====
-    function HistoricalExamples({setScores,setMeta,setFlagsDim,setFlagsSub,setIssues}){
+    // ===== Historical Examples =====
+    function HistoricalExamples({setScores,setMeta,setSubScores,setIssues}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
       const [subs,setSubs]=useState(null);
@@ -445,10 +454,8 @@
       function runEval(nextSubs){
         const dim = aggregate(nextSubs);
         setScores(dim);
-        const {issues,flagsDim,flagsSub} = evaluateContradictions(dim, nextSubs);
-        setIssues(issues);
-        setFlagsDim(flagsDim);
-        setFlagsSub(flagsSub);
+        setSubScores(nextSubs);
+        setIssues([]);
       }
 
       function loadFromSelection(v){
@@ -464,7 +471,7 @@
       function setValue(k,v){
         setSubs(function(prev){
           const next = Object.assign({}, prev, { [k]: v });
-          runEval(next); // real-time nagging
+          runEval(next);
           return next;
         });
       }
@@ -475,8 +482,8 @@
         <div className="space-y-6">
           <div>
             <h2 className="text-2xl font-semibold">Historical Examples</h2>
-            <p className="italic text-sm text-gray-600 mt-1">
-              Select a case. Moving any slider immediately triggers inconsistency checks.
+            <p className="text-sm text-gray-600 mt-1">
+              Select a case to explore how different types of military changes manifest across the four dimensions.
             </p>
           </div>
 
@@ -496,7 +503,7 @@
                   const key = SUB_KEYS[dim][i];
                   pick[key] = subs && (key in subs) ? subs[key] : ex.scores[dim] || 0;
                 }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} flagsSub={{}} locked={false} />;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} />;
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
                 <div className="font-semibold mb-1">Explanation & References</div>
@@ -509,8 +516,8 @@
       );
     }
 
-    // ===== Test Your Idea (real-time checks) =====
-    function TestYourIdea({setScores,setMeta,setFlagsDim,setFlagsSub,setIssues}){
+    // ===== Test Your Idea (enhanced) =====
+    function TestYourIdea({setScores,setMeta,setSubScores,setIssues}){
       const [label,setLabel]=useState("");
       const [sub,setSub]=useState({
         d1:0,d2:0,d3:0,d4:0,
@@ -531,16 +538,14 @@
       function runEval(nextSub){
         const dim = aggregate(nextSub);
         setScores(dim);
-        const {issues,flagsDim,flagsSub} = evaluateContradictions(dim, nextSub);
-        setIssues(issues);
-        setFlagsDim(flagsDim);
-        setFlagsSub(flagsSub);
+        setSubScores(nextSub);
+        setIssues([]);
       }
 
       function setValue(k,v){
         setSub(function(prev){
           const next = Object.assign({}, prev, { [k]: v });
-          runEval(next); // real-time nagging
+          runEval(next);
           return next;
         });
       }
@@ -550,28 +555,30 @@
       return (
         <div className="space-y-6">
           <div className="panel panel-b">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Test Your Idea</h2>
-                <p className="italic text-sm text-gray-600">
-                  Move the four sub-indicator sliders under each dimension. The tool averages them to derive C/I/D/G. Justify choices outside the tool.
+                <p className="text-sm text-gray-600 mt-2">
+                  Assess your innovation concept across the four dimensions. Use the sliders to indicate the likely manifestation level for each sub-indicator. Justify your assessments with evidence outside this tool.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium">Case title</label>
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-gray-700">Innovation Concept Title</label>
                 <input value={label} onChange={e=>setLabel(e.target.value)}
-                       className="border rounded-md px-3 py-2 text-sm w-72" placeholder="e.g., AI-enabled fires deconfliction"/>
+                       className="case-title-input w-80" 
+                       placeholder="e.g., AI-enabled autonomous logistics coordination"/>
+                {!label && <div className="text-xs text-blue-600">Enter a descriptive title for your innovation concept</div>}
               </div>
             </div>
 
-            <div className="mt-5 grid md:grid-cols-2 gap-6">
+            <div className="mt-6 grid md:grid-cols-2 gap-6">
               {["Disruption","Irreversibility","Cognitive","Generative"].map(dim=>{
                 const pick = {};
                 for (let i=0;i<SUB_KEYS[dim].length;i++){
                   const key = SUB_KEYS[dim][i];
                   pick[key] = sub[key];
                 }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} flagsSub={{}} locked={false} />;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} />;
               })}
             </div>
           </div>
@@ -579,20 +586,16 @@
       );
     }
 
-    // ===== Charts panel (dimension flags + modal launcher) =====
-    function ChartsPanel({scores,meta,flagsDim,openModal}){
-      const flagChip=(sev,tip)=> sev
-        ? <span className="tooltip"><span className={sev==='major'?'flag-icon flag-major':'flag-icon flag-mild'}>!</span><span className="tip">{tip||''}</span></span>
-        : null;
-
+    // ===== Charts panel =====
+    function ChartsPanel({scores,meta,openModal}){
       return (
         <div className="grid md:grid-cols-2 gap-6">
           <div className="panel">
-            <div className="panel-h">Radar</div>
+            <div className="panel-h">Radar Chart</div>
             <div className="panel-b"><RadarChart scores={scores}/></div>
           </div>
           <div className="panel">
-            <div className="panel-h">Bar (color-coded)</div>
+            <div className="panel-h">Bar Chart (Qualitative Scale)</div>
             <div className="panel-b"><BarChart scores={scores}/></div>
           </div>
           <div className="md:col-span-2 panel panel-b text-sm">
@@ -600,18 +603,17 @@
               <div><span className="font-semibold">Index:</span> {indexScore(scores)}</div>
               <div><span className="font-semibold">Class:</span> {classify(scores)}</div>
               <div>{thresholdOK(scores)
-                ? <span className="badge bg-green-100 text-green-800">Threshold met (C≥2 & I≥2)</span>
-                : <span className="badge bg-yellow-100 text-yellow-800">Threshold not met</span>}</div>
+                ? <span className="badge bg-green-100 text-green-800">Innovation Threshold Met (C≥3 & I≥3)</span>
+                : <span className="badge bg-yellow-100 text-yellow-800">Innovation Threshold Not Met</span>}</div>
               {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
-              <button onClick={openModal} className="ml-auto px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700">
-                Review & Explain Flags
+              <button onClick={openModal} className="ml-auto px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                View Analysis
               </button>
             </div>
             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
               {DIMS.map(d=>(
-                <div key={d.key} className="text-sm flex items-center gap-1">
-                  <span className="font-semibold">{d.label}</span>
-                  {flagChip(flagsDim[d.key], `Inconsistencies involve ${d.label}. Open the review for details.`)}
+                <div key={d.key} className="text-sm">
+                  <span className="font-semibold">{d.label}:</span> {getLabel(scores[d.key] || 0)} ({scores[d.key] || 0})
                 </div>
               ))}
             </div>
@@ -620,265 +622,12 @@
       );
     }
 
-    // ===== Enhanced Modal with context-aware messaging =====
-    function IssuesModal({issues,meta,onClose}){
-      if(!issues) return null;
-      const majors = issues.filter(x=>x.severity==='major').length;
-      const milds  = issues.filter(x=>x.severity==='mild').length;
-      
-      // Check if this is a historical example vs user input
-      const isHistoricalExample = meta && meta.ex && EXAMPLES[meta.label];
-      
-      let cls='green', title='Assessment Review', sub='Your scoring appears consistent across dimensions.';
-      
-      if (isHistoricalExample) {
-        // Always show educational analysis for historical examples
-        cls='blue'; 
-        title='Historical Case Analysis'; 
-        sub=`Analyzing the scoring patterns for ${meta.label}:`; 
-      } else if (majors || milds) {
-        // For user inputs - inconsistency checking
-        if (majors) { 
-          cls='red'; 
-          title='Assessment Review - Issues Found'; 
-          sub=`Found ${majors} major inconsistenc${majors>1?'ies':'y'} and ${milds} minor inconsistenc${milds>1?'ies':'y'}. Review the explanations below and consider adjusting your scores.`; 
-        } else { 
-          cls='yellow'; 
-          title='Assessment Review - Minor Issues'; 
-          sub=`Found ${milds} minor inconsistenc${milds>1?'ies':'y'}. These may indicate opportunities to refine your assessment.`; 
-        }
-      }
-      
-      // For historical examples, always provide educational content
-      let displayMessages = [];
-      if (isHistoricalExample) {
-        displayMessages = getEducationalAnalysis(meta.label, meta.ex);
-      } else if (majors || milds) {
-        displayMessages = issues.map(issue => issue.message);
-      }
-      
-      return (
-        <div className="modal-bg" onClick={onClose}>
-          <div className="modal" onClick={e=>e.stopPropagation()}>
-            <div className={`modal-h ${cls === 'blue' ? 'bg-blue-50 text-blue-800' : cls}`}>
-              <style>{`.modal-h.bg-blue-50 { background: #eff6ff; color: #1e40af; }`}</style>
-              {title}
-            </div>
-            <div className="px-4 pt-2 pb-1 text-sm text-gray-700">{sub}</div>
-            <div className="p-4 max-h-[60vh] overflow-auto">
-              {isHistoricalExample || (majors||milds) ? (
-                <ul className="space-y-4">
-                  {displayMessages.map((message,i)=>(
-                    <li key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <span className={isHistoricalExample ? 'text-blue-600 font-bold text-lg' : (issues[i]?.severity==='major'?'flag-icon flag-major':'flag-icon flag-mild')}>
-                        {isHistoricalExample ? '•' : '!'}
-                      </span>
-                      <div className="text-sm text-gray-800 leading-relaxed">{message}</div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-sm text-gray-700">No inconsistencies detected. Your scoring appears well-balanced across the four dimensions.</div>
-              )}
-              {isHistoricalExample && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
-                  <div className="font-semibold mb-1">Framework Learning:</div>
-                  This scoring pattern illustrates how {getInnovationType(meta.label)} manifests across the four dimensions, helping you understand the distinctions between upgradation, modernization, and genuine innovation.
-                </div>
-              )}
-            </div>
-            <div className="p-4 border-t text-right">
-              <button onClick={onClose} className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">OK</button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // ===== Comprehensive educational analysis for all historical cases =====
-    function getEducationalAnalysis(caseName, example) {
-      const scores = example.scores;
-      const analysis = [];
-      
-      // Define educational insights for each historical case
-      const insights = {
-        "AI-Targeting": [
-          `**Modernization Pattern**: Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) remain low while Generative (${scores.Generative}) shows moderate development.`,
-          `**Key Insight**: AI-targeting accelerates existing targeting processes without fundamentally changing military doctrine or forcing enemies to abandon current methods.`,
-          `**Significance**: This demonstrates how technological improvements can enhance capabilities while operating within established paradigmatic frameworks.`
-        ],
-        "AIP Submarine": [
-          `**Balanced Modernization**: Moderate scores in Irreversibility (${scores.Irreversibility}) and Generative (${scores.Generative}) with lower Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}).`,
-          `**Key Insight**: AIP technology extends submarine endurance and creates new patrol patterns, requiring some organizational adaptation while operating within existing submarine warfare paradigms.`,
-          `**Significance**: Shows how incremental technological advances can create meaningful operational improvements without paradigmatic transformation.`
-        ],
-        "ASBM": [
-          `**Innovation Pattern**: High Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) scores indicate significant paradigmatic impact.`,
-          `**Key Insight**: Anti-ship ballistic missiles force fundamental rethinking of carrier operations and naval power projection while compelling adversaries to radically alter existing methods.`,
-          `**Significance**: Demonstrates how technological innovation can achieve genuine military innovation by challenging core operational assumptions.`
-        ],
-        "Barbed Wire": [
-          `**Innovation Pattern**: Balanced high scores across Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}).`,
-          `**Key Insight**: Barbed wire made existing offensive operational assumptions untenable, forcing fundamental revision of tactical frameworks and creating institutional resistance to reversion.`,
-          `**Significance**: Illustrates how simple technologies can achieve profound military transformation by fundamentally altering tactical possibilities.`
-        ],
-        "Blitzkrieg": [
-          `**Transformational Innovation**: Maximum or near-maximum scores across all dimensions, with Cognitive (${scores.Cognitive}), Disruption (${scores.Disruption}), and Generative (${scores.Generative}) at 4.`,
-          `**Key Insight**: Blitzkrieg represents complete paradigmatic transformation - making attrition warfare assumptions untenable while spawning numerous follow-on operational innovations.`,
-          `**Significance**: Exemplifies rare cases of total systemic military revolution that redefines warfare itself.`
-        ],
-        "Carrier Aviation": [
-          `**Complete Transformation**: Maximum scores (4) across all four dimensions indicate total paradigmatic revolution.`,
-          `**Key Insight**: Carrier aviation displaced battleship-centric thinking, created irreversible organizational changes, and enabled previously impossible global power projection concepts.`,
-          `**Significance**: Represents the gold standard for transformational military innovation with lasting impact across all aspects of naval warfare.`
-        ],
-        "Cyber Warfare": [
-          `**Emerging Modernization**: Moderate scores across all dimensions with highest Generative (${scores.Generative}) indicating new capability development.`,
-          `**Key Insight**: Cyber warfare creates new operational domains while operating alongside rather than replacing traditional military paradigms.`,
-          `**Significance**: Shows how new domains can emerge without immediately achieving full paradigmatic transformation.`
-        ],
-        "Deep Battle/Reconnaissance Strike Complex": [
-          `**Innovation Pattern**: High Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) with strong Generative (${scores.Generative}) effects.`,
-          `**Key Insight**: Deep Battle doctrine made frontal assault assumptions untenable and established operational art as permanent military thinking.`,
-          `**Significance**: Demonstrates how doctrinal innovations can achieve lasting transformation even when technological irreversibility is moderate.`
-        ],
-        "F-16 Block D": [
-          `**Pure Upgradation**: Minimal scores across all dimensions with only slight Irreversibility (${scores.Irreversibility}) and Generative (${scores.Generative}) effects.`,
-          `**Key Insight**: Block upgrades enhance performance within existing air superiority paradigms without challenging operational assumptions.`,
-          `**Significance**: Illustrates the distinction between technological improvement and genuine innovation.`
-        ],
-        "Hypersonics": [
-          `**Limited Modernization**: Low scores across most dimensions with moderate Generative (${scores.Generative}) potential.`,
-          `**Key Insight**: Hypersonic weapons accelerate existing missile paradigms without fundamentally challenging strategic assumptions about deterrence.`,
-          `**Significance**: Shows how advanced technology doesn't automatically translate to military innovation without paradigmatic change.`
-        ],
-        "Information Warfare": [
-          `**Innovation Pattern**: Balanced high scores with maximum Generative (${scores.Generative}) effects demonstrating broad impact.`,
-          `**Key Insight**: Information warfare challenges command and control assumptions while transcending traditional domain boundaries.`,
-          `**Significance**: Exemplifies how conceptual innovations can achieve transformation through cross-domain spillover effects.`
-        ],
-        "Lasers": [
-          `**Early Modernization**: Low scores across most dimensions indicating limited paradigmatic impact despite technological sophistication.`,
-          `**Key Insight**: Directed energy systems challenge some defensive assumptions but operate within existing frameworks with limited institutional embedding.`,
-          `**Significance**: Demonstrates that cutting-edge technology requires paradigmatic integration to achieve innovation status.`
-        ],
-        "Machine Gun": [
-          `**Complete Innovation**: Maximum scores across Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}) with strong Generative (${scores.Generative}) effects.`,
-          `**Key Insight**: Machine guns made linear tactics completely obsolete while creating irreversible organizational dependencies and forcing fundamental reconceptualization of infantry warfare.`,
-          `**Significance**: Classic example of technological innovation achieving complete military transformation.`
-        ],
-        "Military Robotics": [
-          `**Modernization Pattern**: Higher Generative (${scores.Generative}) score with lower Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) indicating capability extension without paradigmatic change.`,
-          `**Key Insight**: Military robotics extends human capabilities and opens new operational possibilities without fundamentally changing military doctrine or strategic thinking.`,
-          `**Significance**: Illustrates how advanced technology can create new capabilities while operating within established conceptual frameworks.`
-        ],
-        "Minie Ball/Conoidal Bullet": [
-          `**Innovation Pattern**: High and balanced scores across Cognitive (${scores.Cognitive}), Irreversibility (${scores.Irreversibility}), and Disruption (${scores.Disruption}).`,
-          `**Key Insight**: The Minie ball made Napoleonic linear tactics untenable and forced fundamental questioning of infantry effectiveness assumptions.`,
-          `**Significance**: Shows how seemingly simple technological improvements can trigger comprehensive tactical transformation.`
-        ],
-        "Multi-Domain Battle Concept": [
-          `**Conceptual Modernization**: Moderate Generative (${scores.Generative}) with lower other dimensions indicating incomplete paradigmatic embedding.`,
-          `**Key Insight**: Multi-Domain Operations challenges traditional service boundaries but remains conceptually emergent with incomplete institutional adoption.`,
-          `**Significance**: Demonstrates how military concepts may require time and institutional adaptation to achieve full innovative impact.`
-        ],
-        "Network-Centric Warfare": [
-          `**Conceptual Innovation**: High Cognitive (${scores.Cognitive}) and maximum Generative (${scores.Generative}) with moderate Irreversibility (${scores.Irreversibility}) indicating concept-led transformation.`,
-          `**Key Insight**: NCW represents conceptual innovation preceding full technological capability, irreversibly setting military thinking toward networked operations.`,
-          `**Significance**: Illustrates how powerful concepts can achieve innovative status even when implementation lags behind vision.`
-        ],
-        "Nuclear Weapons": [
-          `**Total Transformation**: Maximum scores (4) across all dimensions representing complete paradigmatic revolution.`,
-          `**Key Insight**: Nuclear weapons fundamentally redefined warfare's purpose, strategic logic, and international relations while creating irreversible institutional dependencies.`,
-          `**Significance**: The definitive example of complete military innovation with permanent global impact.`
-        ],
-        "PGMs": [
-          `**Targeted Modernization**: Low Cognitive (${scores.Cognitive}) with moderate other dimensions indicating enhanced capability within existing paradigms.`,
-          `**Key Insight**: Precision-guided munitions enable new targeting concepts and create new capability families while leaving strategic paradigms largely intact.`,
-          `**Significance**: Shows how technological precision can create significant operational improvements without fundamental conceptual transformation.`
-        ],
-        "Radar": [
-          `**Innovation Pattern**: Moderate Cognitive (${scores.Cognitive}) with high Irreversibility (${scores.Irreversibility}), Disruption (${scores.Disruption}), and Generative (${scores.Generative}) scores.`,
-          `**Key Insight**: Radar transformed air warfare by making surprise attacks untenable while creating permanent organizational changes in air defense thinking.`,
-          `**Significance**: Demonstrates how detection technologies can achieve innovation through operational transformation rather than conceptual revolution.`
-        ],
-        "Stealth": [
-          `**Limited Modernization**: Moderate scores across dimensions with minimal Cognitive (${scores.Cognitive}) impact indicating capability improvement within existing paradigms.`,
-          `**Key Insight**: Stealth technology improves existing air warfare capabilities while operating within established operational frameworks.`,
-          `**Significance**: Illustrates how sophisticated technology can enhance military effectiveness without achieving paradigmatic transformation.`
-        ],
-        "Stirrups": [
-          `**Complete Transformation**: Maximum scores (4) across all dimensions indicating total paradigmatic revolution.`,
-          `**Key Insight**: Stirrups enabled shock cavalry tactics while creating irreversible social and military organizational changes, including feudal military structures.`,
-          `**Significance**: Historical example of how simple technological innovation can achieve complete military and social transformation.`
-        ],
-        "Stosstrupp Tactics": [
-          `**Innovation Pattern**: Maximum Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) with high Irreversibility (${scores.Irreversibility}) and Generative (${scores.Generative}) scores.`,
-          `**Key Insight**: Storm troop tactics made linear assault assumptions untenable while embedding infiltration principles and opening conceptual space for combined arms thinking.`,
-          `**Significance**: Shows how tactical innovations can achieve strategic-level transformation through fundamental reconceptualization of combat methods.`
-        ],
-        "T-72B3M Main Battle Tank": [
-          `**Pure Upgradation**: Minimal scores across all dimensions indicating performance enhancement without paradigmatic change.`,
-          `**Key Insight**: Modernized tank systems improve capabilities within existing armored warfare paradigms without challenging operational assumptions.`,
-          `**Significance**: Clear example of upgradation - technological improvement that enhances existing capabilities without transformation.`
-        ],
-        "Tank": [
-          `**Complete Innovation**: Maximum scores (4) across all dimensions representing total paradigmatic transformation.`,
-          `**Key Insight**: Tanks made trench warfare assumptions untenable, created irreversible mechanized dependencies, and fundamentally reconceptualized land warfare around mobility and combined arms.`,
-          `**Significance**: Definitive example of technological innovation achieving complete military transformation with permanent institutional impact.`
-        ],
-        "Telegraph": [
-          `**Complete Transformation**: Maximum scores (4) across all dimensions indicating total paradigmatic revolution.`,
-          `**Key Insight**: Telegraph made courier-based command assumptions untenable while creating irreversible dependencies on communication networks and enabling real-time command coordination.`,
-          `**Significance**: Historical example of communication technology achieving complete transformation of military command and control paradigms.`
-        ],
-        "UAVs": [
-          `**Modernization Pattern**: Low Cognitive (${scores.Cognitive}) and Disruption (${scores.Disruption}) with moderate Irreversibility (${scores.Irreversibility}) and higher Generative (${scores.Generative}) scores.`,
-          `**Key Insight**: UAVs extend existing reconnaissance and strike paradigms while creating new operational concepts without fundamentally challenging core military assumptions.`,
-          `**Significance**: Illustrates how unmanned systems can create significant new capabilities while operating within established doctrinal frameworks.`
-        ]
-      };
-      
-      return insights[caseName] || [
-        `**Scoring Pattern**: This case shows ${getScorePattern(scores)} across the four dimensions.`,
-        `**Classification**: Represents an example of ${getInnovationType(caseName)} in military development.`,
-        `**Framework Application**: Demonstrates how the four-dimensional framework distinguishes between different types of military change.`
-      ];
-    }
-
-    function getScorePattern(scores) {
-      const vals = [scores.Cognitive, scores.Irreversibility, scores.Disruption, scores.Generative];
-      const high = vals.filter(v => v >= 3).length;
-      const moderate = vals.filter(v => v === 2).length;
-      const low = vals.filter(v => v <= 1).length;
-      
-      if (high >= 3) return "high scores";
-      if (moderate >= 2) return "moderate scores";
-      if (high >= 1 && moderate >= 1) return "mixed high and moderate scores";
-      return "low to moderate scores";
-    }
-
-    function getInnovationType(caseName) {
-      const ex = EXAMPLES[caseName];
-      if (!ex) return "military change";
-      
-      const scores = ex.scores;
-      const vals = [scores.Cognitive, scores.Irreversibility, scores.Disruption, scores.Generative];
-      const strong = vals.filter(v => v >= 3).length;
-      
-      if (strong >= 3) return "transformational innovation";
-      if (strong >= 2) return "innovation"; 
-      if (vals.some(v => v >= 2)) return "modernization";
-      return "upgradation";
-    }
-
     // ===== App =====
     function App(){
-      const [tab,setTab]=useState('examples');
+      const [tab,setTab]=useState('test');
       const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
       const [meta,setMeta]=useState({label:""});
-      const [flagsDim,setFlagsDim]=useState({ Cognitive:null, Irreversibility:null, Disruption:null, Generative:null });
-      const [flagsSub,setFlagsSub]=useState({});
+      const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
       const [modalOpen,setModalOpen]=useState(false);
 
@@ -887,14 +636,14 @@
 
       return (
         <main>
-          <header className="text-center space-y-1 mb-4">
+          <header className="text-center space-y-1 mb-6">
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">
               Military Innovation Assessment Framework
             </h1>
             <h2 className="text-xl md:text-2xl font-bold text-gray-800">
               A Four-Dimensional Recognition Tool
             </h2>
-            <div className="italic text-md md:text-lg text-gray-700">
+            <div className="text-md md:text-lg text-gray-700">
               Based on "Military Innovation: Between the Knowns and the Unknowns"
             </div>
             <div className="text-xs text-gray-500 mt-1">(c) Manabrata Guha, 2025</div>
@@ -902,55 +651,59 @@
 
           <div className="big-tabs">
             {[
-              {k:'examples',label:'Historical Examples'},
-              {k:'charts',label:'Charts'},
-              {k:'test',label:'Test Your Idea'}
+              {k:'test',label:'Test Your Idea'},
+              {k:'examples',label:'Historical Examples'}
             ].map(t=>(
               <button key={t.k} onClick={()=>setTab(t.k)}
                 className={'big-tab ' + (tab===t.k?'big-tab-active':'big-tab-inactive')}>{t.label}</button>
             ))}
           </div>
 
-          <div className="panel panel-b text-sm mb-4">
-            <div className="font-semibold mb-2">Scoring Legend</div>
-            <ul className="list-disc list-inside text-gray-700 space-y-1">
-              <li><b>0</b> = None</li>
-              <li><b>1</b> = Minimal impact</li>
-              <li><b>2</b> = Limited but measurable impact</li>
-              <li><b>3</b> = Significant impact</li>
-              <li><b>4</b> = Transformative impact</li>
-            </ul>
+          <div className="panel panel-b text-sm mb-6">
+            <div className="font-semibold mb-2">Assessment Scale</div>
+            <div className="grid grid-cols-5 gap-2 text-center">
+              {LABELS.map((label, idx) => (
+                <div key={idx} className="p-2 bg-gray-50 rounded">
+                  <div className="font-medium">{label}</div>
+                  <div className="text-xs text-gray-600">({idx})</div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 text-xs text-gray-600">
+              <strong>Methodological Note:</strong> Numerical values (0-4) are used for computational purposes only. Assessment is based on qualitative evidence levels.
+            </div>
           </div>
 
           <section className="space-y-6">
+            {tab==='test' && (
+              <>
+                <TestYourIdea
+                  setScores={setScores}
+                  setMeta={setMeta}
+                  setSubScores={setSubScores}
+                  setIssues={setIssues}
+                />
+                <ChartsPanel scores={scores} meta={meta} openModal={openModal}/>
+              </>
+            )}
             {tab==='examples' && (
               <>
                 <HistoricalExamples
                   setScores={setScores}
                   setMeta={setMeta}
-                  setFlagsDim={setFlagsDim}
-                  setFlagsSub={setFlagsSub}
+                  setSubScores={setSubScores}
                   setIssues={setIssues}
                 />
-                <ChartsPanel scores={scores} meta={meta} flagsDim={flagsDim} openModal={openModal}/>
+                <ChartsPanel scores={scores} meta={meta} openModal={openModal}/>
               </>
             )}
-            {tab==='charts' && (<ChartsPanel scores={scores} meta={meta} flagsDim={flagsDim} openModal={openModal}/>)}
-            {tab==='test' && (<>
-              <TestYourIdea
-                setScores={setScores}
-                setMeta={setMeta}
-                setFlagsDim={setFlagsDim}
-                setFlagsSub={setFlagsSub}
-                setIssues={setIssues}
-              />
-              <ChartsPanel scores={scores} meta={meta} flagsDim={flagsDim} openModal={openModal}/>
-            </>)}
           </section>
 
-          <footer className="mt-10 text-center text-xs text-gray-500">Single-file. Copy into your repo and open in a browser.</footer>
+          <footer className="mt-10 text-center text-xs text-gray-500">
+            Military Innovation Assessment Framework - Recognition tool for systematic analysis of military change patterns.
+          </footer>
 
-          {modalOpen && <IssuesModal issues={issues} meta={meta} onClose={closeModal}/>}
+          {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={closeModal}/>}
         </main>
       );
     }
