@@ -71,7 +71,7 @@
     ];
     const ORDER = DIMS.map(d=>d.key);
 
-    // ===== REVISED Sub-indicator scaffold =====
+    // ===== Sub-indicator scaffold =====
     const SUBS = {
       Cognitive: [
         {k:"c1", name:"Core Assumptions Challenged", hint:"Prospective: which fundamental assumptions might break? Retrospective: records show core assumptions seen as broken."},
@@ -116,7 +116,6 @@
     const meanToInt = arr => Math.round(arr.reduce((a,v)=>a+v,0)/arr.length);
     
     function aggregateC2(c2Scores) {
-      // For C2 composite, average the 4 sub-elements
       return meanToInt([c2Scores.c2a||0, c2Scores.c2b||0, c2Scores.c2c||0, c2Scores.c2d||0]);
     }
     
@@ -128,7 +127,6 @@
         Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
       };
       
-      // Check if primary threshold is met
       const meetsPrimaryThreshold = base.Cognitive >= 3 && base.Irreversibility >= 3;
       
       let interactions = {
@@ -137,15 +135,12 @@
       };
       
       if (meetsPrimaryThreshold) {
-        // Above primary threshold: only D-G synergy applies
         interactions.disruptiveBoost = (base.Disruption >= 2 && base.Generative >= 2) ?
           Math.min(0.3, (base.Disruption + base.Generative - 4) * 0.1) : 0;
       } else {
-        // Below primary threshold: contextual framework may reveal innovation
         const dgSynergy = (base.Disruption >= 2 && base.Generative >= 2) ?
           Math.min(0.5, (base.Disruption + base.Generative - 4) * 0.15) : 0;
         
-        // Apply contextual elevation if close to threshold with strong D-G
         if (dgSynergy > 0 && (base.Cognitive >= 2.5 || base.Irreversibility >= 2.5)) {
           interactions.contextualElevation = dgSynergy * 0.6;
         }
@@ -153,7 +148,6 @@
         interactions.disruptiveBoost = dgSynergy;
       }
       
-      // Apply enhancements while maintaining bounds
       const enhanced = {
         Cognitive: Math.min(4, base.Cognitive + interactions.contextualElevation),
         Irreversibility: Math.min(4, base.Irreversibility + interactions.contextualElevation),
@@ -161,7 +155,6 @@
         Generative: Math.min(4, base.Generative + interactions.disruptiveBoost)
       };
       
-      // Store metadata
       enhanced._interactions = interactions;
       enhanced._hasInteractions = Object.values(interactions).some(v => v > 0);
       enhanced._meetsPrimaryThreshold = meetsPrimaryThreshold;
@@ -171,14 +164,13 @@
       return enhanced;
     }
 
-    // ===== FIXED Classification Logic =====
+    // ===== Classification Logic =====
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
     
     function classify(dimScores, isHistoricalExample = false) {
       const vals = ORDER.map(k => +(dimScores[k]||0));
       
       if (isHistoricalExample) {
-        // For historical examples, use direct dimensional scores
         const cognitiveScore = dimScores.Cognitive || 0;
         const irreversibilityScore = dimScores.Irreversibility || 0;
         
@@ -191,28 +183,24 @@
           return vals.some(v => v >= 2) ? "Modernization" : "Upgradation";
         }
       } else {
-        // For user inputs, check both primary threshold and contextual framework
         const enhancedMeets = (dimScores.Cognitive||0) >= 3 && (dimScores.Irreversibility||0) >= 3;
         
         if (enhancedMeets) {
           if (dimScores._meetsPrimaryThreshold) {
-            // Primary threshold recognition - classify by strength
             const strong = vals.filter(v=>v>=3).length;
             if (strong === 4) return "Transformative Innovation";
             if (strong >= 3) return "Revolutionary Innovation";
             return "Innovation";
           } else {
-            // Contextual framework recognition
             return "Contextual Framework Recognition";
           }
         } else {
-          // Below recognition criteria
           return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
         }
       }
     }
 
-    // ===== Complete Historical Examples =====
+    // ===== Historical Examples =====
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
       "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
@@ -243,11 +231,10 @@
       "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends recon/strike; limited paradigm challenge.", sources: ["Singer, 2009"] }
     };
 
-    // ===== Enhanced user feedback generation =====
+    // ===== User feedback generation =====
     function generateUserFeedback(subScores, dimScores, classification) {
       const feedback = [];
       
-      // Generate dimensional feedback
       ORDER.forEach(dim => {
         const dimData = DIMS.find(d => d.key === dim);
         const dimScore = dimScores[dim] || 0;
@@ -265,7 +252,6 @@
         }
       });
       
-      // Add recognition criteria explanation
       if (dimScores._meetsPrimaryThreshold) {
         feedback.push(`**Primary Threshold Recognition**: Assessment meets the primary recognition criteria (C≥3, I≥3), revealing innovation through necessary manifestation patterns.`);
       } else if (dimScores._contextuallyRevealed) {
@@ -274,12 +260,10 @@
         feedback.push(`**Below Recognition Criteria**: Current assessment does not meet the primary threshold (C≥3, I≥3) or contextual framework requirements for innovation recognition.`);
       }
       
-      // Add interaction effects explanation if present
       if (dimScores._hasInteractions) {
         feedback.push(`**Interactive Effects**: Assessment triggered contextual synergies between dimensions, reflecting the dynamic nature of military innovation manifestation.`);
       }
       
-      // Add conclusion
       const total = ORDER.reduce((sum, dim) => sum + (dimScores[dim] || 0), 0);
       feedback.push(`**Final Classification**: Based on assessment patterns (total score: ${Math.round(total*10)/10}/16), this concept is classified as **${classification}**.`);
       
@@ -335,7 +319,7 @@
       ];
     }
 
-    // ===== Enhanced Modal =====
+    // ===== Modal =====
     function IssuesModal({issues,meta,subScores,dimScores,onClose}){
       if(!issues && !meta) return null;
       
@@ -393,12 +377,11 @@
       );
     }
 
-    // ===== Sub Panel with Enhanced Display =====
+    // ===== Sub Panel =====
     function SubPanel({dim, values, setValue, locked=false, showInteractions=false, isHistorical=false}) {
       const items = SUBS[dim];
       const rated = items.filter(it => (values[it.k]||0) > 0).length;
       
-      // Calculate base score
       let baseScore;
       if (dim === 'Cognitive') {
         baseScore = meanToInt([values.c1||0, aggregateC2(values), values.c3||0, values.c4||0]);
@@ -406,7 +389,6 @@
         baseScore = meanToInt(items.map(it => values[it.k]||0));
       }
       
-      // Calculate enhanced score if interactions are enabled
       let displayScore = baseScore;
       let hasBoost = false;
       
@@ -462,10 +444,10 @@
                             <div className="text-xs text-gray-600">{getLabel(values[subEl.k]||0)}</div>
                           </div>
                         </div>
-                        {locked || isHistorical ? (
+                        {locked ? (
                           <>
                             <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[subEl.k]||0)/4)*100}%`}}></div></div>
-                            <div className="text-[10px] text-gray-500 mt-1">{isHistorical ? 'Historical assessment' : 'Locked from historical case'}</div>
+                            <div className="text-[10px] text-gray-500 mt-1">Locked from historical case</div>
                           </>
                         ) : (
                           <div className="mt-3">
@@ -486,10 +468,10 @@
                 
                 {!it.composite && (
                   <>
-                    {locked || isHistorical ? (
+                    {locked ? (
                       <>
                         <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
-                        <div className="text-[10px] text-gray-500 mt-1">{isHistorical ? 'Historical assessment' : 'Locked from historical case'}</div>
+                        <div className="text-[10px] text-gray-500 mt-1">Locked from historical case</div>
                       </>
                     ) : (
                       <div className="mt-3">
@@ -668,7 +650,8 @@
 
       function runEval(nextSubs){
         const ex = EXAMPLES[sel];
-        const dim = {...ex.scores, _isHistoricalExample: true};
+        const dim = aggregateWithContextualEffects(nextSubs);
+        dim._isHistoricalExample = true;
         setScores(dim);
         setSubScores(nextSubs);
         setIssues(getEducationalAnalysis(sel, ex));
@@ -725,7 +708,7 @@
                   const key = SUB_KEYS[dim][i];
                   pick[key] = subs && (key in subs) ? subs[key] : ex.scores[dim] || 0;
                 }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={false} isHistorical={true} />;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={false} isHistorical={false} />;
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
                 <div className="font-semibold mb-1">Explanation & References</div>
@@ -738,7 +721,7 @@
       );
     }
 
-    // ===== Test Your Idea (enhanced) =====
+    // ===== Test Your Idea =====
     function TestYourIdea({setScores,setMeta,setSubScores,setIssues}){
       const [label,setLabel]=useState("");
       const [sub,setSub]=useState({
@@ -803,7 +786,6 @@
                   const key = SUB_KEYS[dim][i];
                   pick[key] = sub[key];
                 }
-                // Add C2 sub-elements for Cognitive dimension
                 if (dim === 'Cognitive') {
                   ['c2a', 'c2b', 'c2c', 'c2d'].forEach(k => pick[k] = sub[k]);
                 }
