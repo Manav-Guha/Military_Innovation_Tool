@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
@@ -113,19 +114,23 @@
       Generative: ["g1", "g2", "g3", "g4"]
     };
 
-    // ===== Aggregation with Contextual Interactive Effects =====
-    const meanToInt = arr => Math.round(arr.reduce((a,v)=>a+v,0)/arr.length);
+    // ===== Averages: compute true means (floats), round only for display =====
+    const mean = arr => {
+      const vals = arr.map(v => +v || 0);
+      return vals.reduce((a,v)=>a+v,0) / (vals.length || 1);
+    };
     
     function aggregateC2(c2Scores) {
-      return meanToInt([c2Scores.c2a||0, c2Scores.c2b||0, c2Scores.c2c||0, c2Scores.c2d||0]);
+      return mean([c2Scores.c2a, c2Scores.c2b, c2Scores.c2c, c2Scores.c2d]);
     }
     
+    // ===== Aggregation with Contextual Interactive Effects =====
     function aggregateWithContextualEffects(subVals) {
       const base = {
-        Disruption:      meanToInt([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
-        Irreversibility: meanToInt([subVals.i1,subVals.i2,subVals.i3,subVals.i4]),
-        Cognitive:       meanToInt([subVals.c1,aggregateC2(subVals),subVals.c3,subVals.c4]),
-        Generative:      meanToInt([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
+        Disruption:      mean([subVals.d1,subVals.d2,subVals.d3,subVals.d4]),
+        Irreversibility: mean([subVals.i1,subVals.i2,subVals.i3,subVals.i4]),
+        Cognitive:       mean([subVals.c1,aggregateC2(subVals),subVals.c3,subVals.c4]),
+        Generative:      mean([subVals.g1,subVals.g2,subVals.g3,subVals.g4]),
       };
       
       const meetsPrimaryThreshold = base.Cognitive >= 3 && base.Irreversibility >= 3;
@@ -201,7 +206,7 @@
       }
     }
 
-    // ===== Historical Examples =====
+    // ===== Historical Examples (27) =====
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
       "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
@@ -378,16 +383,16 @@
       );
     }
 
-    // ===== Sub Panel with C2 Composite Fix =====
+    // ===== Sub Panel (uses true means; rounds only in UI) =====
     function SubPanel({dim, values, setValue, locked=false, showInteractions=false, isHistorical=false}) {
       const items = SUBS[dim];
       const rated = items.filter(it => (values[it.k]||0) > 0).length;
       
       let baseScore;
       if (dim === 'Cognitive') {
-        baseScore = meanToInt([values.c1||0, aggregateC2(values), values.c3||0, values.c4||0]);
+        baseScore = mean([values.c1||0, aggregateC2(values), values.c3||0, values.c4||0]);
       } else {
-        baseScore = meanToInt(items.map(it => values[it.k]||0));
+        baseScore = mean(items.map(it => values[it.k]||0));
       }
       
       let displayScore = baseScore;
@@ -415,7 +420,7 @@
             <div className="hint">{dMeta.def}</div>
             <div className="text-sm text-gray-600 mt-1">
               {isHistorical ? `Historical case assessment` : `${rated}/4 rated`} • Score: {getLabel(displayScore)} ({Math.round(displayScore*10)/10})
-              {hasBoost && <span className="text-xs text-blue-600 ml-1">(base: {baseScore})</span>}
+              {hasBoost && <span className="text-xs text-blue-600 ml-1">(base: {Math.round(baseScore*10)/10})</span>}
             </div>
           </div>
           <div className="panel-b">
@@ -926,7 +931,7 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v3.1 - Recognition Framework Implementation
+            Military Innovation Assessment Framework v3.2 — True-Mean Aggregation + Full Examples
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={closeModal}/>}
@@ -937,4 +942,4 @@
     ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
 </body>
-</html> 
+</html>
