@@ -49,6 +49,7 @@
     .interaction-indicator{background:#e0f2fe;border:1px solid #0288d1;color:#01579b;padding:.125rem .375rem;border-radius:.25rem;font-size:.7rem;margin-left:.5rem}
     .theoretical-note{background:#f0f9ff;border:1px solid #0ea5e9;color:#0c4a6e;padding:.75rem 1rem;border-radius:.5rem;font-size:.8rem;line-height:1.4}
     .c2-composite{background:#f8fafc;border:1px solid #cbd5e1;border-radius:.5rem;padding:.75rem;margin:.5rem 0}
+    .c2-composite-header{background:#e2e8f0;border-bottom:1px solid #cbd5e1;padding:.5rem .75rem;font-weight:600;font-size:.8rem;color:#475569}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -377,7 +378,7 @@
       );
     }
 
-    // ===== Sub Panel =====
+    // ===== Sub Panel with C2 Composite Fix =====
     function SubPanel({dim, values, setValue, locked=false, showInteractions=false, isHistorical=false}) {
       const items = SUBS[dim];
       const rated = items.filter(it => (values[it.k]||0) > 0).length;
@@ -424,13 +425,17 @@
                   <div className="font-medium text-sm">
                     <span>{it.name}</span>
                   </div>
-                  <div className="text-xs text-gray-600">{getLabel(values[it.k]||0)}</div>
+                  <div className="text-xs text-gray-600">
+                    {it.composite ? getLabel(aggregateC2(values)) : getLabel(values[it.k]||0)}
+                  </div>
                 </div>
                 <div className="hint">{it.hint}</div>
                 
                 {it.composite && it.subElements && (
                   <div className="ml-4 space-y-2 border-l-2 border-gray-200 pl-3 mt-3">
-                    <div className="text-xs font-medium text-gray-600 mb-2">C2 Composite Sub-Elements:</div>
+                    <div className="c2-composite-header">
+                      C2 Composite Sub-Elements (Average: {getLabel(aggregateC2(values))} - {Math.round(aggregateC2(values)*10)/10}/4)
+                    </div>
                     {it.subElements.map(subEl => (
                       <div key={subEl.k} className="sub-item-row">
                         <div className="flex justify-between items-start">
@@ -451,7 +456,7 @@
                           </>
                         ) : (
                           <div className="mt-3">
-                            <input type="range" min="0" max="4" value={values[subEl.k]||0}
+                            <input type="range" min="0" max="4" step="1" value={values[subEl.k]||0}
                               onChange={e=> setValue(subEl.k, Number(e.target.value))}
                               className="w-full"/>
                             <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -475,7 +480,7 @@
                       </>
                     ) : (
                       <div className="mt-3">
-                        <input type="range" min="0" max="4" value={values[it.k]||0}
+                        <input type="range" min="0" max="4" step="1" value={values[it.k]||0}
                           onChange={e=> setValue(it.k, Number(e.target.value))}
                           className="w-full"/>
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -640,11 +645,20 @@
 
       function buildSubFromExample(ex) {
         const s = {};
-        function rep(keys,val){ for (let i=0;i<keys.length;i++) s[keys[i]]=val; }
+        function rep(keys,val){ 
+          for (let i=0;i<keys.length;i++) s[keys[i]]=val; 
+        }
         rep(SUB_KEYS.Disruption,      ex.scores.Disruption);
         rep(SUB_KEYS.Irreversibility, ex.scores.Irreversibility);
         rep(SUB_KEYS.Cognitive,       ex.scores.Cognitive);
         rep(SUB_KEYS.Generative,      ex.scores.Generative);
+        
+        // Initialize C2 sub-elements with the same value as the Cognitive score
+        s.c2a = ex.scores.Cognitive;
+        s.c2b = ex.scores.Cognitive; 
+        s.c2c = ex.scores.Cognitive;
+        s.c2d = ex.scores.Cognitive;
+        
         return s;
       }
 
@@ -688,7 +702,7 @@
           <div>
             <h2 className="text-2xl font-semibold">Historical Examples</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Select a case to explore how different types of military changes manifest across the four dimensions.
+              Select a case to explore how different types of military changes manifest across the four dimensions. Manipulate sliders to explore counterfactual scenarios.
             </p>
           </div>
 
@@ -707,6 +721,12 @@
                 for (let i=0;i<SUB_KEYS[dim].length;i++){
                   const key = SUB_KEYS[dim][i];
                   pick[key] = subs && (key in subs) ? subs[key] : ex.scores[dim] || 0;
+                }
+                // Ensure C2 sub-elements are included for Cognitive dimension
+                if (dim === 'Cognitive') {
+                  ['c2a', 'c2b', 'c2c', 'c2d'].forEach(k => {
+                    pick[k] = subs && (k in subs) ? subs[k] : ex.scores.Cognitive || 0;
+                  });
                 }
                 return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={false} isHistorical={false} />;
               })}
@@ -917,4 +937,4 @@
     ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
 </body>
-</html>
+</html> 
