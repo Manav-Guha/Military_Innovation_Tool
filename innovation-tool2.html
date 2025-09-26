@@ -2,7 +2,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Military Innovation Assessment Framework — v3.8</title>
+  <title>Military Innovation Assessment Framework — v3.9</title>
 
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -37,43 +37,12 @@
     .c2-composite-header{background:#e2e8f0;border-bottom:1px solid #cbd5e1;padding:.5rem .75rem;font-weight:600;font-size:.8rem;color:#475569}
     .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
 
-    /* Flag + tooltip */
-    .flag{display:inline-flex;align-items:center;gap:.4rem;color:#7f1d1d;background:#fee2e2;border:1px dashed #7f1d1d;padding:.25rem .5rem;border-radius:.5rem;font-size:.75rem}
-    .flag .dot{width:8px;height:8px;background:#ef4444;border-radius:999px}
-    .tooltip{position:relative;display:inline-flex}
-
-    /* Wide horizontal tooltip styled like criteria cards */
-    .tooltip .tip{
-      position:absolute;
-      z-index:30;
-      top:calc(100% + 8px);
-      left:50%;
-      transform:translateX(-50%);
-      visibility:hidden;
-      opacity:0;
-      transition:opacity .12s;
-      background:#fef2f2;
-      color:#7f1d1d;
-      border:1px solid #fecaca;
-      border-radius:.5rem;
-      padding:.75rem 1rem;
-      width:clamp(420px, 66vw, 900px) !important;
-      max-width:90vw !important;
-      white-space:normal !important;
-      line-height:1.45;
-      text-align:left;
-      overflow-wrap:anywhere;
-      box-shadow:0 8px 20px rgba(0,0,0,.25);
-    }
-    .tooltip:hover .tip,
-    .tooltip:focus-within .tip{visibility:visible;opacity:1}
-
     /* Failed Criteria Cards */
     .criteria-card {background:#fef2f2;border:1px solid #fecaca;border-radius:0.5rem;padding:0.75rem 1rem;margin-top:0.75rem}
     .criteria-card-title {font-weight:700;color:#991b1b;margin-bottom:0.25rem}
     .criteria-card-text {font-size:0.9rem;color:#7f1d1d;line-height:1.4}
 
-    /* FIXED: Modal styles */
+    /* Modal styles */
     .modal-bg {
       position: fixed;
       inset: 0;
@@ -260,7 +229,6 @@
       incomplete: "All sliders must be rated before analysis.",
       coherence: "High Disruption/Generative but weak Cognitive/Irreversibility. Suggests disruptive claims without doctrinal change. Re-examine assumptions.",
       imbalance: "Extreme imbalance across dimensions (>3 points spread). Suggests tunnel vision.",
-      indexStrength: "Index below 40. Overall balance too weak to sustain innovation.",
       contextInvalid: "Contextual recognition requires all base dimensions ≥2.",
       overElevation: "Contextual elevation cannot compensate for collapsed bases.",
       overflow: "Computed score exceeded 0–4 ceiling after elevation."
@@ -274,29 +242,10 @@
         incomplete: Object.values(subs).some(v => v == null || isNaN(+v)),
         coherence: (base.Disruption>=3 || base.Generative>=3) && (base.Cognitive<2 || base.Irreversibility<2),
         imbalance: Math.max(...arr) - Math.min(...arr) > 3,
-        indexStrength: indexScore(enhanced) < 40,
         contextInvalid: (enhanced._interactions.contextualElevation>0) && !(arr.every(v=>v>=2)),
         overElevation: (enhanced._interactions.contextualElevation>0.6) && !(arr.every(v=>v>=2)),
         overflow: [enhanced.Cognitive,enhanced.Irreversibility,enhanced.Disruption,enhanced.Generative].some(v=>v>4)
       };
-    }
-
-    /* === Criteria badge (uses wide red tooltip) === */
-    function CriteriaBadge({violations, isHistorical}){
-      if (isHistorical) {
-        return <span className="badge bg-green-100 text-green-800">Historical case (criteria checks not applied)</span>;
-      }
-      const active = Object.entries(violations).filter(([_,v])=>v);
-      if (active.length===0){
-        return <span className="badge bg-green-100 text-green-800">Criteria satisfied — analysis allowed</span>;
-      }
-      const msg = active.map(([k])=>"• "+(violationMessages[k]||k)).join("\n");
-      return (
-        <span className="tooltip">
-          <span className="flag"><span className="dot"></span><span>Blocked: criteria not met</span></span>
-          <span className="tip">{msg}</span>
-        </span>
-      );
     }
 
     /* === Feedback + analysis generation === */
@@ -334,6 +283,34 @@
       return feedback;
     }
 
+    function generateCriteriaAnalysis(subScores, dimScores, violations) {
+      const feedback = [];
+      const failedKeys = Object.entries(violations).filter(([_,v])=>v).map(([k])=>k);
+
+      feedback.push(`**Criteria Analysis**: Your assessment triggered ${failedKeys.length} validation concerns:`);
+
+      failedKeys.forEach(key => {
+        feedback.push(`**${key.charAt(0).toUpperCase() + key.slice(1)}**: ${violationMessages[key]}`);
+      });
+
+      if (violations.coherence) {
+        const base = dimScores._base;
+        feedback.push(`**Pattern Analysis**: Cognitive (${base.Cognitive.toFixed(1)}) and Irreversibility (${base.Irreversibility.toFixed(1)}) scores suggest limited institutional transformation, yet Disruption/Generative claims are high. This pattern typically indicates overstated disruptive effects without corresponding doctrinal change.`);
+      }
+
+      if (violations.imbalance) {
+        const base = dimScores._base;
+        const arr = [base.Cognitive, base.Irreversibility, base.Disruption, base.Generative];
+        const spread = Math.max(...arr) - Math.min(...arr);
+        feedback.push(`**Balance Analysis**: Dimensional spread of ${spread.toFixed(1)} points suggests uneven manifestation patterns. Innovation typically requires more balanced transformation across dimensions.`);
+      }
+
+      feedback.push(`**Educational Note**: These criteria exist to maintain theoretical coherence. Consider whether your concept represents genuine paradigmatic change (requiring Cognitive ≥ 3, Irreversibility ≥ 3) or capability enhancement within existing frameworks.`);
+      feedback.push(`**Reassessment Guidance**: Focus on the relationship between conceptual transformation (Cognitive) and institutional embedding (Irreversibility). Innovation requires both doctrinal change AND structural lock-in effects.`);
+
+      return feedback;
+    }
+
     function getEducationalAnalysis(caseName, example) {
       const s = example.scores;
       return [
@@ -345,13 +322,19 @@
     }
 
     /* === Modal === */
-    function IssuesModal({issues,meta,subScores,dimScores,onClose}){
+    function IssuesModal({issues,meta,subScores,dimScores,violations,onClose}){
       if(!issues && !meta) return null;
       const isHistorical = !!(meta && meta.ex && EXAMPLES[meta.label]);
       const isUserInput = !isHistorical && meta && meta.label && Object.values(subScores||{}).some(v => v>0);
+      const hasCriteriaViolations = violations && Object.values(violations).some(Boolean);
 
       let title='Assessment Review', sub='Assessment completed successfully.', content=[];
-      if (isUserInput) {
+      
+      if (isUserInput && hasCriteriaViolations) {
+        title='Criteria Analysis';
+        sub = `Assessment guidance for your innovation concept: "${meta.label}"`;
+        content = generateCriteriaAnalysis(subScores, dimScores, violations);
+      } else if (isUserInput) {
         title='Your Innovation Assessment';
         sub = `Analysis of your innovation concept: "${meta.label}"`;
         content = generateUserFeedback(subScores, dimScores, classify(dimScores,false));
@@ -366,7 +349,7 @@
       return (
         <div className="modal-bg" onClick={onClose}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
-            <div className="modal-h bg-blue-50">{title}</div>
+            <div className={`modal-h ${hasCriteriaViolations ? 'red' : 'bg-blue-50'}`}>{title}</div>
             <div className="px-4 pt-2 pb-1 text-sm text-gray-700">{sub}</div>
             <div className="p-4 max-h-[60vh] overflow-auto">
               <ul className="space-y-4">
@@ -819,7 +802,7 @@
       );
     }
 
-    /* === Charts + Status (classification, badges, failed criteria cards) === */
+    /* === Charts + Status === */
     function ChartsPanel({scores,meta,subScores,openModal}){
       const isHistorical = !!(meta && meta.ex && EXAMPLES[meta.label]);
 
@@ -828,11 +811,11 @@
         return computeViolations(subScores, scores, isHistorical);
       },[subScores, scores, isHistorical]);
 
-      const disabled = !isHistorical && Object.values(violations).some(Boolean);
       const meetsPrimaryThreshold = scores._meetsPrimaryThreshold;
       const contextuallyRevealed = scores._contextuallyRevealed;
       const idx = indexScore(scores);
       const cls = classify(scores, isHistorical);
+      const hasCriteriaViolations = !isHistorical && Object.values(violations).some(Boolean);
 
       const failedKeys = Object.entries(violations).filter(([_,v])=>v).map(([k])=>k);
 
@@ -851,9 +834,7 @@
             <div className="flex flex-wrap items-center gap-4">
               <div><span className="font-semibold">Index:</span> {Number.isFinite(idx)?idx:"—"}</div>
               <div>
-                <span className="font-semibold">
-                  Classification result = {cls}{disabled ? " (but criteria checks block further analysis)" : ""}
-                </span>
+                <span className="font-semibold">Classification: {cls}</span>
               </div>
               <div>
                 {meetsPrimaryThreshold ? 
@@ -864,14 +845,13 @@
                 }
               </div>
 
-              <CriteriaBadge violations={violations} isHistorical={isHistorical}/>
+              {isHistorical && <span className="badge bg-green-100 text-green-800">Historical case (criteria checks not applied)</span>}
 
               {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
 
               <button
-                onClick={()=>{ if(!disabled) openModal(); }}
-                disabled={disabled}
-                className={`ml-auto px-4 py-2 rounded-md ${disabled?'bg-gray-300 text-gray-600 cursor-not-allowed':'bg-blue-600 text-white hover:bg-blue-700'}`}>
+                onClick={openModal}
+                className="ml-auto px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
                 View Analysis
               </button>
             </div>
@@ -881,7 +861,7 @@
                 <div className="font-semibold text-red-700">Failed Criteria:</div>
                 {failedKeys.map(k=>(
                   <div key={k} className="criteria-card">
-                    <div className="criteria-card-title">Failed Criterion — {k==='indexStrength'?'Index Strength':k[0].toUpperCase()+k.slice(1)}</div>
+                    <div className="criteria-card-title">Failed Criterion — {k==='coherence'?'Coherence':k[0].toUpperCase()+k.slice(1)}</div>
                     <div className="criteria-card-text">{violationMessages[k]}</div>
                   </div>
                 ))}
@@ -908,6 +888,11 @@
       const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
       const [modalOpen,setModalOpen]=useState(false);
+
+      const violations = useMemo(()=>{
+        if (!subScores || Object.keys(subScores).length===0) return {};
+        return computeViolations(subScores, scores, !!(meta && meta.ex && EXAMPLES[meta.label]));
+      },[subScores, scores, meta]);
 
       return (
         <main>
@@ -954,10 +939,10 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v3.8 (c) Manabrata Guha, 2025
+            Military Innovation Assessment Framework v3.9 (c) Manabrata Guha, 2025
           </footer>
 
-          {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={()=>setModalOpen(false)}/>}
+          {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} violations={violations} onClose={()=>setModalOpen(false)}/>}
         </main>
       );
     }
