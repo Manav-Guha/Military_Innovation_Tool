@@ -35,6 +35,7 @@
     .theoretical-note{background:#f0f9ff;border:1px solid #0ea5e9;color:#0c4a6e;padding:.75rem 1rem;border-radius:.5rem;font-size:.8rem;line-height:1.4}
     .c2-composite{background:#f8fafc;border:1px solid #cbd5e1;border-radius:.5rem;padding:.75rem;margin:.5rem 0}
     .c2-composite-header{background:#e2e8f0;border-bottom:1px solid #cbd5e1;padding:.5rem .75rem;font-weight:600;font-size:.8rem;color:#475569}
+    .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
 
     /* Flag + tooltip */
     .flag{display:inline-flex;align-items:center;gap:.4rem;color:#7f1d1d;background:#fee2e2;border:1px dashed #7f1d1d;padding:.25rem .5rem;border-radius:.5rem;font-size:.75rem}
@@ -51,13 +52,11 @@
       visibility:hidden;
       opacity:0;
       transition:opacity .12s;
-
       background:#fef2f2;
       color:#7f1d1d;
       border:1px solid #fecaca;
       border-radius:.5rem;
       padding:.75rem 1rem;
-
       width:clamp(420px, 66vw, 900px) !important;
       max-width:90vw !important;
       white-space:normal !important;
@@ -73,6 +72,53 @@
     .criteria-card {background:#fef2f2;border:1px solid #fecaca;border-radius:0.5rem;padding:0.75rem 1rem;margin-top:0.75rem}
     .criteria-card-title {font-weight:700;color:#991b1b;margin-bottom:0.25rem}
     .criteria-card-text {font-size:0.9rem;color:#7f1d1d;line-height:1.4}
+
+    /* FIXED: Modal styles */
+    .modal-bg {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      max-width: 900px;
+      width: 94%;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+
+    .modal-h {
+      padding: 1rem 1.1rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-weight: 800;
+    }
+
+    .modal-h.green {
+      background: #ecfdf5;
+      color: #065f46;
+    }
+
+    .modal-h.yellow {
+      background: #fffbeb;
+      color: #78350f;
+    }
+
+    .modal-h.red {
+      background: #fee2e2;
+      color: #7f1d1d;
+    }
+
+    .modal-h.bg-blue-50 {
+      background: #eff6ff;
+      color: #1e40af;
+    }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -105,6 +151,7 @@
       return vals.reduce((a,v)=>a+v,0) / (vals.length || 1);
     };
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
+
     /* === Historical dataset (27) === */
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
@@ -233,6 +280,7 @@
         overflow: [enhanced.Cognitive,enhanced.Irreversibility,enhanced.Disruption,enhanced.Generative].some(v=>v>4)
       };
     }
+
     /* === Criteria badge (uses wide red tooltip) === */
     function CriteriaBadge({violations, isHistorical}){
       if (isHistorical) {
