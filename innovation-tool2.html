@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Military Innovation Assessment Framework — v3.3 (True Means, 27 Examples, Gated Tooltips)</title>
+  <title>Military Innovation Assessment Framework — v3.6</title>
 
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -43,11 +43,11 @@
     .tooltip{position:relative;display:inline-flex}
     .tooltip .tip{visibility:hidden;opacity:0;transition:opacity .12s;position:absolute;z-index:30;top:125%;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;border-radius:.4rem;font-size:.75rem;padding:.5rem .6rem;max-width:360px;white-space:normal;box-shadow:0 8px 20px rgba(0,0,0,.25)}
     .tooltip:hover .tip,.tooltip:focus-within .tip{visibility:visible;opacity:1}
-    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center}
-    .modal{background:#fff;border-radius:12px;max-width:900px;width:94%;max-height:85vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,.25)}
-    .modal-h{padding:1rem 1.1rem;border-bottom:1px solid #e5e7eb;font-weight:800}
-    .modal-h.bg-blue-50{background:#eff6ff;color:#1e40af}
-    .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
+
+    /* Failed Criteria Cards */
+    .criteria-card {background:#fef2f2;border:1px solid #fecaca;border-radius:0.5rem;padding:0.75rem 1rem;margin-top:0.75rem}
+    .criteria-card-title {font-weight:700;color:#991b1b;margin-bottom:0.25rem}
+    .criteria-card-text {font-size:0.9rem;color:#7f1d1d;line-height:1.4}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
@@ -56,17 +56,15 @@
   <script type="text/babel">
     const {useState,useMemo,useEffect,useRef} = React;
 
-    /* =========================
-       Labels and helpers
-    ========================= */
+    /* ===== Labels and helpers ===== */
     const LABELS = ["None", "Minimal", "Moderate", "Significant", "Transformative"];
     const getLabel = (value) => LABELS[Math.round(value)] || "None";
 
     const DIMS = [
-      { key:"Cognitive",        abbr:"C", label:"Cognitive (C)",             def:"Doctrine, training, and mental models change to accommodate the novelty." },
-      { key:"Irreversibility",  abbr:"I", label:"Irreversibility (I)",       def:"Prior doctrine ceases to be viable as decisive practice; no rational return." },
-      { key:"Disruption",       abbr:"D", label:"Disruptive Capacity (D)",   def:"Adversaries are compelled to abandon or radically alter existing methods." },
-      { key:"Generative",       abbr:"G", label:"Generative Capacity (G)",   def:"The change enables new capabilities or follow-on innovations." }
+      { key:"Cognitive",        label:"Cognitive",        def:"Doctrine, training, and mental models change to accommodate the novelty." },
+      { key:"Irreversibility",  label:"Irreversibility",  def:"Prior doctrine ceases to be viable as decisive practice; no rational return." },
+      { key:"Disruption",       label:"Disruption",       def:"Adversaries are compelled to abandon or radically alter existing methods." },
+      { key:"Generative",       label:"Generative",       def:"The change enables new capabilities or follow-on innovations." }
     ];
     const ORDER = DIMS.map(d=>d.key);
 
@@ -83,9 +81,7 @@
     };
     const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
 
-    /* =========================
-       Historical dataset (27)
-    ========================= */
+    /* ===== Historical dataset (27) ===== */
     const EXAMPLES = {
       "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
       "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
@@ -116,9 +112,7 @@
       "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends recon/strike; limited paradigm challenge.", sources: ["Singer, 2009"] }
     };
 
-    /* =========================
-       Scoring and interactions
-    ========================= */
+    /* ===== Scoring and interactions ===== */
     function aggregateC2(c2Scores) {
       return mean([c2Scores.c2a, c2Scores.c2b, c2Scores.c2c, c2Scores.c2d]);
     }
@@ -133,7 +127,7 @@
       return base;
     }
 
-    // True means; round only for display. Interaction logic tuned for reachability + caps.
+    // True means; round only for display.
     function aggregateWithContextualEffects(subVals) {
       const base = computeBaseFromSub(subVals);
       const meetsPrimaryThreshold = base.Cognitive >= 3 && base.Irreversibility >= 3;
@@ -167,13 +161,12 @@
       enhanced._meetsPrimaryThreshold = meetsPrimaryThreshold;
       enhanced._contextuallyRevealed = !meetsPrimaryThreshold && enhanced.Cognitive >= 3 && enhanced.Irreversibility >= 3;
       enhanced._isHistoricalExample = false;
-      enhanced._base = base; // expose base for gating
+      enhanced._base = base; // expose base for criteria checks
       return enhanced;
     }
 
     function classify(dimScores, isHistoricalExample = false) {
       const vals = ORDER.map(k => +(dimScores[k]||0));
-
       if (isHistoricalExample) {
         const c = dimScores.Cognitive||0, i = dimScores.Irreversibility||0;
         if (c>=3 && i>=3){
@@ -201,61 +194,52 @@
       }
     }
 
-    /* =========================
-       Gating rules + tooltips
-    ========================= */
+    /* ===== Criteria checks + explanations ===== */
     const violationMessages = {
       incomplete: "All sliders must be rated before analysis.",
-      incoherent: "High Disruption/Generative requires at least moderate Cognitive and Irreversibility (≥2). Otherwise configuration is incoherent.",
-      imbalance: "Extreme imbalance (>3 points) between any two dimensions indicates tunnel vision, not innovation.",
-      lowIndex: "Overall Index < 40 is too weak to sustain strategic innovation.",
-      contextInvalid: "Contextual recognition requires base C, I, D, G all ≥ 2 before elevation can apply.",
-      overElevation: "Contextual elevation cannot compensate for collapsed bases.",
-      overflow: "A computed score exceeded the 0–4 ceiling after elevation or rounding. Check inputs."
+      coherence: "Your sliders gave high Disruption/Generative but weak Cognitive/Irreversibility. This suggests you are claiming disruptive power without showing how the innovation changes thinking or doctrine. Re-examine whether your idea really challenges assumptions, or adjust the Cognitive/Irreversibility scores.",
+      imbalance: "Your scores show an extreme imbalance (spread > 3 points) across dimensions. This suggests tunnel vision. Consider whether Cognitive, Irreversibility, Disruption, and Generative aspects are being addressed together rather than unevenly.",
+      indexStrength: "Your index fell below 40. This suggests that even though individual scores might look significant, the overall balance is too weak to sustain innovation. Re-examine the spread of your scores or strengthen the weak areas.",
+      contextInvalid: "Contextual recognition requires base Cognitive, Irreversibility, Disruption, and Generative all ≥ 2 before elevation can apply. Re-check the base scores before relying on Disruption–Generative synergy.",
+      overElevation: "Contextual elevation cannot compensate for collapsed bases. Strengthen Cognitive and Irreversibility rather than depending on Disruption–Generative synergy.",
+      overflow: "A computed score exceeded the 0–4 ceiling after elevation or rounding. Reduce extreme inputs or revisit assumptions."
     };
 
     function computeViolations(subs, enhanced, isHistorical){
       if (isHistorical) return {};
-      // completeness: with sliders present, values always defined; keep defensive check
-      const incomplete = Object.values(subs).some(v => v == null || Number.isNaN(+v));
-
-      const base = enhanced._base || computeBaseFromSub(subs);
-      const arr = [base.Cognitive, base.Irreversibility, base.Disruption, base.Generative];
-      const incoherent = (base.Disruption>=3 || base.Generative>=3) && (base.Cognitive<2 || base.Irreversibility<2);
+      const incomplete = Object.values(subs||{}).some(v => v == null || Number.isNaN(+v));
+      const base = enhanced._base || computeBaseFromSub(subs||{});
+      const arr = [base.Cognitive||0, base.Irreversibility||0, base.Disruption||0, base.Generative||0];
+      const coherence = (base.Disruption>=3 || base.Generative>=3) && (base.Cognitive<2 || base.Irreversibility<2);
       const imbalance = Math.max(...arr) - Math.min(...arr) > 3.0;
       const idx = indexScore(enhanced);
-      const lowIndex = idx < 40;
-
+      const indexStrength = idx < 40;
       const ctxElev = (enhanced._interactions?.contextualElevation) || 0;
       const allBaseGTE2 = base.Cognitive>=2 && base.Irreversibility>=2 && base.Disruption>=2 && base.Generative>=2;
       const contextInvalid = ctxElev>0 && !allBaseGTE2;
       const overElevation = ctxElev>0.6 && !allBaseGTE2;
-
       const overflow = [enhanced.Cognitive,enhanced.Irreversibility,enhanced.Disruption,enhanced.Generative].some(v => v>4);
-
-      return { incomplete, incoherent, imbalance, lowIndex, contextInvalid, overElevation, overflow };
+      return { incomplete, coherence, imbalance, indexStrength, contextInvalid, overElevation, overflow };
     }
 
-    function GatingFlag({violations, isHistorical}){
+    function CriteriaBadge({violations, isHistorical}){
       if (isHistorical) {
-        return <span className="badge bg-green-100 text-green-800">Historical case (gating disabled)</span>;
+        return <span className="badge bg-green-100 text-green-800">Historical case (criteria checks not applied)</span>;
       }
       const active = Object.entries(violations).filter(([k,v])=>v);
       if (active.length===0){
-        return <span className="badge bg-green-100 text-green-800">Ready</span>;
+        return <span className="badge bg-green-100 text-green-800">Criteria satisfied — analysis allowed</span>;
       }
       const msg = active.map(([k])=>"• "+(violationMessages[k]||k)).join("\n");
       return (
         <span className="tooltip">
-          <span className="flag"><span className="dot"></span><span>Gated by rules</span></span>
+          <span className="flag"><span className="dot"></span><span>Blocked: criteria not met</span></span>
           <span className="tip whitespace-pre-wrap">{msg}</span>
         </span>
       );
     }
 
-    /* =========================
-       Feedback + analysis modal
-    ========================= */
+    /* ===== Feedback + analysis modal ===== */
     function generateUserFeedback(subScores, dimScores, classification) {
       const feedback = [];
       ORDER.forEach(dim => {
@@ -267,21 +251,18 @@
           feedback.push(`**${d.label}**: total ${getLabel(val).toLowerCase()} (${Math.round(val*10)/10}/4).`);
         }
       });
-
       if (dimScores._meetsPrimaryThreshold) {
-        feedback.push(`**Primary Threshold Recognition**: C≥3 and I≥3 satisfied.`);
+        feedback.push(`**Primary Threshold Recognition**: Cognitive ≥ 3 and Irreversibility ≥ 3 satisfied.`);
       } else if (dimScores._contextuallyRevealed) {
-        feedback.push(`**Contextual Framework Recognition**: Below-threshold base was elevated through D–G synergy.`);
+        feedback.push(`**Contextual Framework Recognition**: Below-threshold base was elevated through Disruption–Generative synergy.`);
       } else {
         feedback.push(`**Below Recognition Criteria**: Neither primary nor contextual criteria met.`);
       }
-
       if (dimScores._hasInteractions) {
         const ce = dimScores._interactions?.contextualElevation || 0;
         const db = dimScores._interactions?.disruptiveBoost || 0;
-        feedback.push(`**Interactive Effects**: contextual +${ce.toFixed(2)} to C/I; disruptive +${db.toFixed(2)} to D/G.`);
+        feedback.push(`**Interactive Effects**: contextual +${ce.toFixed(2)} to Cognitive/Irreversibility; disruptive +${db.toFixed(2)} to Disruption/Generative.`);
       }
-
       const total = ORDER.reduce((s,k)=> s + (dimScores[k]||0), 0);
       feedback.push(`**Final Classification**: ${classification} (total ${Math.round(total*10)/10}/16, index ${indexScore(dimScores)}).`);
       return feedback;
@@ -289,13 +270,12 @@
 
     function getEducationalAnalysis(caseName, example) {
       const s = example.scores;
-      const common = [
-        `**Historical Analysis**: Scored C:${s.Cognitive}, I:${s.Irreversibility}, D:${s.Disruption}, G:${s.Generative}.`,
+      return [
+        `**Historical Analysis**: Scored Cognitive:${s.Cognitive}, Irreversibility:${s.Irreversibility}, Disruption:${s.Disruption}, Generative:${s.Generative}.`,
         `**Classification**: ${classify(s, true)}.`,
         `**Justification**: ${example.justification}`,
         `**Sources**: ${example.sources.join(', ')}.`
       ];
-      return common;
     }
 
     function IssuesModal({issues,meta,subScores,dimScores,onClose}){
@@ -340,9 +320,7 @@
       );
     }
 
-    /* =========================
-       Sub-panel
-    ========================= */
+    /* ===== Sub-panel ===== */
     const SUBS = {
       Cognitive: [
         {k:"c1", name:"Core Assumptions Challenged", hint:"Prospective vs retrospective change"},
@@ -373,7 +351,7 @@
         {k:"g1", name:"New Capability Families", hint:"Follow-ons"},
         {k:"g2", name:"Cross-Domain Spillovers", hint:"Transfers"},
         {k:"g3", name:"Organizational Implications", hint:"Formations/schools"},
-        {k:"g4", name:"Conceptual Platform", hint:"Base for further"},
+        {k:"g4", name:"Conceptual Platform", hint:"Base for further development"},
       ]
     };
 
@@ -490,9 +468,7 @@
       );
     }
 
-    /* =========================
-       Charts
-    ========================= */
+    /* ===== Charts ===== */
     function RadarChart({scores}) {
       const ref = useRef(null);
       const chart = useRef(null);
@@ -517,7 +493,7 @@
                 pointBackgroundColor: 'rgba(37,99,235,1)'
               },
               {
-                label: 'Primary Recognition Threshold (C≥3, I≥3)',
+                label: 'Primary Recognition Threshold (Cognitive ≥ 3, Irreversibility ≥ 3)',
                 data: [3,3,0,0],
                 fill: false,
                 borderColor: 'rgba(239,68,68,0.8)',
@@ -618,9 +594,7 @@
       return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
     }
 
-    /* =========================
-       Historical Examples UI
-    ========================= */
+    /* ===== Historical Examples UI ===== */
     function HistoricalExamples({setScores,setMeta,setSubScores,setIssues}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
@@ -633,7 +607,6 @@
         rep(SUB_KEYS.Irreversibility, ex.scores.Irreversibility);
         rep(SUB_KEYS.Cognitive,       ex.scores.Cognitive);
         rep(SUB_KEYS.Generative,      ex.scores.Generative);
-        // C2 sub-elements seeded from Cognitive
         s.c2a = ex.scores.Cognitive; s.c2b = ex.scores.Cognitive;
         s.c2c = ex.scores.Cognitive; s.c2d = ex.scores.Cognitive;
         return s;
@@ -641,7 +614,7 @@
 
       function evaluateAndRender(nextSubs){
         const enhanced = aggregateWithContextualEffects(nextSubs);
-        enhanced._isHistoricalExample = true;  // bypass gating
+        enhanced._isHistoricalExample = true;  // criteria not applied
         setScores(enhanced);
         setSubScores(nextSubs);
         const ex = EXAMPLES[sel];
@@ -679,7 +652,7 @@
           <div>
             <h2 className="text-2xl font-semibold">Historical Examples</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Select a case. Sliders can be adjusted to explore counterfactuals. Historical cases are exempt from gating.
+              Select a case. Sliders can be adjusted to explore counterfactuals. Historical cases show results without criteria checks.
             </p>
           </div>
 
@@ -712,9 +685,7 @@
       );
     }
 
-    /* =========================
-       Test Your Idea UI
-    ========================= */
+    /* ===== Test Your Idea UI ===== */
     function TestYourIdea({setScores,setMeta,setSubScores,setIssues}){
       const [label,setLabel]=useState("");
       const [sub,setSub]=useState({
@@ -746,8 +717,8 @@
           <div className="theoretical-note">
             <div className="font-semibold mb-2">Recognition Framework</div>
             <div className="space-y-1 text-sm">
-              <div><strong>Primary Threshold:</strong> C≥3 AND I≥3 (necessary manifestation)</div>
-              <div><strong>Contextual Framework:</strong> D–G synergy can elevate borderline C/I</div>
+              <div><strong>Primary Threshold:</strong> Cognitive ≥ 3 AND Irreversibility ≥ 3</div>
+              <div><strong>Contextual Framework:</strong> Disruption–Generative synergy can elevate borderline Cognitive/Irreversibility</div>
               <div><strong>C2:</strong> composite of procedures, architecture, interface, skills</div>
             </div>
           </div>
@@ -761,7 +732,7 @@
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-700">Innovation Concept Title</label>
                 <input value={label} onChange={e=>setLabel(e.target.value)}
-                       className="case-title-input w-80" 
+                       className="case-title-input w-80 border-2 border-blue-500 rounded-md px-3 py-2 bg-white" 
                        placeholder="e.g., AI-enabled autonomous logistics coordination"/>
                 {!label && <div className="text-xs text-blue-600">Enter a descriptive title</div>}
               </div>
@@ -780,14 +751,11 @@
       );
     }
 
-    /* =========================
-       Charts + Status (with gating)
-    ========================= */
+    /* ===== Charts + Status (criteria badge + failed criteria cards) ===== */
     function ChartsPanel({scores,meta,subScores,openModal}){
       const isHistorical = !!(meta && meta.ex && EXAMPLES[meta.label]);
 
       const violations = useMemo(()=>{
-        // if no subScores yet, don't gate; show neutral
         if (!subScores || Object.keys(subScores).length===0) return {};
         return computeViolations(subScores, scores, isHistorical);
       },[subScores, scores, isHistorical]);
@@ -796,6 +764,9 @@
       const meetsPrimaryThreshold = scores._meetsPrimaryThreshold;
       const contextuallyRevealed = scores._contextuallyRevealed;
       const idx = indexScore(scores);
+      const cls = classify(scores, isHistorical);
+
+      const failedKeys = Object.entries(violations).filter(([_,v])=>v).map(([k])=>k);
 
       return (
         <div className="grid md:grid-cols-2 gap-6">
@@ -811,7 +782,11 @@
           <div className="md:col-span-2 panel panel-b text-sm">
             <div className="flex flex-wrap items-center gap-4">
               <div><span className="font-semibold">Index:</span> {Number.isFinite(idx)?idx:"—"}</div>
-              <div><span className="font-semibold">Class:</span> {classify(scores, isHistorical)}</div>
+              <div>
+                <span className="font-semibold">
+                  Classification result = {cls}{disabled ? " (but criteria checks block further analysis)" : ""}
+                </span>
+              </div>
               <div>
                 {meetsPrimaryThreshold ? 
                   <span className="badge bg-green-100 text-green-800">Primary Threshold Recognition</span> :
@@ -821,7 +796,7 @@
                 }
               </div>
 
-              <GatingFlag violations={violations} isHistorical={isHistorical}/>
+              <CriteriaBadge violations={violations} isHistorical={isHistorical}/>
 
               {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
 
@@ -832,6 +807,18 @@
                 View Analysis
               </button>
             </div>
+
+            {failedKeys.length>0 && (
+              <div className="mt-3">
+                <div className="font-semibold text-red-700">Failed Criteria:</div>
+                {failedKeys.map(k=>(
+                  <div key={k} className="criteria-card">
+                    <div className="criteria-card-title">Failed Criterion — {k==='indexStrength'?'Index Strength':k[0].toUpperCase()+k.slice(1)}</div>
+                    <div className="criteria-card-text">{violationMessages[k]}</div>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
               {DIMS.map(d=>(
@@ -845,9 +832,7 @@
       );
     }
 
-    /* =========================
-       App
-    ========================= */
+    /* ===== App ===== */
     function App(){
       const [tab,setTab]=useState('test');
       const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0,_base:{Cognitive:0,Irreversibility:0,Disruption:0,Generative:0}});
@@ -901,7 +886,7 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v3.3 — True Means • 27 Examples • Gated Tooltips
+            Military Innovation Assessment Framework v3.6 — (c) Manabrata Guha, 2025
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} onClose={()=>setModalOpen(false)}/>}
