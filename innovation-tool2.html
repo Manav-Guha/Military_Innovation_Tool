@@ -1,9 +1,8 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Military Innovation Assessment Framework — v4.0</title>
+  <title>Military Innovation Assessment Framework – v4.0</title>
 
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -98,7 +97,14 @@
 
     /* === Labels and helpers === */
     const LABELS = ["None", "Minimal", "Moderate", "Significant", "Transformative"];
-    const getLabel = (value) => LABELS[Math.round(value)] || "None";
+    
+    // BUG 5 FIX: Add bounds checking to getLabel function
+    const getLabel = (value) => {
+      const rounded = Math.round(value);
+      if (rounded < 0) return LABELS[0];
+      if (rounded >= LABELS.length) return LABELS[LABELS.length - 1];
+      return LABELS[rounded] || LABELS[0];
+    };
 
     const DIMS = [
       { key:"Cognitive",        label:"Cognitive",        def:"Doctrine, training, and mental models change to accommodate the novelty." },
@@ -176,23 +182,34 @@
         if (strong>=3) return "Revolutionary Innovation";
         return "Innovation";
       }
-      return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
+      // BUG 7 FIX: Tighten modernization criteria to require multiple dimensions ≥2
+      const moderate = vals.filter(v=>v>=2).length;
+      return moderate >= 2 ? "Modernization" : "Upgradation";
     }
 
     /* === Simplified criteria checks === */
     const violationMessages = {
       incomplete: "All sliders must be rated before analysis.",
       coherence: "High Disruption/Generative but weak Cognitive/Irreversibility. Suggests disruptive claims without doctrinal change. Re-examine assumptions.",
-      imbalance: "Extreme imbalance across dimensions (>3 points spread). Suggests tunnel vision."
+      imbalance: "Extreme imbalance across dimensions (≥2 points spread). Suggests tunnel vision."
     };
 
     function computeViolations(subs, dimScores, isHistorical){
       if (isHistorical) return {};
       const arr = [dimScores.Cognitive, dimScores.Irreversibility, dimScores.Disruption, dimScores.Generative];
+      
+      // BUG 1 FIX: Check for any unrated indicators (null/undefined), not just null
+      const hasUnratedIndicators = Object.entries(subs).some(([key, value]) => {
+        // Skip if this is not an actual sub-indicator key
+        if (!key.match(/^[cdgi][1-4]$|^c2[a-d]$/)) return false;
+        return value === null || value === undefined || value === '';
+      });
+      
       return {
-        incomplete: Object.values(subs).some(v => v == null || isNaN(+v)),
+        incomplete: hasUnratedIndicators,
         coherence: (dimScores.Disruption>=3 || dimScores.Generative>=3) && (dimScores.Cognitive<2 || dimScores.Irreversibility<2),
-        imbalance: Math.max(...arr) - Math.min(...arr) > 3
+        // BUG 3 FIX: Lower imbalance threshold from >3 to ≥2
+        imbalance: Math.max(...arr) - Math.min(...arr) >= 2
       };
     }
 
@@ -347,7 +364,15 @@
     /* === Sub-panel component === */
     function SubPanel({dim, values, setValue, locked=false, isHistorical=false}) {
       const items = SUBS[dim];
-      const rated = items.filter(it => (values[it.k]||0) > 0).length;
+      
+      // BUG 2 FIX: Count indicators that have been explicitly rated (not defaulting to 0)
+      const rated = items.filter(it => {
+        if (it.composite) {
+          // For composite C2, check if any sub-elements are rated
+          return it.subElements.some(subEl => values[subEl.k] > 0);
+        }
+        return values[it.k] > 0;
+      }).length;
 
       let baseScore;
       if (dim === 'Cognitive') {
@@ -397,7 +422,8 @@
                         {locked ? (
                           <>
                             <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[subEl.k]||0)/4)*100}%`}}></div></div>
-                            <div className="text-[10px] text-gray-500 mt-1">Locked from historical case</div>
+                            {/* BUG 6 FIX: Consistent historical case text */}
+                            <div className="text-[10px] text-gray-500 mt-1">Historical case assessment</div>
                           </>
                         ) : (
                           <div className="mt-3">
@@ -421,7 +447,8 @@
                     {locked ? (
                       <>
                         <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
-                        <div className="text-[10px] text-gray-500 mt-1">Locked from historical case</div>
+                        {/* BUG 6 FIX: Consistent historical case text */}
+                        <div className="text-[10px] text-gray-500 mt-1">Historical case assessment</div>
                       </>
                     ) : (
                       <div className="mt-3">
@@ -469,6 +496,7 @@
                 pointBackgroundColor: 'rgba(37,99,235,1)'
               },
               {
+                // BUG 4 FIX: Correct radar threshold visualization showing only C≥3 and I≥3
                 label: 'Primary Recognition Threshold (Cognitive ≥ 3, Irreversibility ≥ 3)',
                 data: [3,3,0,0],
                 fill: false,
