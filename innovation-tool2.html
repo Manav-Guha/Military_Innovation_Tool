@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Military Innovation Assessment Framework — v3.9</title>
+  <title>Military Innovation Assessment Framework — v4.0</title>
 
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -31,7 +32,6 @@
     .badge{display:inline-block;padding:.125rem .5rem;border-radius:.375rem;font-size:.75rem;font-weight:700}
     .meter{height:.5rem;background:#e5e7eb;border-radius:.375rem;overflow:hidden}
     .meter-fill{height:100%;background:#2563eb}
-    .interaction-indicator{background:#e0f2fe;border:1px solid #0288d1;color:#01579b;padding:.125rem .375rem;border-radius:.25rem;font-size:.7rem;margin-left:.5rem}
     .theoretical-note{background:#f0f9ff;border:1px solid #0ea5e9;color:#0c4a6e;padding:.75rem 1rem;border-radius:.5rem;font-size:.8rem;line-height:1.4}
     .c2-composite{background:#f8fafc;border:1px solid #cbd5e1;border-radius:.5rem;padding:.75rem;margin:.5rem 0}
     .c2-composite-header{background:#e2e8f0;border-bottom:1px solid #cbd5e1;padding:.5rem .75rem;font-weight:600;font-size:.8rem;color:#475569}
@@ -152,12 +152,12 @@
       "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends recon/strike; limited paradigm challenge.", sources: ["Singer, 2009"] }
     };
 
-    /* === Scoring and interactions === */
+    /* === Simplified scoring - removed all arbitrary coefficients === */
     function aggregateC2(c2Scores) {
       return mean([c2Scores.c2a, c2Scores.c2b, c2Scores.c2c, c2Scores.c2d]);
     }
 
-    function computeBaseFromSub(subVals){
+    function computeFromSub(subVals){
       return {
         Cognitive:       mean([subVals.c1, aggregateC2(subVals), subVals.c3, subVals.c4]),
         Irreversibility: mean([subVals.i1, subVals.i2, subVals.i3, subVals.i4]),
@@ -166,89 +166,37 @@
       };
     }
 
-    function aggregateWithContextualEffects(subVals) {
-      const base = computeBaseFromSub(subVals);
-      const meetsPrimary = base.Cognitive >= 3 && base.Irreversibility >= 3;
-      let interactions = { disruptiveBoost: 0, contextualElevation: 0 };
-
-      if (meetsPrimary) {
-        interactions.disruptiveBoost =
-          (base.Disruption >= 2 && base.Generative >= 2)
-            ? Math.min(0.3, (base.Disruption + base.Generative - 4) * 0.1)
-            : 0;
-      } else {
-        const synergy =
-          (base.Disruption >= 2 && base.Generative >= 2)
-            ? Math.min(0.5, (base.Disruption + base.Generative - 4) * 0.15)
-            : 0;
-        if (synergy > 0 && (base.Cognitive >= 2.5 || base.Irreversibility >= 2.5)) {
-          interactions.contextualElevation = synergy * 0.6;
-        }
-        interactions.disruptiveBoost = synergy;
-      }
-
-      const enhanced = {
-        Cognitive: Math.min(4, base.Cognitive + interactions.contextualElevation),
-        Irreversibility: Math.min(4, base.Irreversibility + interactions.contextualElevation),
-        Disruption: Math.min(4, base.Disruption + interactions.disruptiveBoost),
-        Generative: Math.min(4, base.Generative + interactions.disruptiveBoost)
-      };
-      enhanced._base = base;
-      enhanced._interactions = interactions;
-      enhanced._meetsPrimaryThreshold = meetsPrimary;
-      enhanced._contextuallyRevealed = !meetsPrimary && enhanced.Cognitive >= 3 && enhanced.Irreversibility >= 3;
-      enhanced._hasInteractions = Object.values(interactions).some(v => v > 0);
-      return enhanced;
-    }
-
     function classify(dimScores, isHistorical=false) {
       const vals = ORDER.map(k => +(dimScores[k]||0));
-      if (isHistorical) {
-        const c=dimScores.Cognitive||0, i=dimScores.Irreversibility||0;
-        if (c>=3 && i>=3) {
-          const strong=vals.filter(v=>v>=3).length;
-          if (strong===4) return "Transformative Innovation";
-          if (strong>=3) return "Revolutionary Innovation";
-          return "Innovation";
-        }
-        return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
-      } else {
-        const meets=(dimScores.Cognitive||0)>=3 && (dimScores.Irreversibility||0)>=3;
-        if (meets) {
-          const strong=vals.filter(v=>v>=3).length;
-          if (strong===4) return "Transformative Innovation";
-          if (strong>=3) return "Revolutionary Innovation";
-          return "Innovation";
-        }
-        return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
+      const c=dimScores.Cognitive||0, i=dimScores.Irreversibility||0;
+      
+      if (c>=3 && i>=3) {
+        const strong=vals.filter(v=>v>=3).length;
+        if (strong===4) return "Transformative Innovation";
+        if (strong>=3) return "Revolutionary Innovation";
+        return "Innovation";
       }
+      return vals.some(v=>v>=2) ? "Modernization" : "Upgradation";
     }
 
-    /* === Criteria checks and violations === */
+    /* === Simplified criteria checks === */
     const violationMessages = {
       incomplete: "All sliders must be rated before analysis.",
       coherence: "High Disruption/Generative but weak Cognitive/Irreversibility. Suggests disruptive claims without doctrinal change. Re-examine assumptions.",
-      imbalance: "Extreme imbalance across dimensions (>3 points spread). Suggests tunnel vision.",
-      contextInvalid: "Contextual recognition requires all base dimensions ≥2.",
-      overElevation: "Contextual elevation cannot compensate for collapsed bases.",
-      overflow: "Computed score exceeded 0–4 ceiling after elevation."
+      imbalance: "Extreme imbalance across dimensions (>3 points spread). Suggests tunnel vision."
     };
 
-    function computeViolations(subs, enhanced, isHistorical){
+    function computeViolations(subs, dimScores, isHistorical){
       if (isHistorical) return {};
-      const base = enhanced._base;
-      const arr = [base.Cognitive, base.Irreversibility, base.Disruption, base.Generative];
+      const arr = [dimScores.Cognitive, dimScores.Irreversibility, dimScores.Disruption, dimScores.Generative];
       return {
         incomplete: Object.values(subs).some(v => v == null || isNaN(+v)),
-        coherence: (base.Disruption>=3 || base.Generative>=3) && (base.Cognitive<2 || base.Irreversibility<2),
-        imbalance: Math.max(...arr) - Math.min(...arr) > 3,
-        contextInvalid: (enhanced._interactions.contextualElevation>0) && !(arr.every(v=>v>=2)),
-        overElevation: (enhanced._interactions.contextualElevation>0.6) && !(arr.every(v=>v>=2)),
-        overflow: [enhanced.Cognitive,enhanced.Irreversibility,enhanced.Disruption,enhanced.Generative].some(v=>v>4)
+        coherence: (dimScores.Disruption>=3 || dimScores.Generative>=3) && (dimScores.Cognitive<2 || dimScores.Irreversibility<2),
+        imbalance: Math.max(...arr) - Math.min(...arr) > 3
       };
     }
 
-    /* === Feedback + analysis generation === */
+    /* === Simplified feedback generation === */
     function generateUserFeedback(subScores, dimScores, classification) {
       const feedback = [];
       const labelFor = (v)=>getLabel(v).toLowerCase();
@@ -264,18 +212,11 @@
         }
       });
 
-      if (dimScores._meetsPrimaryThreshold) {
+      const meetsPrimaryThreshold = dimScores.Cognitive >= 3 && dimScores.Irreversibility >= 3;
+      if (meetsPrimaryThreshold) {
         feedback.push(`**Primary Threshold Recognition**: Cognitive ≥ 3 and Irreversibility ≥ 3 satisfied.`);
-      } else if (dimScores._contextuallyRevealed) {
-        feedback.push(`**Contextual Framework Recognition**: Below-threshold base was elevated through Disruption–Generative synergy.`);
       } else {
-        feedback.push(`**Below Recognition Criteria**: Neither primary nor contextual criteria met.`);
-      }
-
-      if (dimScores._hasInteractions) {
-        const ce = dimScores._interactions?.contextualElevation || 0;
-        const db = dimScores._interactions?.disruptiveBoost || 0;
-        feedback.push(`**Interactive Effects**: contextual +${ce.toFixed(2)} to Cognitive/Irreversibility; disruptive +${db.toFixed(2)} to Disruption/Generative.`);
+        feedback.push(`**Below Recognition Criteria**: Primary threshold (Cognitive ≥ 3 AND Irreversibility ≥ 3) not met.`);
       }
 
       const total = ORDER.reduce((s,k)=> s + (dimScores[k]||0), 0);
@@ -294,13 +235,11 @@
       });
 
       if (violations.coherence) {
-        const base = dimScores._base;
-        feedback.push(`**Pattern Analysis**: Cognitive (${base.Cognitive.toFixed(1)}) and Irreversibility (${base.Irreversibility.toFixed(1)}) scores suggest limited institutional transformation, yet Disruption/Generative claims are high. This pattern typically indicates overstated disruptive effects without corresponding doctrinal change.`);
+        feedback.push(`**Pattern Analysis**: Cognitive (${dimScores.Cognitive.toFixed(1)}) and Irreversibility (${dimScores.Irreversibility.toFixed(1)}) scores suggest limited institutional transformation, yet Disruption/Generative claims are high. This pattern typically indicates overstated disruptive effects without corresponding doctrinal change.`);
       }
 
       if (violations.imbalance) {
-        const base = dimScores._base;
-        const arr = [base.Cognitive, base.Irreversibility, base.Disruption, base.Generative];
+        const arr = [dimScores.Cognitive, dimScores.Irreversibility, dimScores.Disruption, dimScores.Generative];
         const spread = Math.max(...arr) - Math.min(...arr);
         feedback.push(`**Balance Analysis**: Dimensional spread of ${spread.toFixed(1)} points suggests uneven manifestation patterns. Innovation typically requires more balanced transformation across dimensions.`);
       }
@@ -406,7 +345,7 @@
     };
 
     /* === Sub-panel component === */
-    function SubPanel({dim, values, setValue, locked=false, showInteractions=false, isHistorical=false}) {
+    function SubPanel({dim, values, setValue, locked=false, isHistorical=false}) {
       const items = SUBS[dim];
       const rated = items.filter(it => (values[it.k]||0) > 0).length;
 
@@ -417,14 +356,6 @@
         baseScore = mean(items.map(it => values[it.k]||0));
       }
 
-      let displayScore = baseScore;
-      let hasBoost = false;
-      if (showInteractions && !isHistorical) {
-        const enhanced = aggregateWithContextualEffects(values);
-        displayScore = enhanced[dim];
-        hasBoost = Math.abs(displayScore - baseScore) > 0.05;
-      }
-
       const dMeta = DIMS.find(d=>d.key===dim);
 
       return (
@@ -432,16 +363,10 @@
           <div className="panel-h">
             <div className="flex items-center gap-2">
               <span>{dMeta.label}</span>
-              {hasBoost && (
-                <span className="interaction-indicator" title="Score enhanced by contextual interactions">
-                  +{Math.round((displayScore - baseScore)*100)/100}
-                </span>
-              )}
             </div>
             <div className="hint">{dMeta.def}</div>
             <div className="text-sm text-gray-600 mt-1">
-              {isHistorical ? `Historical case assessment` : `${rated}/4 rated`} • Score: {getLabel(displayScore)} ({Math.round(displayScore*10)/10})
-              {hasBoost && <span className="text-xs text-blue-600 ml-1">(base: {Math.round(baseScore*10)/10})</span>}
+              {isHistorical ? `Historical case assessment` : `${rated}/4 rated`} • Score: {getLabel(baseScore)} ({Math.round(baseScore*10)/10})
             </div>
           </div>
           <div className="panel-b">
@@ -664,9 +589,8 @@
       }
 
       function evaluateAndRender(nextSubs){
-        const enhanced = aggregateWithContextualEffects(nextSubs);
-        enhanced._isHistoricalExample = true;  // criteria not applied
-        setScores(enhanced);
+        const scores = computeFromSub(nextSubs);
+        setScores(scores);
         setSubScores(nextSubs);
         const ex = EXAMPLES[sel];
         setIssues(getEducationalAnalysis(sel, ex));
@@ -723,7 +647,7 @@
                 if (dim === 'Cognitive') {
                   ['c2a','c2b','c2c','c2d'].forEach(k => pick[k] = (subs && k in subs) ? subs[k] : ex.scores.Cognitive||0);
                 }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={false} isHistorical={true} />;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={true} />;
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
                 <div className="font-semibold mb-1">Explanation & References</div>
@@ -747,10 +671,10 @@
       });
 
       function runEval(nextSub){
-        const enhanced = aggregateWithContextualEffects(nextSub);
-        setScores(enhanced);
+        const scores = computeFromSub(nextSub);
+        setScores(scores);
         setSubScores(nextSub);
-        setIssues(generateUserFeedback(nextSub, enhanced, classify(enhanced,false)));
+        setIssues(generateUserFeedback(nextSub, scores, classify(scores,false)));
       }
 
       function setValue(k,v){
@@ -769,7 +693,7 @@
             <div className="font-semibold mb-2">Recognition Framework</div>
             <div className="space-y-1 text-sm">
               <div><strong>Primary Threshold:</strong> Cognitive ≥ 3 AND Irreversibility ≥ 3</div>
-              <div><strong>Contextual Framework:</strong> Disruption–Generative synergy can elevate borderline Cognitive/Irreversibility</div>
+              <div><strong>Framework Philosophy:</strong> Innovation requires both cognitive transformation and institutional embedding</div>
               <div><strong>C2:</strong> composite of procedures, architecture, interface, skills</div>
             </div>
           </div>
@@ -794,7 +718,7 @@
                 const pick = {};
                 SUB_KEYS[dim].forEach(key => pick[key] = sub[key]);
                 if (dim === 'Cognitive') ['c2a','c2b','c2c','c2d'].forEach(k => pick[k] = sub[k]);
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} showInteractions={true} />;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={false} />;
               })}
             </div>
           </div>
@@ -811,8 +735,7 @@
         return computeViolations(subScores, scores, isHistorical);
       },[subScores, scores, isHistorical]);
 
-      const meetsPrimaryThreshold = scores._meetsPrimaryThreshold;
-      const contextuallyRevealed = scores._contextuallyRevealed;
+      const meetsPrimaryThreshold = scores.Cognitive >= 3 && scores.Irreversibility >= 3;
       const idx = indexScore(scores);
       const cls = classify(scores, isHistorical);
       const hasCriteriaViolations = !isHistorical && Object.values(violations).some(Boolean);
@@ -839,8 +762,6 @@
               <div>
                 {meetsPrimaryThreshold ? 
                   <span className="badge bg-green-100 text-green-800">Primary Threshold Recognition</span> :
-                  contextuallyRevealed ?
-                  <span className="badge bg-blue-100 text-blue-800">Contextual Framework Recognition</span> :
                   <span className="badge bg-yellow-100 text-yellow-800">Below Recognition Criteria</span>
                 }
               </div>
@@ -883,7 +804,7 @@
     /* === App === */
     function App(){
       const [tab,setTab]=useState('test');
-      const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0,_base:{Cognitive:0,Irreversibility:0,Disruption:0,Generative:0}});
+      const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
       const [meta,setMeta]=useState({label:""});
       const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
@@ -939,7 +860,7 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v3.9 (c) Manabrata Guha, 2025
+            Military Innovation Assessment Framework v4.0 (c) Manabrata Guha, 2025
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} violations={violations} onClose={()=>setModalOpen(false)}/>}
