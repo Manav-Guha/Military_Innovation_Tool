@@ -403,7 +403,7 @@ A: No. Once something achieves innovation status through cognitive transformatio
 
 When using this framework in academic work, please cite:
 
-Guha, Manabrata. "Military Innovation: Between the Knowns and the Unknowns." [Publication details]
+Guha, Manabrata. "Military Innovation: Between the Knowns and the Unknowns." [forthcoming]
 
 Framework Tool: https://manav-guha.github.io/Military_Innovation_Tool/innovation-tool2.html
 
