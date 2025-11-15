@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Military Innovation Assessment Framework – v4.0</title>
+  <title>Military Innovation Assessment Framework – v5.0</title>
 
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -16,7 +17,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
   <style>
-    .big-tabs{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.25rem 0;width:100%}
+    .big-tabs{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.25rem 0;width:100%;flex-wrap:wrap}
     .big-tab{padding:.9rem 1.75rem;border-radius:1rem;font-weight:700;border:1px solid;transition:all .2s;flex-shrink:0}
     .big-tab-inactive{background:#f3f4f6;border-color:#d1d5db;color:#374151}
     .big-tab-inactive:hover{background:#e5e7eb}
@@ -35,11 +36,16 @@
     .c2-composite{background:#f8fafc;border:1px solid #cbd5e1;border-radius:.5rem;padding:.75rem;margin:.5rem 0}
     .c2-composite-header{background:#e2e8f0;border-bottom:1px solid #cbd5e1;padding:.5rem .75rem;font-weight:600;font-size:.8rem;color:#475569}
     .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
-
-    /* Failed Criteria Cards */
-    .criteria-card {background:#fef2f2;border:1px solid #fecaca;border-radius:0.5rem;padding:0.75rem 1rem;margin-top:0.75rem}
-    .criteria-card-title {font-weight:700;color:#991b1b;margin-bottom:0.25rem}
-    .criteria-card-text {font-size:0.9rem;color:#7f1d1d;line-height:1.4}
+    .score-display{background:#f9fafb;border:1px solid #e5e7eb;border-radius:0.5rem;padding:0.75rem;margin-top:0.5rem}
+    .score-row{display:flex;justify-content:space-between;align-items:center;padding:0.25rem 0}
+    .math-box{background:#fef3c7;border:1px solid #fbbf24;border-radius:0.5rem;padding:0.75rem;margin:0.5rem 0;font-family:monospace;font-size:0.85rem}
+    .classification-badge{padding:0.5rem 1rem;border-radius:0.5rem;font-weight:700;font-size:0.9rem;display:inline-block}
+    .classification-upgradation{background:#fee2e2;color:#991b1b;border:2px solid #dc2626}
+    .classification-marginal{background:#fef3c7;color:#92400e;border:2px solid #f59e0b}
+    .classification-modernization{background:#dbeafe;color:#1e40af;border:2px solid #3b82f6}
+    .classification-innovation{background:#d1fae5;color:#065f46;border:2px solid #10b981}
+    .classification-transformative{background:#e0e7ff;color:#3730a3;border:2px solid #6366f1}
+    .classification-revolutionary{background:#fae8ff;color:#6b21a8;border:2px solid #a855f7}
 
     /* Modal styles */
     .modal-bg {
@@ -68,24 +74,19 @@
       font-weight: 800;
     }
 
-    .modal-h.green {
-      background: #ecfdf5;
-      color: #065f46;
-    }
-
-    .modal-h.yellow {
-      background: #fffbeb;
-      color: #78350f;
-    }
-
-    .modal-h.red {
-      background: #fee2e2;
-      color: #7f1d1d;
-    }
-
     .modal-h.bg-blue-50 {
       background: #eff6ff;
       color: #1e40af;
+    }
+
+    .modal-h.bg-amber-50 {
+      background: #fffbeb;
+      color: #92400e;
+    }
+
+    .modal-h.bg-red-50 {
+      background: #fef2f2;
+      color: #991b1b;
     }
   </style>
 </head>
@@ -98,7 +99,6 @@
     /* === Labels and helpers === */
     const LABELS = ["None", "Minimal", "Moderate", "Significant", "Transformative"];
     
-    // BUG 5 FIX: Add bounds checking to getLabel function
     const getLabel = (value) => {
       const rounded = Math.round(value);
       if (rounded < 0) return LABELS[0];
@@ -125,7 +125,6 @@
       const vals = arr.map(v => +v || 0);
       return vals.reduce((a,v)=>a+v,0) / (vals.length || 1);
     };
-    const indexScore = s => Math.round(25 * ORDER.reduce((a,k)=> a + (+s[k]||0), 0) / 4);
 
     /* === Historical dataset (27) === */
     const EXAMPLES = {
@@ -158,12 +157,14 @@
       "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends recon/strike; limited paradigm challenge.", sources: ["Singer, 2009"] }
     };
 
-    /* === Simplified scoring - removed all arbitrary coefficients === */
+    /* === v1.6 Mathematics - Normalized [0,1] scoring === */
+    
     function aggregateC2(c2Scores) {
       return mean([c2Scores.c2a, c2Scores.c2b, c2Scores.c2c, c2Scores.c2d]);
     }
 
-    function computeFromSub(subVals){
+    // Compute RAW dimension scores [0,4] from sub-elements
+    function computeRawFromSub(subVals){
       return {
         Cognitive:       mean([subVals.c1, aggregateC2(subVals), subVals.c3, subVals.c4]),
         Irreversibility: mean([subVals.i1, subVals.i2, subVals.i3, subVals.i4]),
@@ -172,113 +173,138 @@
       };
     }
 
-    function classify(dimScores, isHistorical=false) {
-      const vals = ORDER.map(k => +(dimScores[k]||0));
-      const c=dimScores.Cognitive||0, i=dimScores.Irreversibility||0;
-      
-      if (c>=3 && i>=3) {
-        const strong=vals.filter(v=>v>=3).length;
-        if (strong===4) return "Transformative Innovation";
-        if (strong>=3) return "Revolutionary Innovation";
-        return "Innovation";
-      }
-      // BUG 7 FIX: Tighten modernization criteria to require multiple dimensions ≥2
-      const moderate = vals.filter(v=>v>=2).length;
-      return moderate >= 2 ? "Modernization" : "Upgradation";
+    // Normalize raw [0,4] scores to [0,1] for mathematics
+    function normalizeScores(rawScores) {
+      return {
+        Cognitive: rawScores.Cognitive / 4,
+        Irreversibility: rawScores.Irreversibility / 4,
+        Disruption: rawScores.Disruption / 4,
+        Generative: rawScores.Generative / 4
+      };
     }
 
-    /* === Simplified criteria checks === */
-    const violationMessages = {
-      incomplete: "All sliders must be rated before analysis.",
-      coherence: "High Disruption/Generative but weak Cognitive/Irreversibility. Suggests disruptive claims without doctrinal change. Re-examine assumptions.",
-      imbalance: "Extreme imbalance across dimensions (≥2 points spread). Suggests tunnel vision."
-    };
+    // v1.6 Classification based on L and I_intensity
+    function classify(normScores) {
+      const alpha = 0.5, beta = 0.5;
+      const C = normScores.Cognitive || 0;
+      const I = normScores.Irreversibility || 0;
+      const D = normScores.Disruption || 0;
+      const G = normScores.Generative || 0;
 
-    function computeViolations(subs, dimScores, isHistorical){
-      if (isHistorical) return {};
-      const arr = [dimScores.Cognitive, dimScores.Irreversibility, dimScores.Disruption, dimScores.Generative];
+      // Step 1: Check necessary conditions
+      const L = Math.min(C / alpha, I / beta);
       
-      // BUG 1 FIX: Check for any unrated indicators (null/undefined), not just null
+      if (L < 1.0) {
+        return {
+          classification: "Upgradation",
+          L: L,
+          I_intensity: undefined,
+          reason: "Necessary conditions not met (L < 1.0)"
+        };
+      }
+
+      // Step 2: Calculate intensity
+      const I_intensity = L * Math.sqrt(D * D + G * G);
+
+      // Step 3: Classify based on intensity
+      let classification;
+      if (I_intensity < 0.5) {
+        classification = "Marginal Innovation";
+      } else if (I_intensity < 1.0) {
+        classification = "Modernization";
+      } else if (I_intensity < 1.5) {
+        classification = "Innovation";
+      } else {
+        // Check for Revolutionary (balanced high scores)
+        if (C >= 0.75 && I >= 0.75 && D >= 0.75 && G >= 0.75) {
+          classification = "Revolutionary Innovation";
+        } else {
+          classification = "Transformative Innovation";
+        }
+      }
+
+      return {
+        classification: classification,
+        L: L,
+        I_intensity: I_intensity,
+        reason: `L = ${L.toFixed(2)}, I_intensity = ${I_intensity.toFixed(2)}`
+      };
+    }
+
+    function getClassificationColor(classification) {
+      const colors = {
+        "Upgradation": "classification-upgradation",
+        "Marginal Innovation": "classification-marginal",
+        "Modernization": "classification-modernization",
+        "Innovation": "classification-innovation",
+        "Transformative Innovation": "classification-transformative",
+        "Revolutionary Innovation": "classification-revolutionary"
+      };
+      return colors[classification] || "classification-innovation";
+    }
+
+    /* === Validation checks === */
+    function computeViolations(subs, normScores, isHistorical){
+      if (isHistorical) return {};
+      
+      // Check for any unrated indicators
       const hasUnratedIndicators = Object.entries(subs).some(([key, value]) => {
-        // Skip if this is not an actual sub-indicator key
         if (!key.match(/^[cdgi][1-4]$|^c2[a-d]$/)) return false;
         return value === null || value === undefined || value === '';
       });
       
       return {
         incomplete: hasUnratedIndicators,
-        coherence: (dimScores.Disruption>=3 || dimScores.Generative>=3) && (dimScores.Cognitive<2 || dimScores.Irreversibility<2),
-        // BUG 3 FIX: Lower imbalance threshold from >3 to ≥2
-        imbalance: Math.max(...arr) - Math.min(...arr) >= 2
+        coherence: (normScores.Disruption >= 0.75 || normScores.Generative >= 0.75) && 
+                   (normScores.Cognitive < 0.5 || normScores.Irreversibility < 0.5),
+        imbalance: Math.max(normScores.Cognitive, normScores.Irreversibility, normScores.Disruption, normScores.Generative) - 
+                   Math.min(normScores.Cognitive, normScores.Irreversibility, normScores.Disruption, normScores.Generative) >= 0.5
       };
     }
 
-    /* === Simplified feedback generation === */
-    function generateUserFeedback(subScores, dimScores, classification) {
+    const violationMessages = {
+      incomplete: "All sub-elements must be rated before analysis.",
+      coherence: "High Disruption/Generative but weak Cognitive/Irreversibility suggests disruptive claims without doctrinal change.",
+      imbalance: "Extreme imbalance across dimensions (≥0.5 spread on normalized scale) suggests uneven manifestation."
+    };
+
+    /* === Feedback generation === */
+    function generateUserFeedback(subScores, rawScores, normScores, classResult) {
       const feedback = [];
-      const labelFor = (v)=>getLabel(v).toLowerCase();
 
       ORDER.forEach(dim => {
         const d = DIMS.find(x=>x.key===dim);
-        const val = dimScores[dim] || 0;
-        if (dim==='Cognitive') {
-          const c2 = aggregateC2(subScores);
-          feedback.push(`**${d.label}**: C1 ${labelFor(subScores.c1||0)}, C2 ${labelFor(c2)}, C3 ${labelFor(subScores.c3||0)}, C4 ${labelFor(subScores.c4||0)}. Total: ${labelFor(val)} (${Math.round(val*10)/10}/4).`);
-        } else {
-          feedback.push(`**${d.label}**: total ${labelFor(val)} (${Math.round(val*10)/10}/4).`);
-        }
+        const rawVal = rawScores[dim] || 0;
+        const normVal = normScores[dim] || 0;
+        feedback.push(`**${d.label}**: Raw score ${rawVal.toFixed(2)}/4 (Normalized: ${normVal.toFixed(2)}) - ${getLabel(rawVal)}`);
       });
 
-      const meetsPrimaryThreshold = dimScores.Cognitive >= 3 && dimScores.Irreversibility >= 3;
-      if (meetsPrimaryThreshold) {
-        feedback.push(`**Primary Threshold Recognition**: Cognitive ≥ 3 and Irreversibility ≥ 3 satisfied.`);
-      } else {
-        feedback.push(`**Below Recognition Criteria**: Primary threshold (Cognitive ≥ 3 AND Irreversibility ≥ 3) not met.`);
+      feedback.push(`**Innovation Likelihood (L)**: ${classResult.L ? classResult.L.toFixed(2) : 'N/A'}`);
+      if (classResult.I_intensity !== undefined) {
+        feedback.push(`**Innovation Intensity**: ${classResult.I_intensity.toFixed(2)}`);
       }
 
-      const total = ORDER.reduce((s,k)=> s + (dimScores[k]||0), 0);
-      feedback.push(`**Final Classification**: ${classification} (total ${Math.round(total*10)/10}/16, index ${indexScore(dimScores)}).`);
-      return feedback;
-    }
-
-    function generateCriteriaAnalysis(subScores, dimScores, violations) {
-      const feedback = [];
-      const failedKeys = Object.entries(violations).filter(([_,v])=>v).map(([k])=>k);
-
-      feedback.push(`**Criteria Analysis**: Your assessment triggered ${failedKeys.length} validation concerns:`);
-
-      failedKeys.forEach(key => {
-        feedback.push(`**${key.charAt(0).toUpperCase() + key.slice(1)}**: ${violationMessages[key]}`);
-      });
-
-      if (violations.coherence) {
-        feedback.push(`**Pattern Analysis**: Cognitive (${dimScores.Cognitive.toFixed(1)}) and Irreversibility (${dimScores.Irreversibility.toFixed(1)}) scores suggest limited institutional transformation, yet Disruption/Generative claims are high. This pattern typically indicates overstated disruptive effects without corresponding doctrinal change.`);
-      }
-
-      if (violations.imbalance) {
-        const arr = [dimScores.Cognitive, dimScores.Irreversibility, dimScores.Disruption, dimScores.Generative];
-        const spread = Math.max(...arr) - Math.min(...arr);
-        feedback.push(`**Balance Analysis**: Dimensional spread of ${spread.toFixed(1)} points suggests uneven manifestation patterns. Innovation typically requires more balanced transformation across dimensions.`);
-      }
-
-      feedback.push(`**Educational Note**: These criteria exist to maintain theoretical coherence. Consider whether your concept represents genuine paradigmatic change (requiring Cognitive ≥ 3, Irreversibility ≥ 3) or capability enhancement within existing frameworks.`);
-      feedback.push(`**Reassessment Guidance**: Focus on the relationship between conceptual transformation (Cognitive) and institutional embedding (Irreversibility). Innovation requires both doctrinal change AND structural lock-in effects.`);
+      feedback.push(`**Classification**: ${classResult.classification}`);
+      feedback.push(`**Reason**: ${classResult.reason}`);
 
       return feedback;
     }
 
-    function getEducationalAnalysis(caseName, example) {
+    function getEducationalAnalysis(caseName, example, classResult) {
       const s = example.scores;
       return [
-        `**Historical Analysis**: Scored Cognitive:${s.Cognitive}, Irreversibility:${s.Irreversibility}, Disruption:${s.Disruption}, Generative:${s.Generative}.`,
-        `**Classification**: ${classify(s, true)}.`,
+        `**Historical Case**: ${caseName}`,
+        `**Original Scores**: Cognitive:${s.Cognitive}, Irreversibility:${s.Irreversibility}, Disruption:${s.Disruption}, Generative:${s.Generative}`,
+        `**Classification (v1.6)**: ${classResult.classification}`,
+        `**L (Likelihood)**: ${classResult.L.toFixed(2)}`,
+        classResult.I_intensity !== undefined ? `**I_intensity**: ${classResult.I_intensity.toFixed(2)}` : '',
         `**Justification**: ${example.justification}`,
         `**Sources**: ${example.sources.join(', ')}.`
-      ];
+      ].filter(x => x);
     }
 
     /* === Modal === */
-    function IssuesModal({issues,meta,subScores,dimScores,violations,onClose}){
+    function IssuesModal({issues,meta,subScores,rawScores,normScores,classResult,violations,onClose}){
       if(!issues && !meta) return null;
       const isHistorical = !!(meta && meta.ex && EXAMPLES[meta.label]);
       const isUserInput = !isHistorical && meta && meta.label && Object.values(subScores||{}).some(v => v>0);
@@ -287,17 +313,18 @@
       let title='Assessment Review', sub='Assessment completed successfully.', content=[];
       
       if (isUserInput && hasCriteriaViolations) {
-        title='Criteria Analysis';
-        sub = `Assessment guidance for your innovation concept: "${meta.label}"`;
-        content = generateCriteriaAnalysis(subScores, dimScores, violations);
+        title='Assessment Guidance';
+        sub = `Analysis of "${meta.label}"`;
+        const failedKeys = Object.entries(violations).filter(([_,v])=>v).map(([k])=>k);
+        content = failedKeys.map(k => `**${k.charAt(0).toUpperCase() + k.slice(1)}**: ${violationMessages[k]}`);
       } else if (isUserInput) {
-        title='Your Innovation Assessment';
-        sub = `Analysis of your innovation concept: "${meta.label}"`;
-        content = generateUserFeedback(subScores, dimScores, classify(dimScores,false));
+        title='Assessment Results';
+        sub = `Analysis of "${meta.label}"`;
+        content = generateUserFeedback(subScores, rawScores, normScores, classResult);
       } else if (isHistorical) {
         title='Historical Case Analysis';
-        sub = `Educational analysis of ${meta.label}:`;
-        content = getEducationalAnalysis(meta.label, meta.ex);
+        sub = `Educational analysis:`;
+        content = getEducationalAnalysis(meta.label, meta.ex, classResult);
       } else {
         content = ["Assessment completed successfully."];
       }
@@ -305,10 +332,10 @@
       return (
         <div className="modal-bg" onClick={onClose}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
-            <div className={`modal-h ${hasCriteriaViolations ? 'red' : 'bg-blue-50'}`}>{title}</div>
+            <div className={`modal-h ${hasCriteriaViolations ? 'bg-amber-50' : 'bg-blue-50'}`}>{title}</div>
             <div className="px-4 pt-2 pb-1 text-sm text-gray-700">{sub}</div>
             <div className="p-4 max-h-[60vh] overflow-auto">
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 {content.map((m,i)=>(
                   <li key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
                     <span className="text-blue-600 font-bold text-lg">•</span>
@@ -319,7 +346,7 @@
               </ul>
             </div>
             <div className="p-4 border-t text-right">
-              <button onClick={onClose} className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">OK</button>
+              <button onClick={onClose} className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">Close</button>
             </div>
           </div>
         </div>
@@ -362,24 +389,15 @@
     };
 
     /* === Sub-panel component === */
-    function SubPanel({dim, values, setValue, locked=false, isHistorical=false}) {
+    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore}) {
       const items = SUBS[dim];
       
-      // BUG 2 FIX: Count indicators that have been explicitly rated (not defaulting to 0)
       const rated = items.filter(it => {
         if (it.composite) {
-          // For composite C2, check if any sub-elements are rated
           return it.subElements.some(subEl => values[subEl.k] > 0);
         }
         return values[it.k] > 0;
       }).length;
-
-      let baseScore;
-      if (dim === 'Cognitive') {
-        baseScore = mean([values.c1||0, aggregateC2(values), values.c3||0, values.c4||0]);
-      } else {
-        baseScore = mean(items.map(it => values[it.k]||0));
-      }
 
       const dMeta = DIMS.find(d=>d.key===dim);
 
@@ -391,8 +409,20 @@
             </div>
             <div className="hint">{dMeta.def}</div>
             <div className="text-sm text-gray-600 mt-1">
-              {isHistorical ? `Historical case assessment` : `${rated}/4 rated`} • Score: {getLabel(baseScore)} ({Math.round(baseScore*10)/10})
+              {isHistorical ? `Historical case` : `${rated}/4 rated`}
             </div>
+            {rawScore !== undefined && (
+              <div className="score-display mt-2">
+                <div className="score-row">
+                  <span className="font-semibold">Raw Score [0-4]:</span>
+                  <span>{rawScore.toFixed(2)} ({getLabel(rawScore)})</span>
+                </div>
+                <div className="score-row">
+                  <span className="font-semibold">Normalized [0-1]:</span>
+                  <span>{normScore.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="panel-b">
             {items.map(it=>(
@@ -408,7 +438,7 @@
                 {it.composite && it.subElements && (
                   <div className="ml-4 space-y-2 border-l-2 border-gray-200 pl-3 mt-3">
                     <div className="c2-composite-header">
-                      C2 Composite Sub-Elements (Average: {getLabel(aggregateC2(values))} - {Math.round(aggregateC2(values)*10)/10}/4)
+                      C2 Composite Sub-Elements (Average: {getLabel(aggregateC2(values))} - {aggregateC2(values).toFixed(2)}/4)
                     </div>
                     {it.subElements.map(subEl => (
                       <div key={subEl.k} className="sub-item-row">
@@ -422,7 +452,6 @@
                         {locked ? (
                           <>
                             <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[subEl.k]||0)/4)*100}%`}}></div></div>
-                            {/* BUG 6 FIX: Consistent historical case text */}
                             <div className="text-[10px] text-gray-500 mt-1">Historical case assessment</div>
                           </>
                         ) : (
@@ -447,7 +476,6 @@
                     {locked ? (
                       <>
                         <div className="mt-2 meter"><div className="meter-fill" style={{width: `${((values[it.k]||0)/4)*100}%`}}></div></div>
-                        {/* BUG 6 FIX: Consistent historical case text */}
                         <div className="text-[10px] text-gray-500 mt-1">Historical case assessment</div>
                       </>
                     ) : (
@@ -472,10 +500,10 @@
     }
 
     /* === Charts === */
-    function RadarChart({scores}) {
+    function RadarChart({normScores}) {
       const ref = useRef(null);
       const chart = useRef(null);
-      const values = useMemo(() => ORDER.map(k => +scores[k] || 0), [scores]);
+      const values = useMemo(() => ORDER.map(k => +(normScores[k] || 0)), [normScores]);
 
       useEffect(() => {
         const ctx = ref.current.getContext('2d');
@@ -486,7 +514,7 @@
             labels: DIMS.map(d => d.label),
             datasets: [
               {
-                label: 'Current Assessment',
+                label: 'Current Assessment (Normalized [0,1])',
                 data: values,
                 fill: true,
                 backgroundColor: 'rgba(37,99,235,0.2)',
@@ -496,9 +524,8 @@
                 pointBackgroundColor: 'rgba(37,99,235,1)'
               },
               {
-                // BUG 4 FIX: Correct radar threshold visualization showing only C≥3 and I≥3
-                label: 'Primary Recognition Threshold (Cognitive ≥ 3, Irreversibility ≥ 3)',
-                data: [3,3,0,0],
+                label: 'Necessary Condition Threshold (C≥0.5, I≥0.5)',
+                data: [0.5, 0.5, 0, 0],
                 fill: false,
                 borderColor: 'rgba(239,68,68,0.8)',
                 borderDash: [6, 4],
@@ -517,8 +544,7 @@
                   label: function(context) {
                     const label = context.dataset.label || '';
                     const value = context.parsed.r;
-                    const qualitative = getLabel(value);
-                    return `${label}: ${qualitative} (${Math.round(value*10)/10})`;
+                    return `${label}: ${value.toFixed(2)}`;
                   }
                 }
               }
@@ -527,10 +553,10 @@
               r: {
                 beginAtZero: true,
                 min: 0,
-                max: 4,
+                max: 1,
                 ticks: { 
-                  stepSize: 1,
-                  callback: value => getLabel(value)
+                  stepSize: 0.25,
+                  callback: value => value.toFixed(2)
                 },
                 grid: { color: 'rgba(0,0,0,0.1)' }
               }
@@ -543,9 +569,9 @@
       return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
     }
 
-    function BarChart({scores}){
+    function BarChart({rawScores}){
       const ref=useRef(null), chart=useRef(null);
-      const values = useMemo(()=> ORDER.map(k => +scores[k]||0), [scores]);
+      const values = useMemo(()=> ORDER.map(k => +(rawScores[k]||0)), [rawScores]);
       const colorFor=v=> v>=3?'rgba(22,163,74,0.85)':v>=2?'rgba(234,179,8,0.95)':'rgba(239,68,68,0.95)';
       
       useEffect(()=>{
@@ -556,7 +582,7 @@
           data:{
             labels:DIMS.map(d=>d.label),
             datasets:[{
-              label:'Dimension Scores',
+              label:'Raw Dimension Scores [0-4]',
               data:values,
               backgroundColor:values.map(colorFor),
               borderColor:values.map(colorFor),
@@ -573,7 +599,7 @@
                   label: function(context) {
                     const value = context.parsed.y;
                     const qualitative = getLabel(value);
-                    return `${qualitative} (${Math.round(value*10)/10})`;
+                    return `${qualitative} (${value.toFixed(2)})`;
                   }
                 }
               }
@@ -599,7 +625,7 @@
     }
 
     /* === Historical Examples === */
-    function HistoricalExamples({setScores,setMeta,setSubScores,setIssues}){
+    function HistoricalExamples({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
       const [subs,setSubs]=useState(null);
@@ -617,11 +643,17 @@
       }
 
       function evaluateAndRender(nextSubs){
-        const scores = computeFromSub(nextSubs);
-        setScores(scores);
+        const raw = computeRawFromSub(nextSubs);
+        const norm = normalizeScores(raw);
+        const classRes = classify(norm);
+        
+        setRawScores(raw);
+        setNormScores(norm);
+        setClassResult(classRes);
         setSubScores(nextSubs);
+        
         const ex = EXAMPLES[sel];
-        setIssues(getEducationalAnalysis(sel, ex));
+        setIssues(getEducationalAnalysis(sel, ex, classRes));
       }
 
       function setValue(k,v){
@@ -635,9 +667,11 @@
       function loadFromSelection(v){
         setSel(v);
         if (!v) {
-          setScores({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
+          setRawScores({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
+          setNormScores({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
           setMeta({});
           setSubScores({});
+          setClassResult({classification:"Upgradation",L:0,I_intensity:undefined,reason:""});
           setIssues([]);
           return;
         }
@@ -655,7 +689,7 @@
           <div>
             <h2 className="text-2xl font-semibold">Historical Examples</h2>
             <p className="text-sm text-gray-600 mt-1">
-              Select a case. Sliders can be adjusted to explore counterfactuals. Historical cases show results without criteria checks.
+              Select a case. All 27 cases assessed using v1.6 mathematics (normalized scoring, L/I_intensity classification).
             </p>
           </div>
 
@@ -675,7 +709,9 @@
                 if (dim === 'Cognitive') {
                   ['c2a','c2b','c2c','c2d'].forEach(k => pick[k] = (subs && k in subs) ? subs[k] : ex.scores.Cognitive||0);
                 }
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={true} />;
+                const rawScore = computeRawFromSub(subs || buildSubFromExample(ex))[dim];
+                const normScore = rawScore / 4;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={true} rawScore={rawScore} normScore={normScore} />;
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
                 <div className="font-semibold mb-1">Explanation & References</div>
@@ -689,7 +725,7 @@
     }
 
     /* === Test Your Idea === */
-    function TestYourIdea({setScores,setMeta,setSubScores,setIssues}){
+    function TestYourIdea({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues}){
       const [label,setLabel]=useState("");
       const [sub,setSub]=useState({
         d1:0,d2:0,d3:0,d4:0,
@@ -699,10 +735,15 @@
       });
 
       function runEval(nextSub){
-        const scores = computeFromSub(nextSub);
-        setScores(scores);
+        const raw = computeRawFromSub(nextSub);
+        const norm = normalizeScores(raw);
+        const classRes = classify(norm);
+        
+        setRawScores(raw);
+        setNormScores(norm);
+        setClassResult(classRes);
         setSubScores(nextSub);
-        setIssues(generateUserFeedback(nextSub, scores, classify(scores,false)));
+        setIssues(generateUserFeedback(nextSub, raw, norm, classRes));
       }
 
       function setValue(k,v){
@@ -718,11 +759,11 @@
       return (
         <div className="space-y-6">
           <div className="theoretical-note">
-            <div className="font-semibold mb-2">Recognition Framework</div>
+            <div className="font-semibold mb-2">MIAF v1.6 Framework</div>
             <div className="space-y-1 text-sm">
-              <div><strong>Primary Threshold:</strong> Cognitive ≥ 3 AND Irreversibility ≥ 3</div>
-              <div><strong>Framework Philosophy:</strong> Innovation requires both cognitive transformation and institutional embedding</div>
-              <div><strong>C2:</strong> composite of procedures, architecture, interface, skills</div>
+              <div><strong>Necessary Conditions:</strong> Cognitive ≥ 0.5 AND Irreversibility ≥ 0.5 (on normalized scale)</div>
+              <div><strong>Assessment Flow:</strong> Sub-elements [0-4] → Raw dimensions [0-4] → Normalized [0-1] → L & I_intensity → Classification</div>
+              <div><strong>Philosophy:</strong> Innovation requires both cognitive transformation and institutional embedding</div>
             </div>
           </div>
 
@@ -730,7 +771,7 @@
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Test Your Idea</h2>
-                <p className="text-sm text-gray-600 mt-2">Use sliders to score manifestation across sub-indicators.</p>
+                <p className="text-sm text-gray-600 mt-2">Score sub-elements [0-4]. Framework computes normalized scores and classification.</p>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-700">Innovation Concept Title</label>
@@ -746,7 +787,9 @@
                 const pick = {};
                 SUB_KEYS[dim].forEach(key => pick[key] = sub[key]);
                 if (dim === 'Cognitive') ['c2a','c2b','c2c','c2d'].forEach(k => pick[k] = sub[k]);
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={false} />;
+                const rawScore = computeRawFromSub(sub)[dim];
+                const normScore = rawScore / 4;
+                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={false} rawScore={rawScore} normScore={normScore} />;
               })}
             </div>
           </div>
@@ -755,74 +798,72 @@
     }
 
     /* === Charts + Status === */
-    function ChartsPanel({scores,meta,subScores,openModal}){
+    function ChartsPanel({rawScores,normScores,classResult,meta,subScores,openModal}){
       const isHistorical = !!(meta && meta.ex && EXAMPLES[meta.label]);
 
       const violations = useMemo(()=>{
         if (!subScores || Object.keys(subScores).length===0) return {};
-        return computeViolations(subScores, scores, isHistorical);
-      },[subScores, scores, isHistorical]);
-
-      const meetsPrimaryThreshold = scores.Cognitive >= 3 && scores.Irreversibility >= 3;
-      const idx = indexScore(scores);
-      const cls = classify(scores, isHistorical);
-      const hasCriteriaViolations = !isHistorical && Object.values(violations).some(Boolean);
+        return computeViolations(subScores, normScores, isHistorical);
+      },[subScores, normScores, isHistorical]);
 
       const failedKeys = Object.entries(violations).filter(([_,v])=>v).map(([k])=>k);
 
       return (
         <div className="grid md:grid-cols-2 gap-6">
           <div className="panel">
-            <div className="panel-h">Radar Chart</div>
-            <div className="panel-b"><RadarChart scores={scores}/></div>
+            <div className="panel-h">Radar Chart (Normalized [0,1])</div>
+            <div className="panel-b"><RadarChart normScores={normScores}/></div>
           </div>
           <div className="panel">
-            <div className="panel-h">Bar Chart (Qualitative Scale)</div>
-            <div className="panel-b"><BarChart scores={scores}/></div>
+            <div className="panel-h">Bar Chart (Raw [0,4])</div>
+            <div className="panel-b"><BarChart rawScores={rawScores}/></div>
           </div>
 
-          <div className="md:col-span-2 panel panel-b text-sm">
-            <div className="flex flex-wrap items-center gap-4">
-              <div><span className="font-semibold">Index:</span> {Number.isFinite(idx)?idx:"—"}</div>
-              <div>
-                <span className="font-semibold">Classification: {cls}</span>
-              </div>
-              <div>
-                {meetsPrimaryThreshold ? 
-                  <span className="badge bg-green-100 text-green-800">Primary Threshold Recognition</span> :
-                  <span className="badge bg-yellow-100 text-yellow-800">Below Recognition Criteria</span>
-                }
+          <div className="md:col-span-2 panel panel-b">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className={`classification-badge ${getClassificationColor(classResult.classification)}`}>
+                  {classResult.classification}
+                </div>
+                {meta && meta.label && <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div>}
               </div>
 
-              {isHistorical && <span className="badge bg-green-100 text-green-800">Historical case (criteria checks not applied)</span>}
+              <div className="math-box">
+                <div className="font-semibold mb-2">Mathematical Analysis (v1.6)</div>
+                <div>L (Innovation Likelihood) = min(C/0.5, I/0.5) = {classResult.L ? classResult.L.toFixed(2) : 'N/A'}</div>
+                {classResult.I_intensity !== undefined && (
+                  <div>I_intensity = L × √(D² + G²) = {classResult.I_intensity.toFixed(2)}</div>
+                )}
+                <div className="mt-2 text-sm">{classResult.reason}</div>
+              </div>
 
-              {meta && meta.label ? <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div> : null}
+              {failedKeys.length>0 && !isHistorical && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <div className="font-semibold text-amber-900 mb-2">Assessment Guidance</div>
+                  {failedKeys.map(k=>(
+                    <div key={k} className="text-sm text-amber-800 mb-1">• {violationMessages[k]}</div>
+                  ))}
+                </div>
+              )}
 
-              <button
-                onClick={openModal}
-                className="ml-auto px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
-                View Analysis
-              </button>
-            </div>
-
-            {failedKeys.length>0 && (
-              <div className="mt-3">
-                <div className="font-semibold text-red-700">Failed Criteria:</div>
-                {failedKeys.map(k=>(
-                  <div key={k} className="criteria-card">
-                    <div className="criteria-card-title">Failed Criterion — {k==='coherence'?'Coherence':k[0].toUpperCase()+k.slice(1)}</div>
-                    <div className="criteria-card-text">{violationMessages[k]}</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                {DIMS.map(d=>(
+                  <div key={d.key}>
+                    <div className="font-semibold">{d.label}</div>
+                    <div>Raw: {(rawScores[d.key] || 0).toFixed(2)}/4</div>
+                    <div>Norm: {(normScores[d.key] || 0).toFixed(2)}</div>
+                    <div className="text-gray-600">{getLabel(rawScores[d.key] || 0)}</div>
                   </div>
                 ))}
               </div>
-            )}
 
-            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
-              {DIMS.map(d=>(
-                <div key={d.key} className="text-sm">
-                  <span className="font-semibold">{d.label}:</span> {getLabel(scores[d.key] || 0)} ({Math.round((scores[d.key] || 0)*10)/10})
-                </div>
-              ))}
+              <div className="flex justify-end">
+                <button
+                  onClick={openModal}
+                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                  View Detailed Analysis
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -832,7 +873,9 @@
     /* === App === */
     function App(){
       const [tab,setTab]=useState('test');
-      const [scores,setScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
+      const [rawScores,setRawScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
+      const [normScores,setNormScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
+      const [classResult,setClassResult]=useState({classification:"Upgradation",L:0,I_intensity:undefined,reason:""});
       const [meta,setMeta]=useState({label:""});
       const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
@@ -840,27 +883,22 @@
 
       const violations = useMemo(()=>{
         if (!subScores || Object.keys(subScores).length===0) return {};
-        return computeViolations(subScores, scores, !!(meta && meta.ex && EXAMPLES[meta.label]));
-      },[subScores, scores, meta]);
+        return computeViolations(subScores, normScores, !!(meta && meta.ex && EXAMPLES[meta.label]));
+      },[subScores, normScores, meta]);
 
       return (
         <main>
           <header className="text-center space-y-1 mb-6">
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Military Innovation Assessment Framework</h1>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800">A Four-Dimensional Recognition Tool</h2>
-            <div className="text-md md:text-lg text-gray-700">Based on "Military Innovation: Between the Knowns and the Unknowns"</div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">v5.0 - Code-Aligned with v1.6 Mathematics</h2>
+            <div className="text-md md:text-lg text-gray-700">Normalized Scoring | L & I_intensity Classification</div>
             <div className="text-xs text-gray-500 mt-1">(c) Manabrata Guha, 2025</div>
           </header>
-<div className="text-center mb-4">
-  <a href="./docs/user-guide.html" target="_blank" 
-     className="text-blue-600 hover:text-blue-800 text-sm font-medium underline">
-    User Guide & Documentation
-  </a>
-</div>
+
           <div className="big-tabs">
             {[
               {k:'test',label:'Test Your Idea'},
-              {k:'examples',label:'Historical Examples'}
+              {k:'examples',label:'Historical Examples (27 Cases)'}
             ].map(t=>(
               <button key={t.k} onClick={()=>setTab(t.k)}
                 className={'big-tab ' + (tab===t.k?'big-tab-active':'big-tab-inactive')}>{t.label}</button>
@@ -871,32 +909,36 @@
             {tab==='test' && (
               <>
                 <TestYourIdea
-                  setScores={setScores}
+                  setRawScores={setRawScores}
+                  setNormScores={setNormScores}
                   setMeta={setMeta}
                   setSubScores={setSubScores}
+                  setClassResult={setClassResult}
                   setIssues={setIssues}
                 />
-                <ChartsPanel scores={scores} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
+                <ChartsPanel rawScores={rawScores} normScores={normScores} classResult={classResult} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
               </>
             )}
             {tab==='examples' && (
               <>
                 <HistoricalExamples
-                  setScores={setScores}
+                  setRawScores={setRawScores}
+                  setNormScores={setNormScores}
                   setMeta={setMeta}
                   setSubScores={setSubScores}
+                  setClassResult={setClassResult}
                   setIssues={setIssues}
                 />
-                <ChartsPanel scores={scores} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
+                <ChartsPanel rawScores={rawScores} normScores={normScores} classResult={classResult} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
               </>
             )}
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v4.0 (c) Manabrata Guha, 2025
+            Military Innovation Assessment Framework v5.0 (c) Manabrata Guha, 2025
           </footer>
 
-          {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} dimScores={scores} violations={violations} onClose={()=>setModalOpen(false)}/>}
+          {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} rawScores={rawScores} normScores={normScores} classResult={classResult} violations={violations} onClose={()=>setModalOpen(false)}/>}
         </main>
       );
     }
