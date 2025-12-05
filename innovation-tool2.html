@@ -309,26 +309,29 @@
       ].filter(x => x);
     }
 
-    /* === Evidence Search Functions === */
-    async function searchEvidence(query, apiKey) {
-      if (!apiKey) {
-        throw new Error('API key not configured');
+    /* === Evidence Search Functions - Google Custom Search === */
+    async function searchEvidence(query, apiKey, searchEngineId) {
+      if (!apiKey || !searchEngineId) {
+        throw new Error('API credentials not configured');
       }
 
       try {
-        const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`, {
-          headers: {
-            'Accept': 'application/json',
-            'X-Subscription-Token': apiKey
-          }
-        });
+        const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=5`;
+        const response = await fetch(url);
 
         if (!response.ok) {
-          throw new Error(`Search failed: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `Search failed: ${response.status}`);
         }
 
         const data = await response.json();
-        return data.web?.results || [];
+        
+        // Transform Google results to our format
+        return (data.items || []).map(item => ({
+          title: item.title,
+          description: item.snippet,
+          url: item.link
+        }));
       } catch (error) {
         console.error('Search error:', error);
         throw error;
@@ -342,39 +345,62 @@
     }
 
     /* === Settings Component === */
-    function SettingsPanel({apiKey, setApiKey}) {
+    function SettingsPanel({apiKey, setApiKey, searchEngineId, setSearchEngineId}) {
       const [localKey, setLocalKey] = useState(apiKey);
+      const [localCx, setLocalCx] = useState(searchEngineId);
       const [saved, setSaved] = useState(false);
 
       useEffect(() => {
-        const stored = localStorage.getItem('brave_api_key');
-        if (stored) {
-          setLocalKey(stored);
-          setApiKey(stored);
+        const storedKey = localStorage.getItem('google_api_key');
+        const storedCx = localStorage.getItem('google_search_engine_id');
+        if (storedKey) {
+          setLocalKey(storedKey);
+          setApiKey(storedKey);
+        }
+        if (storedCx) {
+          setLocalCx(storedCx);
+          setSearchEngineId(storedCx);
         }
       }, []);
 
-      function saveKey() {
-        localStorage.setItem('brave_api_key', localKey);
+      function saveSettings() {
+        localStorage.setItem('google_api_key', localKey);
+        localStorage.setItem('google_search_engine_id', localCx);
         setApiKey(localKey);
+        setSearchEngineId(localCx);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
       }
 
       return (
         <div className="settings-panel">
-          <div className="font-semibold mb-2">🔧 Search Configuration</div>
-          <div className="text-sm text-gray-600 mb-3">Enter your Brave Search API key to enable evidence search. Get one free at: https://brave.com/search/api/</div>
-          <div className="flex gap-2 items-center flex-wrap">
-            <input
-              type="text"
-              value={localKey}
-              onChange={e => setLocalKey(e.target.value)}
-              placeholder="BSA..."
-              className="settings-input"
-            />
-            <button onClick={saveKey} className="search-btn">
-              {saved ? '✓ Saved' : 'Save Key'}
+          <div className="font-semibold mb-2">🔧 Search Configuration (Google Custom Search)</div>
+          <div className="text-sm text-gray-600 mb-3">
+            Using Google Custom Search API. Free tier: 100 searches/day.
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">API Key</label>
+              <input
+                type="text"
+                value={localKey}
+                onChange={e => setLocalKey(e.target.value)}
+                placeholder="AIza..."
+                className="settings-input"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Search Engine ID</label>
+              <input
+                type="text"
+                value={localCx}
+                onChange={e => setLocalCx(e.target.value)}
+                placeholder="61b572d99cb424a78"
+                className="settings-input"
+              />
+            </div>
+            <button onClick={saveSettings} className="search-btn">
+              {saved ? '✓ Saved' : 'Save Settings'}
             </button>
           </div>
         </div>
@@ -391,7 +417,7 @@
         return (
           <div className="evidence-panel">
             <div className="text-red-600">⚠️ Search failed: {error}</div>
-            <div className="text-sm text-gray-600 mt-2">Check your API key in settings above.</div>
+            <div className="text-sm text-gray-600 mt-2">Check your API credentials in settings above.</div>
           </div>
         );
       }
@@ -423,7 +449,7 @@
     }
 
     /* === Dimension Evidence Search Component === */
-    function DimensionEvidenceSearch({dimension, caseName, apiKey, onEvidenceSearched}) {
+    function DimensionEvidenceSearch({dimension, caseName, apiKey, searchEngineId, onEvidenceSearched}) {
       const [justification, setJustification] = useState('');
       const [results, setResults] = useState(null);
       const [loading, setLoading] = useState(false);
@@ -436,8 +462,8 @@
           return;
         }
 
-        if (!apiKey) {
-          setError('API key not configured - check settings above');
+        if (!apiKey || !searchEngineId) {
+          setError('API credentials not configured - check settings above');
           return;
         }
 
@@ -451,7 +477,7 @@
             ? `${caseName} ${dimension} military innovation ${keywords}`
             : `${dimension} military innovation ${keywords}`;
           
-          const searchResults = await searchEvidence(query, apiKey);
+          const searchResults = await searchEvidence(query, apiKey, searchEngineId);
           setResults(searchResults);
           setSearched(true);
           if (onEvidenceSearched) onEvidenceSearched(dimension);
@@ -575,7 +601,7 @@
     };
 
     /* === Sub-panel component === */
-    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, onEvidenceSearched, evidenceSearched}) {
+    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, searchEngineId, onEvidenceSearched, evidenceSearched}) {
       const items = SUBS[dim];
       
       const rated = items.filter(it => {
@@ -689,6 +715,7 @@
                 dimension={dim}
                 caseName={caseName}
                 apiKey={apiKey}
+                searchEngineId={searchEngineId}
                 onEvidenceSearched={onEvidenceSearched}
               />
             )}
@@ -823,7 +850,7 @@
     }
 
     /* === Historical Examples === */
-    function HistoricalExamples({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey}){
+    function HistoricalExamples({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey,searchEngineId}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
       const [subs,setSubs]=useState(null);
@@ -923,6 +950,7 @@
                     normScore={normScore}
                     caseName={sel}
                     apiKey={apiKey}
+                    searchEngineId={searchEngineId}
                     onEvidenceSearched={(d) => setEvidenceSearched(prev => ({...prev, [d]: true}))}
                     evidenceSearched={evidenceSearched[dim]}
                   />
@@ -940,7 +968,7 @@
     }
 
     /* === Test Your Idea === */
-    function TestYourIdea({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey}){
+    function TestYourIdea({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey,searchEngineId}){
       const [label,setLabel]=useState("");
       const [sub,setSub]=useState({
         d1:0,d2:0,d3:0,d4:0,
@@ -1018,6 +1046,7 @@
                     normScore={normScore}
                     caseName={label}
                     apiKey={apiKey}
+                    searchEngineId={searchEngineId}
                     onEvidenceSearched={(d) => setEvidenceSearched(prev => ({...prev, [d]: true}))}
                     evidenceSearched={evidenceSearched[dim]}
                   />
@@ -1112,7 +1141,8 @@
       const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
       const [modalOpen,setModalOpen]=useState(false);
-      const [apiKey,setApiKey]=useState("BSAg7bfiLx9ibBxZq1YJ0WxR1kBHun6");
+      const [apiKey,setApiKey]=useState("AIzaSyBlXjjV8mZy_Smm1TIDBqviv6blbJqNYYM");
+      const [searchEngineId,setSearchEngineId]=useState("61b572d99cb424a78");
 
       const violations = useMemo(()=>{
         if (!subScores || Object.keys(subScores).length===0) return {};
@@ -1128,7 +1158,7 @@
             <div className="text-xs text-gray-500 mt-1">(c) Manabrata Guha, 2025</div>
           </header>
 
-          <SettingsPanel apiKey={apiKey} setApiKey={setApiKey} />
+          <SettingsPanel apiKey={apiKey} setApiKey={setApiKey} searchEngineId={searchEngineId} setSearchEngineId={setSearchEngineId} />
 
           <div className="big-tabs">
             {[
@@ -1151,6 +1181,7 @@
                   setClassResult={setClassResult}
                   setIssues={setIssues}
                   apiKey={apiKey}
+                  searchEngineId={searchEngineId}
                 />
                 <ChartsPanel rawScores={rawScores} normScores={normScores} classResult={classResult} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
               </>
@@ -1165,6 +1196,7 @@
                   setClassResult={setClassResult}
                   setIssues={setIssues}
                   apiKey={apiKey}
+                  searchEngineId={searchEngineId}
                 />
                 <ChartsPanel rawScores={rawScores} normScores={normScores} classResult={classResult} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
               </>
