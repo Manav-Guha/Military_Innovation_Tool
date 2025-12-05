@@ -60,6 +60,8 @@
     .warning-badge{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.25rem}
     .settings-panel{background:#f0f9ff;border:2px solid #0ea5e9;border-radius:0.5rem;padding:1rem;margin-bottom:1rem}
     .settings-input{padding:0.5rem;border:1px solid #cbd5e1;border-radius:0.375rem;font-size:0.85rem;width:100%;max-width:500px;font-family:monospace}
+    .search-hint{font-size:0.75rem;color:#6b7280;font-style:italic;margin-top:0.25rem;line-height:1.3}
+    .search-example{font-size:0.7rem;color:#3b82f6;margin-top:0.125rem}
 
     /* Modal styles */
     .modal-bg {
@@ -133,6 +135,26 @@
       Irreversibility: ["i1","i2","i3","i4"],
       Disruption: ["d1","d2","d3","d4"],
       Generative: ["g1","g2","g3","g4"]
+    };
+
+    /* === Search term recommendations per dimension === */
+    const SEARCH_TERMS = {
+      Cognitive: {
+        terms: ["doctrine", "training transformation", "mental models", "TTPs", "operational concepts"],
+        example: "doctrine change tactical training"
+      },
+      Irreversibility: {
+        terms: ["path dependence", "sunk costs", "institutional lock-in", "infrastructure investment", "irreversible commitment"],
+        example: "path dependence institutional lock-in"
+      },
+      Disruption: {
+        terms: ["OODA loop", "adversary adaptation", "doctrinal breakpoint", "operational paradigm shift", "kill chain"],
+        example: "OODA disruption adversary response"
+      },
+      Generative: {
+        terms: ["follow-on capabilities", "spillover effects", "capability families", "cross-domain application", "derivative innovations"],
+        example: "follow-on capabilities new systems"
+      }
     };
 
     const mean = arr => {
@@ -326,7 +348,6 @@
 
         const data = await response.json();
         
-        // Transform Google results to our format
         return (data.items || []).map(item => ({
           title: item.title,
           description: item.snippet,
@@ -449,12 +470,16 @@
     }
 
     /* === Dimension Evidence Search Component === */
-    function DimensionEvidenceSearch({dimension, caseName, apiKey, searchEngineId, onEvidenceSearched}) {
-      const [justification, setJustification] = useState('');
+    function DimensionEvidenceSearch({dimension, caseName, apiKey, searchEngineId, onEvidenceSearched, initialJustification=""}) {
+      const [justification, setJustification] = useState(initialJustification);
       const [results, setResults] = useState(null);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
       const [searched, setSearched] = useState(false);
+
+      useEffect(() => {
+        setJustification(initialJustification);
+      }, [initialJustification]);
 
       async function handleSearch() {
         if (!justification.trim()) {
@@ -473,6 +498,7 @@
 
         try {
           const keywords = extractKeywords(justification);
+          const dimTerms = SEARCH_TERMS[dimension];
           const query = caseName 
             ? `${caseName} ${dimension} military innovation ${keywords}`
             : `${dimension} military innovation ${keywords}`;
@@ -488,6 +514,8 @@
         }
       }
 
+      const dimTerms = SEARCH_TERMS[dimension];
+
       return (
         <div className="mt-4 border-t pt-4">
           <div className="font-medium text-sm text-gray-700 mb-2">
@@ -500,6 +528,12 @@
             placeholder={`Justify your ${dimension} assessment (e.g., "Transforms targeting doctrine through autonomous decision-making")`}
             className="justification-field"
           />
+          <div className="search-hint">
+            <strong>Recommended search terms:</strong> {dimTerms.terms.join(', ')}
+          </div>
+          <div className="search-example">
+            Example query: "{caseName || 'Your case'} {dimTerms.example}"
+          </div>
           <button
             onClick={handleSearch}
             disabled={loading || !justification.trim()}
@@ -601,7 +635,7 @@
     };
 
     /* === Sub-panel component === */
-    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, searchEngineId, onEvidenceSearched, evidenceSearched}) {
+    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, searchEngineId, onEvidenceSearched, evidenceSearched, historicalJustification=""}) {
       const items = SUBS[dim];
       
       const rated = items.filter(it => {
@@ -717,6 +751,7 @@
                 apiKey={apiKey}
                 searchEngineId={searchEngineId}
                 onEvidenceSearched={onEvidenceSearched}
+                initialJustification={historicalJustification}
               />
             )}
           </div>
@@ -953,6 +988,7 @@
                     searchEngineId={searchEngineId}
                     onEvidenceSearched={(d) => setEvidenceSearched(prev => ({...prev, [d]: true}))}
                     evidenceSearched={evidenceSearched[dim]}
+                    historicalJustification={ex.justification}
                   />
                 );
               })}
