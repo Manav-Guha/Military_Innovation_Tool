@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Military Innovation Assessment Framework – v5.0</title>
+  <title>Military Innovation Assessment Framework – v5.1</title>
 
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -46,6 +46,20 @@
     .classification-innovation{background:#d1fae5;color:#065f46;border:2px solid #10b981}
     .classification-transformative{background:#e0e7ff;color:#3730a3;border:2px solid #6366f1}
     .classification-revolutionary{background:#fae8ff;color:#6b21a8;border:2px solid #a855f7}
+
+    .evidence-panel{background:#f8fafc;border:1px solid #cbd5e1;border-radius:0.5rem;padding:1rem;margin-top:1rem}
+    .evidence-header{font-weight:700;color:#475569;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
+    .evidence-result{background:#fff;border:1px solid #e2e8f0;border-radius:0.375rem;padding:0.75rem;margin-bottom:0.5rem}
+    .evidence-title{font-weight:600;color:#1e40af;margin-bottom:0.25rem;font-size:0.9rem}
+    .evidence-snippet{font-size:0.8rem;color:#475569;line-height:1.4}
+    .evidence-url{font-size:0.7rem;color:#64748b;margin-top:0.25rem}
+    .search-btn{background:#2563eb;color:#fff;padding:0.5rem 1rem;border-radius:0.375rem;font-size:0.85rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s}
+    .search-btn:hover{background:#1d4ed8}
+    .search-btn:disabled{background:#94a3b8;cursor:not-allowed}
+    .justification-field{width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:0.375rem;font-size:0.85rem;margin-top:0.5rem;resize:vertical;min-height:60px}
+    .warning-badge{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.25rem}
+    .settings-panel{background:#f0f9ff;border:2px solid #0ea5e9;border-radius:0.5rem;padding:1rem;margin-bottom:1rem}
+    .settings-input{padding:0.5rem;border:1px solid #cbd5e1;border-radius:0.375rem;font-size:0.85rem;width:100%;max-width:500px;font-family:monospace}
 
     /* Modal styles */
     .modal-bg {
@@ -115,7 +129,7 @@
     const ORDER = DIMS.map(d=>d.key);
 
     const SUB_KEYS = {
-      Cognitive: ["c1","c2","c3","c4"],  // c2 is composite of c2a..c2d
+      Cognitive: ["c1","c2","c3","c4"],
       Irreversibility: ["i1","i2","i3","i4"],
       Disruption: ["d1","d2","d3","d4"],
       Generative: ["g1","g2","g3","g4"]
@@ -163,7 +177,6 @@
       return mean([c2Scores.c2a, c2Scores.c2b, c2Scores.c2c, c2Scores.c2d]);
     }
 
-    // Compute RAW dimension scores [0,4] from sub-elements
     function computeRawFromSub(subVals){
       return {
         Cognitive:       mean([subVals.c1, aggregateC2(subVals), subVals.c3, subVals.c4]),
@@ -173,7 +186,6 @@
       };
     }
 
-    // Normalize raw [0,4] scores to [0,1] for mathematics
     function normalizeScores(rawScores) {
       return {
         Cognitive: rawScores.Cognitive / 4,
@@ -183,7 +195,6 @@
       };
     }
 
-    // v1.6 Classification based on L and I_intensity
     function classify(normScores) {
       const alpha = 0.5, beta = 0.5;
       const C = normScores.Cognitive || 0;
@@ -191,7 +202,6 @@
       const D = normScores.Disruption || 0;
       const G = normScores.Generative || 0;
 
-      // Step 1: Check necessary conditions
       const L = Math.min(C / alpha, I / beta);
       
       if (L < 1.0) {
@@ -203,10 +213,8 @@
         };
       }
 
-      // Step 2: Calculate intensity
       const I_intensity = L * Math.sqrt(D * D + G * G);
 
-      // Step 3: Classify based on intensity
       let classification;
       if (I_intensity < 0.5) {
         classification = "Marginal Innovation";
@@ -215,7 +223,6 @@
       } else if (I_intensity < 1.5) {
         classification = "Innovation";
       } else {
-        // Check for Revolutionary (balanced high scores)
         if (C >= 0.75 && I >= 0.75 && D >= 0.75 && G >= 0.75) {
           classification = "Revolutionary Innovation";
         } else {
@@ -247,7 +254,6 @@
     function computeViolations(subs, normScores, isHistorical){
       if (isHistorical) return {};
       
-      // Check for any unrated indicators
       const hasUnratedIndicators = Object.entries(subs).some(([key, value]) => {
         if (!key.match(/^[cdgi][1-4]$|^c2[a-d]$/)) return false;
         return value === null || value === undefined || value === '';
@@ -301,6 +307,186 @@
         `**Justification**: ${example.justification}`,
         `**Sources**: ${example.sources.join(', ')}.`
       ].filter(x => x);
+    }
+
+    /* === Evidence Search Functions === */
+    async function searchEvidence(query, apiKey) {
+      if (!apiKey) {
+        throw new Error('API key not configured');
+      }
+
+      try {
+        const response = await fetch(`https://api.search.brave.com/res/v1/web/search?q=${encodeURIComponent(query)}&count=5`, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Subscription-Token': apiKey
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Search failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.web?.results || [];
+      } catch (error) {
+        console.error('Search error:', error);
+        throw error;
+      }
+    }
+
+    function extractKeywords(text) {
+      const stopWords = new Set(['the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but', 'in', 'with', 'to', 'for', 'of', 'as', 'by', 'this', 'that']);
+      const words = text.toLowerCase().split(/\W+/).filter(w => w.length > 3 && !stopWords.has(w));
+      return [...new Set(words)].slice(0, 5).join(' ');
+    }
+
+    /* === Settings Component === */
+    function SettingsPanel({apiKey, setApiKey}) {
+      const [localKey, setLocalKey] = useState(apiKey);
+      const [saved, setSaved] = useState(false);
+
+      useEffect(() => {
+        const stored = localStorage.getItem('brave_api_key');
+        if (stored) {
+          setLocalKey(stored);
+          setApiKey(stored);
+        }
+      }, []);
+
+      function saveKey() {
+        localStorage.setItem('brave_api_key', localKey);
+        setApiKey(localKey);
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+
+      return (
+        <div className="settings-panel">
+          <div className="font-semibold mb-2">🔧 Search Configuration</div>
+          <div className="text-sm text-gray-600 mb-3">Enter your Brave Search API key to enable evidence search. Get one free at: https://brave.com/search/api/</div>
+          <div className="flex gap-2 items-center flex-wrap">
+            <input
+              type="text"
+              value={localKey}
+              onChange={e => setLocalKey(e.target.value)}
+              placeholder="BSA..."
+              className="settings-input"
+            />
+            <button onClick={saveKey} className="search-btn">
+              {saved ? '✓ Saved' : 'Save Key'}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    /* === Evidence Display Component === */
+    function EvidenceResults({results, loading, error}) {
+      if (loading) {
+        return <div className="evidence-panel"><div className="text-gray-600">🔍 Searching evidence...</div></div>;
+      }
+
+      if (error) {
+        return (
+          <div className="evidence-panel">
+            <div className="text-red-600">⚠️ Search failed: {error}</div>
+            <div className="text-sm text-gray-600 mt-2">Check your API key in settings above.</div>
+          </div>
+        );
+      }
+
+      if (!results || results.length === 0) {
+        return (
+          <div className="evidence-panel">
+            <div className="text-gray-600">No results found. Try refining your justification keywords.</div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="evidence-panel">
+          <div className="evidence-header">
+            📚 Evidence Results ({results.length})
+          </div>
+          {results.map((result, idx) => (
+            <div key={idx} className="evidence-result">
+              <div className="evidence-title">{result.title}</div>
+              <div className="evidence-snippet">{result.description}</div>
+              <a href={result.url} target="_blank" rel="noopener noreferrer" className="evidence-url hover:text-blue-600">
+                {result.url}
+              </a>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    /* === Dimension Evidence Search Component === */
+    function DimensionEvidenceSearch({dimension, caseName, apiKey, onEvidenceSearched}) {
+      const [justification, setJustification] = useState('');
+      const [results, setResults] = useState(null);
+      const [loading, setLoading] = useState(false);
+      const [error, setError] = useState(null);
+      const [searched, setSearched] = useState(false);
+
+      async function handleSearch() {
+        if (!justification.trim()) {
+          setError('Please provide justification text before searching');
+          return;
+        }
+
+        if (!apiKey) {
+          setError('API key not configured - check settings above');
+          return;
+        }
+
+        setLoading(true);
+        setError(null);
+        setSearched(false);
+
+        try {
+          const keywords = extractKeywords(justification);
+          const query = caseName 
+            ? `${caseName} ${dimension} military innovation ${keywords}`
+            : `${dimension} military innovation ${keywords}`;
+          
+          const searchResults = await searchEvidence(query, apiKey);
+          setResults(searchResults);
+          setSearched(true);
+          if (onEvidenceSearched) onEvidenceSearched(dimension);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      return (
+        <div className="mt-4 border-t pt-4">
+          <div className="font-medium text-sm text-gray-700 mb-2">
+            Evidence Search for {dimension}
+            {!searched && <span className="warning-badge ml-2">⚠️ Not searched</span>}
+          </div>
+          <textarea
+            value={justification}
+            onChange={e => setJustification(e.target.value)}
+            placeholder={`Justify your ${dimension} assessment (e.g., "Transforms targeting doctrine through autonomous decision-making")`}
+            className="justification-field"
+          />
+          <button
+            onClick={handleSearch}
+            disabled={loading || !justification.trim()}
+            className="search-btn mt-2"
+          >
+            {loading ? '🔍 Searching...' : '🔍 Search Evidence'}
+          </button>
+
+          {(results || loading || error) && (
+            <EvidenceResults results={results} loading={loading} error={error} />
+          )}
+        </div>
+      );
     }
 
     /* === Modal === */
@@ -389,7 +575,7 @@
     };
 
     /* === Sub-panel component === */
-    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore}) {
+    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, onEvidenceSearched, evidenceSearched}) {
       const items = SUBS[dim];
       
       const rated = items.filter(it => {
@@ -406,6 +592,9 @@
           <div className="panel-h">
             <div className="flex items-center gap-2">
               <span>{dMeta.label}</span>
+              {!evidenceSearched && !isHistorical && (
+                <span className="warning-badge text-xs">⚠️ Evidence not reviewed</span>
+              )}
             </div>
             <div className="hint">{dMeta.def}</div>
             <div className="text-sm text-gray-600 mt-1">
@@ -494,6 +683,15 @@
                 )}
               </div>
             ))}
+
+            {!locked && (
+              <DimensionEvidenceSearch
+                dimension={dim}
+                caseName={caseName}
+                apiKey={apiKey}
+                onEvidenceSearched={onEvidenceSearched}
+              />
+            )}
           </div>
         </div>
       );
@@ -625,10 +823,11 @@
     }
 
     /* === Historical Examples === */
-    function HistoricalExamples({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues}){
+    function HistoricalExamples({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
       const [subs,setSubs]=useState(null);
+      const [evidenceSearched, setEvidenceSearched] = useState({});
 
       function buildSubFromExample(ex) {
         const s = {};
@@ -666,6 +865,7 @@
 
       function loadFromSelection(v){
         setSel(v);
+        setEvidenceSearched({});
         if (!v) {
           setRawScores({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
           setNormScores({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
@@ -711,7 +911,22 @@
                 }
                 const rawScore = computeRawFromSub(subs || buildSubFromExample(ex))[dim];
                 const normScore = rawScore / 4;
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={true} rawScore={rawScore} normScore={normScore} />;
+                return (
+                  <SubPanel 
+                    key={dim} 
+                    dim={dim} 
+                    values={pick} 
+                    setValue={setValue} 
+                    locked={false} 
+                    isHistorical={true} 
+                    rawScore={rawScore} 
+                    normScore={normScore}
+                    caseName={sel}
+                    apiKey={apiKey}
+                    onEvidenceSearched={(d) => setEvidenceSearched(prev => ({...prev, [d]: true}))}
+                    evidenceSearched={evidenceSearched[dim]}
+                  />
+                );
               })}
               <div className="md:col-span-2 panel panel-b text-sm">
                 <div className="font-semibold mb-1">Explanation & References</div>
@@ -725,7 +940,7 @@
     }
 
     /* === Test Your Idea === */
-    function TestYourIdea({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues}){
+    function TestYourIdea({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey}){
       const [label,setLabel]=useState("");
       const [sub,setSub]=useState({
         d1:0,d2:0,d3:0,d4:0,
@@ -733,6 +948,7 @@
         c1:0,c2:0,c3:0,c4:0,c2a:0,c2b:0,c2c:0,c2d:0,
         g1:0,g2:0,g3:0,g4:0
       });
+      const [evidenceSearched, setEvidenceSearched] = useState({});
 
       function runEval(nextSub){
         const raw = computeRawFromSub(nextSub);
@@ -759,11 +975,12 @@
       return (
         <div className="space-y-6">
           <div className="theoretical-note">
-            <div className="font-semibold mb-2">MIAF v1.6 Framework</div>
+            <div className="font-semibold mb-2">MIAF v1.6 Framework with Evidence Search</div>
             <div className="space-y-1 text-sm">
               <div><strong>Necessary Conditions:</strong> Cognitive ≥ 0.5 AND Irreversibility ≥ 0.5 (on normalized scale)</div>
               <div><strong>Assessment Flow:</strong> Sub-elements [0-4] → Raw dimensions [0-4] → Normalized [0-1] → L & I_intensity → Classification</div>
-              <div><strong>Philosophy:</strong> Innovation requires both cognitive transformation and institutional embedding</div>
+              <div><strong>Evidence Search:</strong> Justify dimension scores → search for supporting/contradicting evidence → refine assessment</div>
+              <div><strong>Philosophy:</strong> Innovation requires both cognitive transformation and institutional embedding, validated by evidence</div>
             </div>
           </div>
 
@@ -771,7 +988,7 @@
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-semibold">Test Your Idea</h2>
-                <p className="text-sm text-gray-600 mt-2">Score sub-elements [0-4]. Framework computes normalized scores and classification.</p>
+                <p className="text-sm text-gray-600 mt-2">Score sub-elements [0-4]. Provide justification and search evidence per dimension.</p>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm font-medium text-gray-700">Innovation Concept Title</label>
@@ -789,7 +1006,22 @@
                 if (dim === 'Cognitive') ['c2a','c2b','c2c','c2d'].forEach(k => pick[k] = sub[k]);
                 const rawScore = computeRawFromSub(sub)[dim];
                 const normScore = rawScore / 4;
-                return <SubPanel key={dim} dim={dim} values={pick} setValue={setValue} locked={false} isHistorical={false} rawScore={rawScore} normScore={normScore} />;
+                return (
+                  <SubPanel 
+                    key={dim} 
+                    dim={dim} 
+                    values={pick} 
+                    setValue={setValue} 
+                    locked={false} 
+                    isHistorical={false} 
+                    rawScore={rawScore} 
+                    normScore={normScore}
+                    caseName={label}
+                    apiKey={apiKey}
+                    onEvidenceSearched={(d) => setEvidenceSearched(prev => ({...prev, [d]: true}))}
+                    evidenceSearched={evidenceSearched[dim]}
+                  />
+                );
               })}
             </div>
           </div>
@@ -880,6 +1112,7 @@
       const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
       const [modalOpen,setModalOpen]=useState(false);
+      const [apiKey,setApiKey]=useState("BSAg7bfiLx9ibBxZq1YJ0WxR1kBHun6");
 
       const violations = useMemo(()=>{
         if (!subScores || Object.keys(subScores).length===0) return {};
@@ -890,10 +1123,12 @@
         <main>
           <header className="text-center space-y-1 mb-6">
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Military Innovation Assessment Framework</h1>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800">v5.0 - Code-Aligned with v1.6 Mathematics</h2>
-            <div className="text-md md:text-lg text-gray-700">Normalized Scoring | L & I_intensity Classification</div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">v5.1 - Evidence-Informed Assessment</h2>
+            <div className="text-md md:text-lg text-gray-700">Normalized Scoring | L & I_intensity Classification | Evidence Search</div>
             <div className="text-xs text-gray-500 mt-1">(c) Manabrata Guha, 2025</div>
           </header>
+
+          <SettingsPanel apiKey={apiKey} setApiKey={setApiKey} />
 
           <div className="big-tabs">
             {[
@@ -915,6 +1150,7 @@
                   setSubScores={setSubScores}
                   setClassResult={setClassResult}
                   setIssues={setIssues}
+                  apiKey={apiKey}
                 />
                 <ChartsPanel rawScores={rawScores} normScores={normScores} classResult={classResult} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
               </>
@@ -928,6 +1164,7 @@
                   setSubScores={setSubScores}
                   setClassResult={setClassResult}
                   setIssues={setIssues}
+                  apiKey={apiKey}
                 />
                 <ChartsPanel rawScores={rawScores} normScores={normScores} classResult={classResult} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
               </>
@@ -935,7 +1172,7 @@
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v5.0 (c) Manabrata Guha, 2025
+            Military Innovation Assessment Framework v5.1 (c) Manabrata Guha, 2025
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} rawScores={rawScores} normScores={normScores} classResult={classResult} violations={violations} onClose={()=>setModalOpen(false)}/>}
