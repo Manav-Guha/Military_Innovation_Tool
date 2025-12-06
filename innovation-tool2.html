@@ -141,19 +141,23 @@
     const SEARCH_TERMS = {
       Cognitive: {
         terms: ["doctrine", "training transformation", "mental models", "TTPs", "operational concepts"],
-        example: "doctrine change tactical training"
+        example: "doctrine change tactical training",
+        placeholder: "e.g., Doctrine revised to accommodate new operational concepts and training methods"
       },
       Irreversibility: {
         terms: ["path dependence", "sunk costs", "institutional lock-in", "infrastructure investment", "irreversible commitment"],
-        example: "path dependence institutional lock-in"
+        example: "path dependence institutional lock-in",
+        placeholder: "e.g., Infrastructure investment creates path dependence and institutional lock-in"
       },
       Disruption: {
         terms: ["OODA loop", "adversary adaptation", "doctrinal breakpoint", "operational paradigm shift", "kill chain"],
-        example: "OODA disruption adversary response"
+        example: "OODA disruption adversary response",
+        placeholder: "e.g., OODA loop disrupted forcing adversary to abandon existing methods"
       },
       Generative: {
         terms: ["follow-on capabilities", "spillover effects", "capability families", "cross-domain application", "derivative innovations"],
-        example: "follow-on capabilities new systems"
+        example: "follow-on capabilities new systems",
+        placeholder: "e.g., Enables follow-on capabilities and cross-domain spillover effects"
       }
     };
 
@@ -525,7 +529,7 @@
           <textarea
             value={justification}
             onChange={e => setJustification(e.target.value)}
-            placeholder={`Justify your ${dimension} assessment (e.g., "Transforms targeting doctrine through autonomous decision-making")`}
+            placeholder={dimTerms.placeholder}
             className="justification-field"
           />
           <div className="search-hint">
@@ -1112,7 +1116,7 @@
             <div className="panel-b"><RadarChart normScores={normScores}/></div>
           </div>
           <div className="panel">
-            <div className="panel-h">Bar Chart (Raw [0,4])</div>
+            <div className="panel-h">Bar Chart (Raw [0-4])</div>
             <div className="panel-b"><BarChart rawScores={rawScores}/></div>
           </div>
 
