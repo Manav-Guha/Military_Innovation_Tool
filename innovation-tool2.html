@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Military Innovation Assessment Framework – v5.1</title>
+  <title>Military Innovation Assessment Framework – v5.2</title>
 
   <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -32,7 +32,6 @@
     .badge{display:inline-block;padding:.125rem .5rem;border-radius:.375rem;font-size:.75rem;font-weight:700}
     .meter{height:.5rem;background:#e5e7eb;border-radius:.375rem;overflow:hidden}
     .meter-fill{height:100%;background:#2563eb}
-    .theoretical-note{background:#f0f9ff;border:1px solid #0ea5e9;color:#0c4a6e;padding:.75rem 1rem;border-radius:.5rem;font-size:.8rem;line-height:1.4}
     .c2-composite{background:#f8fafc;border:1px solid #cbd5e1;border-radius:.5rem;padding:.75rem;margin:.5rem 0}
     .c2-composite-header{background:#e2e8f0;border-bottom:1px solid #cbd5e1;padding:.5rem .75rem;font-weight:600;font-size:.8rem;color:#475569}
     .case-title-input{font-size:1.1rem;font-weight:600;padding:0.75rem 1rem;border:2px solid #3b82f6;border-radius:0.5rem;background:#f8fafc}
@@ -58,10 +57,23 @@
     .search-btn:disabled{background:#94a3b8;cursor:not-allowed}
     .justification-field{width:100%;padding:0.5rem;border:1px solid #cbd5e1;border-radius:0.375rem;font-size:0.85rem;margin-top:0.5rem;resize:vertical;min-height:60px}
     .warning-badge{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.25rem}
-    .settings-panel{background:#f0f9ff;border:2px solid #0ea5e9;border-radius:0.5rem;padding:1rem;margin-bottom:1rem}
-    .settings-input{padding:0.5rem;border:1px solid #cbd5e1;border-radius:0.375rem;font-size:0.85rem;width:100%;max-width:500px;font-family:monospace}
     .search-hint{font-size:0.75rem;color:#6b7280;font-style:italic;margin-top:0.25rem;line-height:1.3}
     .search-example{font-size:0.7rem;color:#3b82f6;margin-top:0.125rem}
+
+    /* Framework Guide Styles */
+    .guide-section{background:#fff;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1.5rem;margin-bottom:1.5rem}
+    .guide-section h2{font-size:1.5rem;font-weight:700;color:#1f2937;margin-bottom:1rem}
+    .guide-section h3{font-size:1.25rem;font-weight:600;color:#374151;margin-top:1.25rem;margin-bottom:0.75rem}
+    .guide-section p{color:#4b5563;line-height:1.7;margin-bottom:0.75rem}
+    .guide-section ul{list-style:disc;margin-left:1.5rem;color:#4b5563;line-height:1.7}
+    .guide-section li{margin-bottom:0.5rem}
+    .guide-section code{background:#f3f4f6;padding:0.125rem 0.375rem;border-radius:0.25rem;font-size:0.9em;font-family:monospace}
+    .guide-section .formula{background:#fffbeb;border:1px solid #fbbf24;padding:1rem;border-radius:0.5rem;font-family:monospace;margin:1rem 0}
+    .guide-section table{width:100%;border-collapse:collapse;margin:1rem 0}
+    .guide-section th{background:#f3f4f6;padding:0.75rem;text-align:left;font-weight:600;border-bottom:2px solid #d1d5db}
+    .guide-section td{padding:0.75rem;border-bottom:1px solid #e5e7eb}
+    .back-btn{background:#10b981;color:#fff;padding:0.75rem 1.5rem;border-radius:0.5rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;display:inline-block;margin-bottom:1.5rem}
+    .back-btn:hover{background:#059669}
 
     /* Modal styles */
     .modal-bg {
@@ -142,22 +154,26 @@
       Cognitive: {
         terms: ["doctrine", "training transformation", "mental models", "TTPs", "operational concepts"],
         example: "doctrine change tactical training",
-        placeholder: "e.g., Doctrine revised to accommodate new operational concepts and training methods"
+        placeholder: "e.g., Doctrine revised to accommodate new operational concepts and training methods",
+        defaultTerms: "doctrine revision, tactical assumptions, training transformation, operational concepts"
       },
       Irreversibility: {
         terms: ["path dependence", "sunk costs", "institutional lock-in", "infrastructure investment", "irreversible commitment"],
         example: "path dependence institutional lock-in",
-        placeholder: "e.g., Infrastructure investment creates path dependence and institutional lock-in"
+        placeholder: "e.g., Infrastructure investment creates path dependence and institutional lock-in",
+        defaultTerms: "path dependence, institutional lock-in, infrastructure investment, force structure change"
       },
       Disruption: {
         terms: ["OODA loop", "adversary adaptation", "doctrinal breakpoint", "operational paradigm shift", "kill chain"],
         example: "OODA disruption adversary response",
-        placeholder: "e.g., OODA loop disrupted forcing adversary to abandon existing methods"
+        placeholder: "e.g., OODA loop disrupted forcing adversary to abandon existing methods",
+        defaultTerms: "OODA loop disruption, adversary forced to adapt, doctrinal breakpoint, paradigm shift"
       },
       Generative: {
         terms: ["follow-on capabilities", "spillover effects", "capability families", "cross-domain application", "derivative innovations"],
         example: "follow-on capabilities new systems",
-        placeholder: "e.g., Enables follow-on capabilities and cross-domain spillover effects"
+        placeholder: "e.g., Enables follow-on capabilities and cross-domain spillover effects",
+        defaultTerms: "follow-on capabilities, cross-domain spillover, derivative innovations, capability families"
       }
     };
 
@@ -369,69 +385,6 @@
       return [...new Set(words)].slice(0, 5).join(' ');
     }
 
-    /* === Settings Component === */
-    function SettingsPanel({apiKey, setApiKey, searchEngineId, setSearchEngineId}) {
-      const [localKey, setLocalKey] = useState(apiKey);
-      const [localCx, setLocalCx] = useState(searchEngineId);
-      const [saved, setSaved] = useState(false);
-
-      useEffect(() => {
-        const storedKey = localStorage.getItem('google_api_key');
-        const storedCx = localStorage.getItem('google_search_engine_id');
-        if (storedKey) {
-          setLocalKey(storedKey);
-          setApiKey(storedKey);
-        }
-        if (storedCx) {
-          setLocalCx(storedCx);
-          setSearchEngineId(storedCx);
-        }
-      }, []);
-
-      function saveSettings() {
-        localStorage.setItem('google_api_key', localKey);
-        localStorage.setItem('google_search_engine_id', localCx);
-        setApiKey(localKey);
-        setSearchEngineId(localCx);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-      }
-
-      return (
-        <div className="settings-panel">
-          <div className="font-semibold mb-2">🔧 Search Configuration (Google Custom Search)</div>
-          <div className="text-sm text-gray-600 mb-3">
-            Using Google Custom Search API. Free tier: 100 searches/day.
-          </div>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">API Key</label>
-              <input
-                type="text"
-                value={localKey}
-                onChange={e => setLocalKey(e.target.value)}
-                placeholder="AIza..."
-                className="settings-input"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Search Engine ID</label>
-              <input
-                type="text"
-                value={localCx}
-                onChange={e => setLocalCx(e.target.value)}
-                placeholder="61b572d99cb424a78"
-                className="settings-input"
-              />
-            </div>
-            <button onClick={saveSettings} className="search-btn">
-              {saved ? '✓ Saved' : 'Save Settings'}
-            </button>
-          </div>
-        </div>
-      );
-    }
-
     /* === Evidence Display Component === */
     function EvidenceResults({results, loading, error}) {
       if (loading) {
@@ -442,7 +395,7 @@
         return (
           <div className="evidence-panel">
             <div className="text-red-600">⚠️ Search failed: {error}</div>
-            <div className="text-sm text-gray-600 mt-2">Check your API credentials in settings above.</div>
+            <div className="text-sm text-gray-600 mt-2">Check your API credentials in settings.</div>
           </div>
         );
       }
@@ -450,7 +403,7 @@
       if (!results || results.length === 0) {
         return (
           <div className="evidence-panel">
-            <div className="text-gray-600">No results found. Try refining your justification keywords.</div>
+            <div className="text-gray-600">No results found. Try refining your search terms.</div>
           </div>
         );
       }
@@ -474,25 +427,22 @@
     }
 
     /* === Dimension Evidence Search Component === */
-    function DimensionEvidenceSearch({dimension, caseName, apiKey, searchEngineId, onEvidenceSearched, initialJustification=""}) {
-      const [justification, setJustification] = useState(initialJustification);
+    function DimensionEvidenceSearch({dimension, caseName, apiKey, searchEngineId, onEvidenceSearched, isHistorical}) {
+      const dimTerms = SEARCH_TERMS[dimension];
+      const [justification, setJustification] = useState(isHistorical ? dimTerms.defaultTerms : "");
       const [results, setResults] = useState(null);
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
       const [searched, setSearched] = useState(false);
 
-      useEffect(() => {
-        setJustification(initialJustification);
-      }, [initialJustification]);
-
       async function handleSearch() {
         if (!justification.trim()) {
-          setError('Please provide justification text before searching');
+          setError('Please provide search terms before searching');
           return;
         }
 
         if (!apiKey || !searchEngineId) {
-          setError('API credentials not configured - check settings above');
+          setError('API credentials not configured');
           return;
         }
 
@@ -502,7 +452,6 @@
 
         try {
           const keywords = extractKeywords(justification);
-          const dimTerms = SEARCH_TERMS[dimension];
           const query = caseName 
             ? `${caseName} ${dimension} military innovation ${keywords}`
             : `${dimension} military innovation ${keywords}`;
@@ -517,8 +466,6 @@
           setLoading(false);
         }
       }
-
-      const dimTerms = SEARCH_TERMS[dimension];
 
       return (
         <div className="mt-4 border-t pt-4">
@@ -639,7 +586,7 @@
     };
 
     /* === Sub-panel component === */
-    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, searchEngineId, onEvidenceSearched, evidenceSearched, historicalJustification=""}) {
+    function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, searchEngineId, onEvidenceSearched, evidenceSearched}) {
       const items = SUBS[dim];
       
       const rated = items.filter(it => {
@@ -755,7 +702,7 @@
                 apiKey={apiKey}
                 searchEngineId={searchEngineId}
                 onEvidenceSearched={onEvidenceSearched}
-                initialJustification={historicalJustification}
+                isHistorical={isHistorical}
               />
             )}
           </div>
@@ -788,7 +735,7 @@
                 pointBackgroundColor: 'rgba(37,99,235,1)'
               },
               {
-                label: 'Necessary Condition Threshold (C≥0.5, I≥0.5)',
+                label: 'Necessary Condition Threshold (C >= 0.5, I >= 0.5)',
                 data: [0.5, 0.5, 0, 0],
                 fill: false,
                 borderColor: 'rgba(239,68,68,0.8)',
@@ -886,6 +833,315 @@
         return ()=> chart.current && chart.current.destroy();
       },[values]);
       return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
+    }
+
+    /* === Framework Guide === */
+    function FrameworkGuide({onBack}) {
+      return (
+        <div className="space-y-6">
+          <button onClick={onBack} className="back-btn">← Back to Assessment</button>
+
+          <div className="guide-section">
+            <h2>1. Overview: What is MIAF?</h2>
+            <p>
+              The Military Innovation Assessment Framework (MIAF) is a systematic methodology for evaluating military innovations 
+              based on their substantive characteristics rather than rhetorical claims or technological novelty alone.
+            </p>
+            <p>
+              <strong>Core Philosophy:</strong> Innovation is a <em>relational event</em> emerging from the interaction between 
+              a problem structure and a proposed solution, not an inherent attribute of technology or individuals. This framework 
+              distinguishes genuine innovations from upgrades, modernizations, and marginal improvements.
+            </p>
+            <h3>Why Assess Military Innovation?</h3>
+            <ul>
+              <li>Avoid strategic misallocation of resources to non-innovations</li>
+              <li>Identify transformative capabilities before adversaries do</li>
+              <li>Establish evidence-based criteria for innovation claims</li>
+              <li>Enable comparative analysis across historical and contemporary cases</li>
+            </ul>
+          </div>
+
+          <div className="guide-section">
+            <h2>2. Methodology: The Four Dimensions</h2>
+            <p>
+              MIAF evaluates innovations across four dimensions, each capturing a distinct aspect of military change:
+            </p>
+
+            <h3>Cognitive Dimension</h3>
+            <p>
+              Measures whether doctrine, training, and mental models change to accommodate the novelty. Innovations challenge 
+              core assumptions prospectively, not retrospectively.
+            </p>
+            <p><strong>Sub-elements:</strong></p>
+            <ul>
+              <li>Core Assumptions Challenged: Does it require new operational thinking?</li>
+              <li>Process Logics/Systems: Changes to procedures, architecture, interfaces, skills</li>
+              <li>Doctrine/PME Revision: Updates to tactics, techniques, procedures, curricula</li>
+              <li>New Success Criteria: Different measures of effectiveness</li>
+            </ul>
+
+            <h3>Irreversibility Dimension</h3>
+            <p>
+              Assesses whether prior doctrine ceases to be viable as decisive practice. True innovation creates path dependence 
+              and institutional lock-in, making return to previous methods irrational.
+            </p>
+            <p><strong>Sub-elements:</strong></p>
+            <ul>
+              <li>Training & Skill Path Dependence: Pipeline commitments</li>
+              <li>Logistics & Infrastructure: Supply chain and maintenance investments</li>
+              <li>Adversary Compulsion to Mirror: Rival forced adoption</li>
+              <li>Institutional Lock-in: Force structure and sunk costs</li>
+            </ul>
+
+            <h3>Disruption Dimension</h3>
+            <p>
+              Evaluates whether adversaries are compelled to abandon or radically alter existing methods. Disruption breaks 
+              OODA loops, creates doctrinal breakpoints, and forces urgent adaptation.
+            </p>
+            <p><strong>Sub-elements:</strong></p>
+            <ul>
+              <li>OODA Disruption: Observation/decision cycle broken</li>
+              <li>Doctrinal Breakpoints: Old doctrine rendered obsolete</li>
+              <li>Kill-Chain/Topology Shifts: Operational sequencing changes</li>
+              <li>Adversary Scramble: Urgent counter-innovation required</li>
+            </ul>
+
+            <h3>Generative Dimension</h3>
+            <p>
+              Measures whether the change enables new capabilities or follow-on innovations. Generativity indicates whether 
+              the innovation serves as a platform for derivative developments.
+            </p>
+            <p><strong>Sub-elements:</strong></p>
+            <ul>
+              <li>New Capability Families: Enables follow-on systems</li>
+              <li>Cross-Domain Spillovers: Transfers to adjacent domains</li>
+              <li>Organizational Implications: New formations, schools, doctrines</li>
+              <li>Conceptual Platform: Foundation for further innovation</li>
+            </ul>
+
+            <h3>Scoring Logic</h3>
+            <p>
+              Each sub-element is rated on a 0-4 scale:
+            </p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Score</th>
+                  <th>Label</th>
+                  <th>Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td>0</td><td>None</td><td>No evidence of this characteristic</td></tr>
+                <tr><td>1</td><td>Minimal</td><td>Slight or negligible presence</td></tr>
+                <tr><td>2</td><td>Moderate</td><td>Clear but limited manifestation</td></tr>
+                <tr><td>3</td><td>Significant</td><td>Strong and substantial presence</td></tr>
+                <tr><td>4</td><td>Transformative</td><td>Complete and fundamental change</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="guide-section">
+            <h2>3. Mathematics: From Scores to Classification</h2>
+            
+            <h3>Step 1: Raw Dimension Scores</h3>
+            <p>Each dimension score is the mean of its sub-element scores:</p>
+            <div className="formula">
+              Dimension_raw = mean(sub-element₁, sub-element₂, sub-element₃, sub-element₄)
+            </div>
+            <p>Range: [0, 4]</p>
+
+            <h3>Step 2: Normalization</h3>
+            <p>Raw scores are normalized to [0, 1] scale:</p>
+            <div className="formula">
+              Dimension_normalized = Dimension_raw / 4
+            </div>
+
+            <h3>Step 3: Necessary Conditions</h3>
+            <p>Innovation requires BOTH cognitive transformation AND institutional embedding:</p>
+            <div className="formula">
+              Cognitive ≥ 0.5 AND Irreversibility ≥ 0.5
+            </div>
+            <p>If either condition fails, classification = <strong>Upgradation</strong> (not an innovation).</p>
+
+            <h3>Step 4: Innovation Likelihood (L)</h3>
+            <p>Measures how strongly necessary conditions are met:</p>
+            <div className="formula">
+              L = min(C / 0.5, I / 0.5)
+            </div>
+            <p>Where C = Cognitive (normalized), I = Irreversibility (normalized)</p>
+            <p>If L &lt; 1.0 → Upgradation</p>
+
+            <h3>Step 5: Innovation Intensity (I_intensity)</h3>
+            <p>Combines likelihood with disruption and generativity:</p>
+            <div className="formula">
+              I_intensity = L × √(D² + G²)
+            </div>
+            <p>Where D = Disruption (normalized), G = Generative (normalized)</p>
+
+            <h3>Step 6: Classification Taxonomy</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Classification</th>
+                  <th>Criteria</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Upgradation</td>
+                  <td>L &lt; 1.0 (necessary conditions not met)</td>
+                </tr>
+                <tr>
+                  <td>Marginal Innovation</td>
+                  <td>L ≥ 1.0 AND I_intensity &lt; 0.5</td>
+                </tr>
+                <tr>
+                  <td>Modernization</td>
+                  <td>L ≥ 1.0 AND 0.5 ≤ I_intensity &lt; 1.0</td>
+                </tr>
+                <tr>
+                  <td>Innovation</td>
+                  <td>L ≥ 1.0 AND 1.0 ≤ I_intensity &lt; 1.5</td>
+                </tr>
+                <tr>
+                  <td>Transformative Innovation</td>
+                  <td>L ≥ 1.0 AND I_intensity ≥ 1.5 (but not Revolutionary)</td>
+                </tr>
+                <tr>
+                  <td>Revolutionary Innovation</td>
+                  <td>L ≥ 1.0 AND I_intensity ≥ 1.5 AND all dimensions ≥ 0.75</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="guide-section">
+            <h2>4. Evidence Search: Agency, Not Automation</h2>
+            
+            <h3>Why Search for Evidence?</h3>
+            <ul>
+              <li><strong>Reduce confirmation bias:</strong> Forces confrontation with counter-evidence</li>
+              <li><strong>Create audit trail:</strong> Transparent justification for assessments</li>
+              <li><strong>Level expertise gap:</strong> Junior analysts gain automatic source access</li>
+              <li><strong>Speed assessment:</strong> Eliminates manual literature review</li>
+            </ul>
+
+            <h3>How to Formulate Search Terms</h3>
+            <p>
+              The tool provides dimension-specific recommended terms (e.g., "doctrine revision" for Cognitive, 
+              "OODA loop disruption" for Disruption). Combine these with case-specific keywords from your justification.
+            </p>
+            <p><strong>Good search terms:</strong></p>
+            <ul>
+              <li>Concrete nouns: "training pipeline", "infrastructure investment"</li>
+              <li>Military jargon: "TTPs", "force structure", "kill chain"</li>
+              <li>Theoretical concepts: "path dependence", "doctrinal breakpoint"</li>
+            </ul>
+            <p><strong>Avoid:</strong> Generic verbs ("improve", "enhance"), vague adjectives ("better", "new")</p>
+
+            <h3>Interpreting Results</h3>
+            <p>
+              Search results provide external validation or contradiction of your assessment. Look for:
+            </p>
+            <ul>
+              <li>Primary sources (military doctrine documents, field manuals, official reports)</li>
+              <li>Peer-reviewed scholarship (academic journals, think tank analyses)</li>
+              <li>Historical accounts (memoirs, archival evidence, contemporaneous reporting)</li>
+            </ul>
+            <p>
+              Absence of evidence is NOT evidence of absence. If no results appear, your search terms may be too narrow 
+              or the innovation may be undertheorized in existing literature.
+            </p>
+
+            <h3>Philosophy: Agency, Not Automation</h3>
+            <p>
+              Evidence search is <em>optional and deliberate</em>. The system does computational work (query construction, 
+              result retrieval) but you do the epistemic work (evaluation, interpretation, judgment). The warning badge 
+              "⚠️ Evidence not reviewed" serves as a nudge, not a requirement.
+            </p>
+          </div>
+
+          <div className="guide-section">
+            <h2>5. Use Cases</h2>
+
+            <h3>Defense Planning & Acquisition</h3>
+            <p>
+              Evaluate technology proposals to distinguish genuine innovations from incremental improvements. Avoid 
+              strategic misallocation by assessing whether claimed innovations meet necessary conditions.
+            </p>
+
+            <h3>Academic Research</h3>
+            <p>
+              Comparative analysis of historical innovations. MIAF provides standardized metrics for cross-case comparison, 
+              enabling systematic study of innovation patterns.
+            </p>
+
+            <h3>Technology Assessment</h3>
+            <p>
+              Assess emerging technologies (AI, hypersonics, quantum) against innovation criteria. Distinguish hype from 
+              substantive military change.
+            </p>
+
+            <h3>Policy Development</h3>
+            <p>
+              Inform innovation policy by understanding which characteristics predict successful adoption. Design programs 
+              that address both cognitive and institutional dimensions.
+            </p>
+          </div>
+
+          <div className="guide-section">
+            <h2>6. How to Use This Tool</h2>
+
+            <h3>Step-by-Step Walkthrough</h3>
+            <p><strong>Tab 1: Test Your Idea</strong></p>
+            <ol>
+              <li>Enter your innovation concept title</li>
+              <li>Score each sub-element [0-4] using the slider</li>
+              <li>For each dimension, write justification and click "Search Evidence"</li>
+              <li>Review search results and refine your assessment if needed</li>
+              <li>View radar and bar charts showing your scores</li>
+              <li>Check the mathematical analysis for L and I_intensity values</li>
+              <li>Click "View Detailed Analysis" for comprehensive feedback</li>
+            </ol>
+
+            <p><strong>Tab 2: Historical Examples</strong></p>
+            <ol>
+              <li>Select a case from the dropdown (27 historical innovations)</li>
+              <li>Review pre-scored dimensions and justifications</li>
+              <li>Use "Search Evidence" to see supporting scholarship</li>
+              <li>Compare MIAF classification to conventional narratives</li>
+              <li>Learn from validated assessments to calibrate your own judgments</li>
+            </ol>
+
+            <h3>Reading the Charts</h3>
+            <p><strong>Radar Chart (Normalized [0,1]):</strong></p>
+            <ul>
+              <li>Blue filled area: Your assessment across 4 dimensions</li>
+              <li>Red dashed line: Necessary condition threshold (C ≥ 0.5, I ≥ 0.5)</li>
+              <li>Larger area = higher innovation intensity</li>
+            </ul>
+
+            <p><strong>Bar Chart (Raw [0-4]):</strong></p>
+            <ul>
+              <li>Green bars (≥3): Strong presence of characteristic</li>
+              <li>Yellow bars (2): Moderate presence</li>
+              <li>Red bars (&lt;2): Weak or absent</li>
+            </ul>
+
+            <h3>Understanding Violations/Warnings</h3>
+            <p>The system flags potential assessment issues:</p>
+            <ul>
+              <li><strong>Incomplete:</strong> Not all sub-elements rated</li>
+              <li><strong>Coherence:</strong> High Disruption/Generative but weak Cognitive/Irreversibility (suggests claims without doctrinal embedding)</li>
+              <li><strong>Imbalance:</strong> Extreme variation across dimensions (≥0.5 spread) suggests uneven manifestation</li>
+            </ul>
+            <p>These are guidance, not failures. Consider whether your assessment accurately reflects the innovation's characteristics.</p>
+          </div>
+
+          <button onClick={onBack} className="back-btn">← Back to Assessment</button>
+        </div>
+      );
     }
 
     /* === Historical Examples === */
@@ -992,7 +1248,6 @@
                     searchEngineId={searchEngineId}
                     onEvidenceSearched={(d) => setEvidenceSearched(prev => ({...prev, [d]: true}))}
                     evidenceSearched={evidenceSearched[dim]}
-                    historicalJustification={ex.justification}
                   />
                 );
               })}
@@ -1042,16 +1297,6 @@
 
       return (
         <div className="space-y-6">
-          <div className="theoretical-note">
-            <div className="font-semibold mb-2">MIAF v1.6 Framework with Evidence Search</div>
-            <div className="space-y-1 text-sm">
-              <div><strong>Necessary Conditions:</strong> Cognitive ≥ 0.5 AND Irreversibility ≥ 0.5 (on normalized scale)</div>
-              <div><strong>Assessment Flow:</strong> Sub-elements [0-4] → Raw dimensions [0-4] → Normalized [0-1] → L & I_intensity → Classification</div>
-              <div><strong>Evidence Search:</strong> Justify dimension scores → search for supporting/contradicting evidence → refine assessment</div>
-              <div><strong>Philosophy:</strong> Innovation requires both cognitive transformation and institutional embedding, validated by evidence</div>
-            </div>
-          </div>
-
           <div className="panel panel-b">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
@@ -1181,8 +1426,24 @@
       const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
       const [modalOpen,setModalOpen]=useState(false);
-      const [apiKey,setApiKey]=useState("AIzaSyBlXjjV8mZy_Smm1TIDBqviv6blbJqNYYM");
-      const [searchEngineId,setSearchEngineId]=useState("61b572d99cb424a78");
+      
+      // Load API credentials from localStorage on mount
+      const [apiKey,setApiKey]=useState("");
+      const [searchEngineId,setSearchEngineId]=useState("");
+
+      useEffect(() => {
+        const storedKey = localStorage.getItem('google_api_key') || "AIzaSyBlXjjV8mZy_Smm1TIDBqviv6blbJqNYYM";
+        const storedCx = localStorage.getItem('google_search_engine_id') || "61b572d99cb424a78";
+        setApiKey(storedKey);
+        setSearchEngineId(storedCx);
+        // Store defaults if not present
+        if (!localStorage.getItem('google_api_key')) {
+          localStorage.setItem('google_api_key', storedKey);
+        }
+        if (!localStorage.getItem('google_search_engine_id')) {
+          localStorage.setItem('google_search_engine_id', storedCx);
+        }
+      }, []);
 
       const violations = useMemo(()=>{
         if (!subScores || Object.keys(subScores).length===0) return {};
@@ -1193,17 +1454,15 @@
         <main>
           <header className="text-center space-y-1 mb-6">
             <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900">Military Innovation Assessment Framework</h1>
-            <h2 className="text-xl md:text-2xl font-bold text-gray-800">v5.1 - Evidence-Informed Assessment</h2>
-            <div className="text-md md:text-lg text-gray-700">Normalized Scoring | L & I_intensity Classification | Evidence Search</div>
-            <div className="text-xs text-gray-500 mt-1">(c) Manabrata Guha, 2025</div>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-800">v5.2</h2>
+            <div className="text-xs text-gray-500 mt-1">© Manabrata Guha, 2025-2026</div>
           </header>
-
-          <SettingsPanel apiKey={apiKey} setApiKey={setApiKey} searchEngineId={searchEngineId} setSearchEngineId={setSearchEngineId} />
 
           <div className="big-tabs">
             {[
               {k:'test',label:'Test Your Idea'},
-              {k:'examples',label:'Historical Examples (27 Cases)'}
+              {k:'examples',label:'Historical Examples (27 Cases)'},
+              {k:'guide',label:'Framework Guide'}
             ].map(t=>(
               <button key={t.k} onClick={()=>setTab(t.k)}
                 className={'big-tab ' + (tab===t.k?'big-tab-active':'big-tab-inactive')}>{t.label}</button>
@@ -1241,10 +1500,13 @@
                 <ChartsPanel rawScores={rawScores} normScores={normScores} classResult={classResult} meta={meta} subScores={subScores} openModal={()=>setModalOpen(true)}/>
               </>
             )}
+            {tab==='guide' && (
+              <FrameworkGuide onBack={()=>setTab('test')} />
+            )}
           </section>
 
           <footer className="mt-10 text-center text-xs text-gray-500">
-            Military Innovation Assessment Framework v5.1 (c) Manabrata Guha, 2025
+            Military Innovation Assessment Framework v5.2 © Manabrata Guha, 2025-2026
           </footer>
 
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} rawScores={rawScores} normScores={normScores} classResult={classResult} violations={violations} onClose={()=>setModalOpen(false)}/>}
