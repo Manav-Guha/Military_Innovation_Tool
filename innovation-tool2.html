@@ -452,9 +452,10 @@
 
         try {
           const keywords = extractKeywords(justification);
+          // Removed dimension name from query - just use case + military + keywords
           const query = caseName 
-            ? `${caseName} ${dimension} military innovation ${keywords}`
-            : `${dimension} military innovation ${keywords}`;
+            ? `${caseName} military ${keywords}`
+            : `military innovation ${keywords}`;
           
           const searchResults = await searchEvidence(query, apiKey, searchEngineId);
           setResults(searchResults);
@@ -483,7 +484,7 @@
             <strong>Recommended search terms:</strong> {dimTerms.terms.join(', ')}
           </div>
           <div className="search-example">
-            Example query: "{caseName || 'Your case'} {dimTerms.example}"
+            Example query: "{caseName || 'Your case'} military {dimTerms.example}"
           </div>
           <button
             onClick={handleSearch}
