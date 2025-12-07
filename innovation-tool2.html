@@ -4,18 +4,11 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>Military Innovation Assessment Framework – v5.2</title>
-
-  <!-- React + Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js" data-presets="env,react"></script>
-
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Chart.js UMD -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
   <style>
     .big-tabs{display:flex;align-items:center;justify-content:center;gap:1rem;margin:1.25rem 0;width:100%;flex-wrap:wrap}
     .big-tab{padding:.9rem 1.75rem;border-radius:1rem;font-weight:700;border:1px solid;transition:all .2s;flex-shrink:0}
@@ -45,7 +38,6 @@
     .classification-innovation{background:#d1fae5;color:#065f46;border:2px solid #10b981}
     .classification-transformative{background:#e0e7ff;color:#3730a3;border:2px solid #6366f1}
     .classification-revolutionary{background:#fae8ff;color:#6b21a8;border:2px solid #a855f7}
-
     .evidence-panel{background:#f8fafc;border:1px solid #cbd5e1;border-radius:0.5rem;padding:1rem;margin-top:1rem}
     .evidence-header{font-weight:700;color:#475569;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem}
     .evidence-result{background:#fff;border:1px solid #e2e8f0;border-radius:0.375rem;padding:0.75rem;margin-bottom:0.5rem}
@@ -59,8 +51,6 @@
     .warning-badge{background:#fef3c7;color:#92400e;border:1px solid #f59e0b;padding:0.25rem 0.75rem;border-radius:0.375rem;font-size:0.75rem;display:inline-flex;align-items:center;gap:0.25rem}
     .search-hint{font-size:0.75rem;color:#6b7280;font-style:italic;margin-top:0.25rem;line-height:1.3}
     .search-example{font-size:0.7rem;color:#3b82f6;margin-top:0.125rem}
-
-    /* Framework Guide Styles */
     .guide-section{background:#fff;border:1px solid #e5e7eb;border-radius:0.75rem;padding:1.5rem;margin-bottom:1.5rem}
     .guide-section h2{font-size:1.5rem;font-weight:700;color:#1f2937;margin-bottom:1rem}
     .guide-section h3{font-size:1.25rem;font-weight:600;color:#374151;margin-top:1.25rem;margin-bottom:0.75rem}
@@ -74,82 +64,38 @@
     .guide-section td{padding:0.75rem;border-bottom:1px solid #e5e7eb}
     .back-btn{background:#10b981;color:#fff;padding:0.75rem 1.5rem;border-radius:0.5rem;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;display:inline-block;margin-bottom:1.5rem}
     .back-btn:hover{background:#059669}
-
-    /* Modal styles */
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-    }
-
-    .modal {
-      background: #fff;
-      border-radius: 12px;
-      max-width: 900px;
-      width: 94%;
-      max-height: 85vh;
-      overflow-y: auto;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-    }
-
-    .modal-h {
-      padding: 1rem 1.1rem;
-      border-bottom: 1px solid #e5e7eb;
-      font-weight: 800;
-    }
-
-    .modal-h.bg-blue-50 {
-      background: #eff6ff;
-      color: #1e40af;
-    }
-
-    .modal-h.bg-amber-50 {
-      background: #fffbeb;
-      color: #92400e;
-    }
-
-    .modal-h.bg-red-50 {
-      background: #fef2f2;
-      color: #991b1b;
-    }
+    .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:50}
+    .modal{background:#fff;border-radius:12px;max-width:900px;width:94%;max-height:85vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25)}
+    .modal-h{padding:1rem 1.1rem;border-bottom:1px solid #e5e7eb;font-weight:800}
+    .modal-h.bg-blue-50{background:#eff6ff;color:#1e40af}
+    .modal-h.bg-amber-50{background:#fffbeb;color:#92400e}
+    .modal-h.bg-red-50{background:#fef2f2;color:#991b1b}
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
   <div id="root" class="max-w-7xl mx-auto p-6"></div>
-
   <script type="text/babel">
     const {useState,useMemo,useEffect,useRef} = React;
-
-    /* === Labels and helpers === */
     const LABELS = ["None", "Minimal", "Moderate", "Significant", "Transformative"];
-    
     const getLabel = (value) => {
       const rounded = Math.round(value);
       if (rounded < 0) return LABELS[0];
       if (rounded >= LABELS.length) return LABELS[LABELS.length - 1];
       return LABELS[rounded] || LABELS[0];
     };
-
     const DIMS = [
-      { key:"Cognitive",        label:"Cognitive",        def:"Doctrine, training, and mental models change to accommodate the novelty." },
-      { key:"Irreversibility",  label:"Irreversibility",  def:"Prior doctrine ceases to be viable as decisive practice; no rational return." },
-      { key:"Disruption",       label:"Disruption",       def:"Adversaries are compelled to abandon or radically alter existing methods." },
-      { key:"Generative",       label:"Generative",       def:"The change enables new capabilities or follow-on innovations." }
+      { key:"Cognitive", label:"Cognitive", def:"Doctrine, training, and mental models change to accommodate the novelty." },
+      { key:"Irreversibility", label:"Irreversibility", def:"Prior doctrine ceases to be viable as decisive practice; rational return becomes impossible." },
+      { key:"Disruption", label:"Disruption", def:"Adversaries are compelled to abandon or radically alter existing methods." },
+      { key:"Generative", label:"Generative", def:"The change serves as a platform for derivative innovations and capability families." }
     ];
     const ORDER = DIMS.map(d=>d.key);
-
     const SUB_KEYS = {
       Cognitive: ["c1","c2","c3","c4"],
       Irreversibility: ["i1","i2","i3","i4"],
       Disruption: ["d1","d2","d3","d4"],
       Generative: ["g1","g2","g3","g4"]
     };
-
-    /* === Search term recommendations per dimension === */
     const SEARCH_TERMS = {
       Cognitive: {
         terms: ["doctrine", "training transformation", "mental models", "TTPs", "operational concepts"],
@@ -176,49 +122,42 @@
         defaultTerms: "follow-on capabilities, cross-domain spillover, derivative innovations, capability families"
       }
     };
-
     const mean = arr => {
       const vals = arr.map(v => +v || 0);
       return vals.reduce((a,v)=>a+v,0) / (vals.length || 1);
     };
-
-    /* === Historical dataset (27) === */
     const EXAMPLES = {
-      "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "AI-targeting speeds up existing processes; limited conceptual change.", sources: ["USAF Mad Scientist Initial Research"] },
-      "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Extended endurance; new patrol patterns.", sources: ["Polmar & Moore, 2004"] },
-      "ASBM": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Conceptual innovation altering naval operational art through integrated OTH radar, SAR satellites, MRBMs, MIRV warheads.", sources: ["Erickson, 2013"] },
-      "Barbed Wire": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Offensive assumptions untenable; defensive shift.", sources: ["Bull, 2013"] },
-      "Blitzkrieg": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:4 }, justification: "Transformed land warfare; follow-ons; new strategy.", sources: ["Liddell Hart; Guderian"] },
-      "Carrier Aviation": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Shift from battleships; aviation embedded.", sources: ["Friedman, 1983"] },
-      "Cyber Warfare": { scores: { Cognitive:2, Irreversibility:2, Disruption:2, Generative:3 }, justification: "New domain; integration continues.", sources: ["Libicki, 2012"] },
-      "Deep Battle/Reconnaissance Strike Complex": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Operational art entrenched; frontal assaults untenable.", sources: ["Habeck, 2003"] },
-      "F-16 Block D": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Modernization within air superiority paradigm.", sources: ["USAF Fact Sheets"] },
-      "Hypersonics": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "Acceleration; limited conceptual shift.", sources: ["Mahnken, 2007"] },
-      "Information Warfare": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 }, justification: "Digital-age transformation of knowledge conflict.", sources: ["Ricks, 2012"] },
-      "Lasers": { scores: { Cognitive:1, Irreversibility:1, Disruption:2, Generative:2 }, justification: "Capability improvement within paradigm.", sources: ["AFRL Primer, 2019"] },
-      "Machine Gun": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:3 }, justification: "Linear tactics obsolete; irreversible organization.", sources: ["Ellis, 1975"] },
-      "Military Robotics": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends human capability; limited reconceptualization.", sources: ["Singer, 2009"] },
-      "Minie Ball/Conoidal Bullet": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Napoleonic tactics untenable; assumptions questioned.", sources: ["Nosworthy, 2003"] },
-      "Multi-Domain Battle Concept": { scores: { Cognitive:2, Irreversibility:1, Disruption:2, Generative:3 }, justification: "Challenges stovepipes; embedding incomplete.", sources: ["TRADOC 525-3-1"] },
-      "Network-Centric Warfare": { scores: { Cognitive:1, Irreversibility:0, Disruption:1, Generative:2 }, justification: "Theory without institutional/doctrinal embedding; SoS implementations ≠ NCW.", sources: ["Alberts, Garstka, Stein, 1999"] },
-      "Nuclear Weapons": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Complete transformation.", sources: ["Freedman, 2003"] },
-      "PGMs": { scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:3 }, justification: "Enables new targeting; paradigm intact.", sources: ["Hallion, 1995"] },
-      "Radar": { scores: { Cognitive:2, Irreversibility:3, Disruption:3, Generative:3 }, justification: "Transforms air defense; organizational shifts.", sources: ["Fisher, 1988"] },
-      "Stealth": { scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:2 }, justification: "Improves capabilities within paradigm.", sources: ["Sweetman, 1986"] },
-      "Stirrups": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Paradigmatic transformation; feudal structures.", sources: ["Lynn White Jr., 1962"] },
-      "Stosstrupp Tactics": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Infiltration doctrine; linear assaults obsolete.", sources: ["Gudmundsson, 1989"] },
-      "T-72B3M Main Battle Tank": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Upgradation.", sources: ["Bartles, 2015"] },
-      "Tank": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Transformed land warfare; org change; new thinking.", sources: ["Harris, 1995"] },
-      "Telegraph": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Courier assumptions untenable; networked command.", sources: ["Hochfelder, 2012"] },
-      "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Extends recon/strike; limited paradigm challenge.", sources: ["Singer, 2009"] }
+      "AI-Targeting": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "Cognitive=1 (Minimal): AI-targeting accelerates existing OODA loop (faster BDA, target selection) but does not challenge air power doctrine—pilots still make final targeting decisions, AI serves as decision support not autonomous agent. Irreversibility=1 (Minimal): Forces could revert to manual targeting without strategic penalty; system enhances rather than replaces human judgment. Disruption=1 (Minimal): Adversaries face faster targeting cycles but can respond within existing IADS paradigms. Generative=2 (Moderate): Enables follow-on AI applications in ISR fusion and predictive analysis. Classification: Modernization.", sources: ["USAF Mad Scientist Initial Research"] },
+      "AIP Submarine": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:2 }, justification: "Cognitive=1 (Minimal): Extended patrol endurance enables new patrol patterns but doesn't challenge submarine warfare doctrine. Irreversibility=2 (Moderate): Supply infrastructure investment creates moderate lock-in. Disruption=1 (Minimal): Forces adversaries to extend ASW coverage but within existing paradigm. Generative=2 (Moderate): Spawns endurance-focused designs but not cross-domain platform.", sources: ["Polmar & Moore, 2004"] },
+      "ASBM": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Cognitive=3 (Significant): Challenges fundamental assumption that carrier groups operate with impunity beyond first island chain; requires new naval operational concepts integrating OTH radar, SAR satellites, MRBMs, MIRV warheads into kill-chain. Irreversibility=3 (Significant): Once deployed, reversal means conceding strategic depth; adversary (US Navy) compelled to develop countermeasures, distributed operations. Disruption=3 (Significant): Forces carrier groups to operate at extended ranges, breaking established power projection doctrine. Generative=2 (Moderate): Spawns follow-on hypersonic development, but not yet cross-domain platform. Classification: Transformative Innovation.", sources: ["Erickson, 2013"] },
+      "Barbed Wire": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Cognitive=3 (Significant): Made offensive assumptions of élan and bayonet charges untenable; forced defensive reconceptualization. Irreversibility=3 (Significant): Once deployed, reversal to open warfare impossible without strategic penalty. Disruption=3 (Significant): Rendered linear offensive tactics obsolete; forced trench warfare adaptation. Generative=2 (Moderate): Enabled defensive-in-depth but limited cross-domain transfer.", sources: ["Bull, 2013"] },
+      "Blitzkrieg": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:4 }, justification: "Cognitive=4 (Transformative): Complete reconceptualization of land warfare from attrition to maneuver, integrating armor, air, infantry in combined arms; new operational art (Auftragstaktik). Irreversibility=3 (Significant): Once mechanized, reversal to static defense untenable; created force structure lock-in. Disruption=4 (Transformative): Rendered WWI-era linear defenses obsolete; forced Allied scramble (Fall of France). Generative=4 (Transformative): Spawned operational maneuver concepts, deep battle doctrine, modern combined arms theory. Classification: Revolutionary Innovation (all dimensions ≥0.75).", sources: ["Liddell Hart; Guderian"] },
+      "Carrier Aviation": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Cognitive=4 (Transformative): Complete shift from battleship-centric to aviation-centric naval doctrine; reconceptualized power projection. Irreversibility=4 (Transformative): Massive infrastructure investment (carriers, naval air stations) made reversal impossible. Disruption=4 (Transformative): Rendered battleship doctrine obsolete (Pearl Harbor, Coral Sea, Midway). Generative=4 (Transformative): Spawned amphibious assault doctrine, modern naval aviation, joint strike capabilities.", sources: ["Friedman, 1983"] },
+      "Cyber Warfare": { scores: { Cognitive:2, Irreversibility:2, Disruption:2, Generative:3 }, justification: "Cognitive=2 (Moderate): New operational domain requiring new concepts, but integration into joint doctrine incomplete. Irreversibility=2 (Moderate): Organizational investment (Cyber Command) creates moderate lock-in. Disruption=2 (Moderate): Compels adversary cyber defenses but hasn't broken kinetic paradigm. Generative=3 (Significant): Enables information operations, hybrid warfare concepts.", sources: ["Libicki, 2012"] },
+      "Deep Battle/Reconnaissance Strike Complex": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Cognitive=4 (Transformative): Revolutionary operational art embedding reconnaissance-strike complex into doctrine; frontal assaults replaced by deep penetration. Irreversibility=3 (Significant): Force structure (tank armies, aviation regiments) created institutional lock-in. Disruption=4 (Transformative): Rendered WWI linear tactics completely obsolete. Generative=3 (Significant): Influenced modern operational maneuver, but domain-specific.", sources: ["Habeck, 2003"] },
+      "F-16 Block D": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Cognitive=0 (None): No doctrinal change—air superiority paradigm unchanged, improved sensors/weapons fit existing concepts. Irreversibility=1 (Minimal): Minor supply chain investment, but reversal to earlier blocks feasible. Disruption=0 (None): Adversaries face better F-16 but respond with incremental IADS improvements. Generative=1 (Minimal): Marginal sensor sharing, no derivative platforms. Classification: Upgradation (capability enhancement within existing paradigm).", sources: ["USAF Fact Sheets"] },
+      "Hypersonics": { scores: { Cognitive:1, Irreversibility:1, Disruption:1, Generative:2 }, justification: "Cognitive=1 (Minimal): Accelerates strike timelines but doesn't challenge air-missile power paradigm. Irreversibility=1 (Minimal): Development investment moderate, reversal feasible. Disruption=1 (Minimal): Compresses adversary decision cycles but within existing IAMD frameworks. Generative=2 (Moderate): Enables prompt global strike concepts.", sources: ["Mahnken, 2007"] },
+      "Information Warfare": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:4 }, justification: "Cognitive=3 (Significant): Reconceptualizes conflict as knowledge competition; challenges kinetic-centric assumptions. Irreversibility=3 (Significant): Organizational investment (IO units, cyber commands) creates path dependence. Disruption=3 (Significant): Forces adversaries to develop counter-information capabilities. Generative=4 (Transformative): Spawns hybrid warfare, cognitive security, influence operations—becomes foundational for 21st century conflict.", sources: ["Ricks, 2012"] },
+      "Lasers": { scores: { Cognitive:1, Irreversibility:1, Disruption:2, Generative:2 }, justification: "Cognitive=1 (Minimal): Provides alternative engagement method within existing air defense paradigm. Irreversibility=1 (Minimal): Deployment limited, reversal to kinetic systems feasible. Disruption=2 (Moderate): Compels adversary saturation tactics but within missile defense framework. Generative=2 (Moderate): Enables directed energy family but not yet cross-domain.", sources: ["AFRL Primer, 2019"] },
+      "Machine Gun": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:3 }, justification: "Cognitive=4 (Transformative): Made linear infantry tactics completely obsolete; forced suppression-and-maneuver reconceptualization. Irreversibility=4 (Transformative): Industrial base, training, force structure created irreversible organizational transformation. Disruption=4 (Transformative): Rendered close-order formations suicidal. Generative=3 (Significant): Enabled automatic weapons families, crew-served weapons doctrine.", sources: ["Ellis, 1975"] },
+      "Military Robotics": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Cognitive=1 (Minimal): Extends human capability (EOD, ISR) but doesn't challenge human-in-loop paradigm. Irreversibility=2 (Moderate): Some infrastructure investment but reversal feasible. Disruption=1 (Minimal): Marginal impact on adversary doctrine. Generative=3 (Significant): Platform for autonomous systems development, cross-domain potential emerging.", sources: ["Singer, 2009"] },
+      "Minie Ball/Conoidal Bullet": { scores: { Cognitive:3, Irreversibility:3, Disruption:3, Generative:2 }, justification: "Cognitive=3 (Significant): Made Napoleonic massed formations untenable; required dispersed tactics. Irreversibility=3 (Significant): Rifled musket production created path dependence. Disruption=3 (Significant): Rendered column tactics obsolete; extended engagement ranges. Generative=2 (Moderate): Enabled precision marksmanship but limited generativity.", sources: ["Nosworthy, 2003"] },
+      "Multi-Domain Battle Concept": { scores: { Cognitive:2, Irreversibility:1, Disruption:2, Generative:3 }, justification: "Cognitive=2 (Moderate): Challenges service stovepipes, advocates cross-domain integration, but doctrinal embedding incomplete. Irreversibility=1 (Minimal): Organizational resistance limits lock-in. Disruption=2 (Moderate): Potential to disrupt adversary A2/AD but unproven. Generative=3 (Significant): Spawns joint all-domain command concepts.", sources: ["TRADOC 525-3-1"] },
+      "Network-Centric Warfare": { scores: { Cognitive:1, Irreversibility:0, Disruption:1, Generative:2 }, justification: "Cognitive=1 (Minimal): Theory advocated information superiority but did not embed in doctrine—forces continued platform-centric operations with networked enhancements. Irreversibility=0 (None): No path dependence; forces could (and did) disconnect networks without strategic penalty; System-of-Systems implementations ≠ doctrinal NCW. Disruption=1 (Minimal): Marginally improved situational awareness, but adversaries not compelled to fundamental restructuring. Generative=2 (Moderate): Spawned C4ISR concepts but as enablers not transformative doctrine. Classification: Upgradation (theory without institutional embedding).", sources: ["Alberts, Garstka, Stein, 1999"] },
+      "Nuclear Weapons": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Cognitive=4 (Transformative): Complete reconceptualization of warfare; MAD doctrine, deterrence theory, arms control. Irreversibility=4 (Transformative): Industrial base, strategic forces, global nonproliferation regime create absolute lock-in. Disruption=4 (Transformative): Rendered conventional great power war potentially suicidal. Generative=4 (Transformative): Spawned entire strategic studies field, arms control architecture, extended deterrence.", sources: ["Freedman, 2003"] },
+      "PGMs": { scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:3 }, justification: "Cognitive=1 (Minimal): Enables precision strike within existing air power paradigm; doesn't challenge doctrinal assumptions. Irreversibility=2 (Moderate): Supply chain investment creates moderate lock-in. Disruption=2 (Moderate): Compels adversary hardening and dispersal but within conventional framework. Generative=3 (Significant): Enables guided munitions families, network-centric targeting.", sources: ["Hallion, 1995"] },
+      "Radar": { scores: { Cognitive:2, Irreversibility:3, Disruption:3, Generative:3 }, justification: "Cognitive=2 (Moderate): Requires new air defense procedures, early warning doctrine, but integrates into existing air warfare paradigm. Irreversibility=3 (Significant): Infrastructure (radar networks, control centers) creates path dependence. Disruption=3 (Significant): Breaks surprise attack advantage, forces adversary EW development. Generative=3 (Significant): Spawns IADS architectures, sensor fusion concepts.", sources: ["Fisher, 1988"] },
+      "Stealth": { scores: { Cognitive:1, Irreversibility:2, Disruption:2, Generative:2 }, justification: "Cognitive=1 (Minimal): Improves penetration capability within existing air superiority doctrine. Irreversibility=2 (Moderate): Design/manufacturing investment creates lock-in. Disruption=2 (Moderate): Compels adversary radar modernization but within IADS paradigm. Generative=2 (Moderate): Enables low-observable platforms but limited cross-domain transfer.", sources: ["Sweetman, 1986"] },
+      "Stirrups": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Cognitive=4 (Transformative): Complete transformation of cavalry doctrine; enabled shock tactics, heavy cavalry dominance. Irreversibility=4 (Transformative): Social structure (feudalism, knighthood) created absolute path dependence. Disruption=4 (Transformative): Rendered infantry-centric tactics obsolete. Generative=4 (Transformative): Spawned feudal military system, medieval warfare paradigm.", sources: ["Lynn White Jr., 1962"] },
+      "Stosstrupp Tactics": { scores: { Cognitive:4, Irreversibility:3, Disruption:4, Generative:3 }, justification: "Cognitive=4 (Transformative): Revolutionary infiltration doctrine replacing linear assaults; integrated combined arms at tactical level. Irreversibility=3 (Significant): Training, organization (stormtrooper units) created institutional lock-in. Disruption=4 (Transformative): Rendered trench warfare stalemate breakable; forced Allied adaptation. Generative=3 (Significant): Influenced modern infantry tactics, but domain-specific.", sources: ["Gudmundsson, 1989"] },
+      "T-72B3M Main Battle Tank": { scores: { Cognitive:0, Irreversibility:1, Disruption:0, Generative:1 }, justification: "Cognitive=0 (None): Incremental armor/fire control upgrades; no doctrinal change. Irreversibility=1 (Minimal): Modernization kit installation, minimal sunk costs. Disruption=0 (None): Marginal impact on adversary. Generative=1 (Minimal): No derivative platforms. Classification: Upgradation (incremental improvement).", sources: ["Bartles, 2015"] },
+      "Tank": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Cognitive=4 (Transformative): Complete reconceptualization of land warfare; mobile armored warfare replaced static defense. Irreversibility=4 (Transformative): Industrial base, mechanized force structure, logistics created irreversible transformation. Disruption=4 (Transformative): Rendered trench warfare paradigm obsolete. Generative=4 (Transformative): Spawned mechanized warfare doctrine, combined arms theory, operational maneuver.", sources: ["Harris, 1995"] },
+      "Telegraph": { scores: { Cognitive:4, Irreversibility:4, Disruption:4, Generative:4 }, justification: "Cognitive=4 (Transformative): Made courier-based command untenable; enabled real-time strategic coordination. Irreversibility=4 (Transformative): Network infrastructure, organizational adaptation (signal corps) created absolute lock-in. Disruption=4 (Transformative): Rendered slow-tempo command obsolete; compressed decision cycles. Generative=4 (Transformative): Foundational for modern networked C2, information age warfare.", sources: ["Hochfelder, 2012"] },
+      "UAVs": { scores: { Cognitive:1, Irreversibility:2, Disruption:1, Generative:3 }, justification: "Cognitive=1 (Minimal): Extends reconnaissance and strike but within existing manned-centric doctrine. Irreversibility=2 (Moderate): Some infrastructure (ground control stations) but reversal feasible. Disruption=1 (Minimal): Marginal impact on adversary doctrine. Generative=3 (Significant): Platform for autonomous systems, swarming concepts, but potential not yet realized.", sources: ["Singer, 2009"] }
     };
-
-    /* === v1.6 Mathematics - Normalized [0,1] scoring === */
-    
     function aggregateC2(c2Scores) {
       return mean([c2Scores.c2a, c2Scores.c2b, c2Scores.c2c, c2Scores.c2d]);
     }
-
     function computeRawFromSub(subVals){
       return {
         Cognitive:       mean([subVals.c1, aggregateC2(subVals), subVals.c3, subVals.c4]),
@@ -227,7 +166,6 @@
         Generative:      mean([subVals.g1, subVals.g2, subVals.g3, subVals.g4])
       };
     }
-
     function normalizeScores(rawScores) {
       return {
         Cognitive: rawScores.Cognitive / 4,
@@ -236,16 +174,13 @@
         Generative: rawScores.Generative / 4
       };
     }
-
     function classify(normScores) {
       const alpha = 0.5, beta = 0.5;
       const C = normScores.Cognitive || 0;
       const I = normScores.Irreversibility || 0;
       const D = normScores.Disruption || 0;
       const G = normScores.Generative || 0;
-
       const L = Math.min(C / alpha, I / beta);
-      
       if (L < 1.0) {
         return {
           classification: "Upgradation",
@@ -254,9 +189,7 @@
           reason: "Necessary conditions not met (L < 1.0)"
         };
       }
-
       const I_intensity = L * Math.sqrt(D * D + G * G);
-
       let classification;
       if (I_intensity < 0.5) {
         classification = "Marginal Innovation";
@@ -271,7 +204,6 @@
           classification = "Transformative Innovation";
         }
       }
-
       return {
         classification: classification,
         L: L,
@@ -279,7 +211,6 @@
         reason: `L = ${L.toFixed(2)}, I_intensity = ${I_intensity.toFixed(2)}`
       };
     }
-
     function getClassificationColor(classification) {
       const colors = {
         "Upgradation": "classification-upgradation",
@@ -291,16 +222,12 @@
       };
       return colors[classification] || "classification-innovation";
     }
-
-    /* === Validation checks === */
     function computeViolations(subs, normScores, isHistorical){
       if (isHistorical) return {};
-      
       const hasUnratedIndicators = Object.entries(subs).some(([key, value]) => {
         if (!key.match(/^[cdgi][1-4]$|^c2[a-d]$/)) return false;
         return value === null || value === undefined || value === '';
       });
-      
       return {
         incomplete: hasUnratedIndicators,
         coherence: (normScores.Disruption >= 0.75 || normScores.Generative >= 0.75) && 
@@ -309,35 +236,27 @@
                    Math.min(normScores.Cognitive, normScores.Irreversibility, normScores.Disruption, normScores.Generative) >= 0.5
       };
     }
-
-    const violationMessages = {
-      incomplete: "All sub-elements must be rated before analysis.",
+      const violationMessages = {
+      incomplete: "All sub-elements should be rated for complete assessment. Leaving indicators unscored may lead to misleading classifications.",
       coherence: "High Disruption/Generative but weak Cognitive/Irreversibility suggests disruptive claims without doctrinal change.",
       imbalance: "Extreme imbalance across dimensions (≥0.5 spread on normalized scale) suggests uneven manifestation."
     };
-
-    /* === Feedback generation === */
     function generateUserFeedback(subScores, rawScores, normScores, classResult) {
       const feedback = [];
-
       ORDER.forEach(dim => {
         const d = DIMS.find(x=>x.key===dim);
         const rawVal = rawScores[dim] || 0;
         const normVal = normScores[dim] || 0;
         feedback.push(`**${d.label}**: Raw score ${rawVal.toFixed(2)}/4 (Normalized: ${normVal.toFixed(2)}) - ${getLabel(rawVal)}`);
       });
-
       feedback.push(`**Innovation Likelihood (L)**: ${classResult.L ? classResult.L.toFixed(2) : 'N/A'}`);
       if (classResult.I_intensity !== undefined) {
         feedback.push(`**Innovation Intensity**: ${classResult.I_intensity.toFixed(2)}`);
       }
-
       feedback.push(`**Classification**: ${classResult.classification}`);
       feedback.push(`**Reason**: ${classResult.reason}`);
-
       return feedback;
     }
-
     function getEducationalAnalysis(caseName, example, classResult) {
       const s = example.scores;
       return [
@@ -350,24 +269,18 @@
         `**Sources**: ${example.sources.join(', ')}.`
       ].filter(x => x);
     }
-
-    /* === Evidence Search Functions - Google Custom Search === */
     async function searchEvidence(query, apiKey, searchEngineId) {
       if (!apiKey || !searchEngineId) {
         throw new Error('API credentials not configured');
       }
-
       try {
         const url = `https://www.googleapis.com/customsearch/v1?key=${apiKey}&cx=${searchEngineId}&q=${encodeURIComponent(query)}&num=5`;
         const response = await fetch(url);
-
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(errorData.error?.message || `Search failed: ${response.status}`);
         }
-
         const data = await response.json();
-        
         return (data.items || []).map(item => ({
           title: item.title,
           description: item.snippet,
@@ -378,19 +291,15 @@
         throw error;
       }
     }
-
     function extractKeywords(text) {
       const stopWords = new Set(['the', 'is', 'at', 'which', 'on', 'a', 'an', 'and', 'or', 'but', 'in', 'with', 'to', 'for', 'of', 'as', 'by', 'this', 'that']);
       const words = text.toLowerCase().split(/\W+/).filter(w => w.length > 3 && !stopWords.has(w));
       return [...new Set(words)].slice(0, 5).join(' ');
     }
-
-    /* === Evidence Display Component === */
     function EvidenceResults({results, loading, error}) {
       if (loading) {
         return <div className="evidence-panel"><div className="text-gray-600">🔍 Searching evidence...</div></div>;
       }
-
       if (error) {
         return (
           <div className="evidence-panel">
@@ -399,7 +308,6 @@
           </div>
         );
       }
-
       if (!results || results.length === 0) {
         return (
           <div className="evidence-panel">
@@ -407,7 +315,6 @@
           </div>
         );
       }
-
       return (
         <div className="evidence-panel">
           <div className="evidence-header">
@@ -425,8 +332,6 @@
         </div>
       );
     }
-
-    /* === Dimension Evidence Search Component === */
     function DimensionEvidenceSearch({dimension, caseName, apiKey, searchEngineId, onEvidenceSearched, isHistorical}) {
       const dimTerms = SEARCH_TERMS[dimension];
       const [justification, setJustification] = useState(isHistorical ? dimTerms.defaultTerms : "");
@@ -434,29 +339,23 @@
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState(null);
       const [searched, setSearched] = useState(false);
-
       async function handleSearch() {
         if (!justification.trim()) {
           setError('Please provide search terms before searching');
           return;
         }
-
         if (!apiKey || !searchEngineId) {
           setError('API credentials not configured');
           return;
         }
-
         setLoading(true);
         setError(null);
         setSearched(false);
-
         try {
           const keywords = extractKeywords(justification);
-          // Removed dimension name from query - just use case + military + keywords
           const query = caseName 
             ? `${caseName} military ${keywords}`
             : `military innovation ${keywords}`;
-          
           const searchResults = await searchEvidence(query, apiKey, searchEngineId);
           setResults(searchResults);
           setSearched(true);
@@ -467,7 +366,6 @@
           setLoading(false);
         }
       }
-
       return (
         <div className="mt-4 border-t pt-4">
           <div className="font-medium text-sm text-gray-700 mb-2">
@@ -493,23 +391,18 @@
           >
             {loading ? '🔍 Searching...' : '🔍 Search Evidence'}
           </button>
-
           {(results || loading || error) && (
             <EvidenceResults results={results} loading={loading} error={error} />
           )}
         </div>
       );
     }
-
-    /* === Modal === */
     function IssuesModal({issues,meta,subScores,rawScores,normScores,classResult,violations,onClose}){
       if(!issues && !meta) return null;
       const isHistorical = !!(meta && meta.ex && EXAMPLES[meta.label]);
       const isUserInput = !isHistorical && meta && meta.label && Object.values(subScores||{}).some(v => v>0);
       const hasCriteriaViolations = violations && Object.values(violations).some(Boolean);
-
       let title='Assessment Review', sub='Assessment completed successfully.', content=[];
-      
       if (isUserInput && hasCriteriaViolations) {
         title='Assessment Guidance';
         sub = `Analysis of "${meta.label}"`;
@@ -526,7 +419,6 @@
       } else {
         content = ["Assessment completed successfully."];
       }
-
       return (
         <div className="modal-bg" onClick={onClose}>
           <div className="modal" onClick={e=>e.stopPropagation()}>
@@ -550,55 +442,48 @@
         </div>
       );
     }
-
-    /* === Sub-indicator schema === */
     const SUBS = {
       Cognitive: [
-        {k:"c1", name:"Core Assumptions Challenged", hint:"Prospective vs retrospective change"},
-        {k:"c2", name:"Shift in Process Logics/Systems", hint:"Composite of procedures, architecture, interface, skills", composite:true,
+        {k:"c1", name:"Core Assumptions Challenged", hint:"Are fundamental operational assumptions challenged prospectively (before implementation) or only justified retrospectively (after success)? True innovation requires questioning assumptions before adoption, not rationalizing them afterward."},
+        {k:"c2", name:"Procedural & Architectural Integration", hint:"Does the change require modifications to standard operating procedures, system architectures, human-machine interfaces, and skill requirements? Composite indicator capturing breadth of organizational transformation.", composite:true,
           subElements:[
-            {k:"c2a",name:"Procedural Integration",hint:"SOP changes?"},
-            {k:"c2b",name:"System Architecture",hint:"Infrastructure/API shifts?"},
-            {k:"c2c",name:"Human-Machine Interface",hint:"Cognitive workflow shifts?"},
-            {k:"c2d",name:"Skill Requirements",hint:"New competencies?"},
+            {k:"c2a",name:"Procedural Integration",hint:"Are new standard operating procedures (SOPs) required, or do existing TTPs accommodate the change?"},
+            {k:"c2b",name:"System Architecture",hint:"Does infrastructure, data flow, or API integration require redesign, or does it plug into existing systems?"},
+            {k:"c2c",name:"Human-Machine Interface",hint:"Do cognitive workflows, decision authorities, or operational roles shift, or does human interaction remain unchanged?"},
+            {k:"c2d",name:"Skill Requirements",hint:"Are new competencies, training pipelines, or expertise domains required, or can existing personnel adapt quickly?"},
           ]
         },
-        {k:"c3", name:"Doctrine/PME Revision", hint:"TTPs, manuals, curricula"},
-        {k:"c4", name:"New Criteria for Success", hint:"Measures of effectiveness"},
+        {k:"c3", name:"Doctrine/PME Revision", hint:"Are tactics, techniques, procedures (TTPs), field manuals, or professional military education curricula formally revised to accommodate the change?"},
+        {k:"c4", name:"New Criteria for Success", hint:"Do measures of effectiveness (MOEs) or operational success criteria change, or do existing metrics still apply?"},
       ],
       Irreversibility: [
-        {k:"i1", name:"Training & Skill Path Dependence", hint:"Pipelines"},
-        {k:"i2", name:"Logistics & Infrastructure", hint:"Supply/maintenance"},
-        {k:"i3", name:"Adversary Compulsion to Mirror", hint:"Rival adoption"},
-        {k:"i4", name:"Institutional Lock-in/Force Structure", hint:"Sunk costs"},
+        {k:"i1", name:"Training & Skill Path Dependence", hint:"Have training pipelines, career paths, or skill investments created path dependence making reversal costly? Consider sunk human capital."},
+        {k:"i2", name:"Logistics & Infrastructure", hint:"Has supply chain infrastructure, maintenance ecosystems, or industrial base investment made reversal economically untenable?"},
+        {k:"i3", name:"Adversary Compulsion to Mirror", hint:"Are adversaries forced to adopt similar capabilities to maintain strategic parity, creating mutual lock-in?"},
+        {k:"i4", name:"Institutional Lock-in/Force Structure", hint:"Have force structure changes, organizational budgets, or bureaucratic commitments created sunk costs preventing reversal?"},
       ],
       Disruption: [
-        {k:"d1", name:"OODA Disruption", hint:"Observation/decision broken"},
-        {k:"d2", name:"Doctrinal Breakpoints", hint:"Old doctrine unusable"},
-        {k:"d3", name:"Kill-Chain/Topology Shifts", hint:"Sequencing changes"},
-        {k:"d4", name:"Adversary Scramble", hint:"Urgent counters"},
+        {k:"d1", name:"OODA Disruption", hint:"Does the change break adversary observation-orientation-decision-action loops, forcing them to operate inside degraded decision cycles?"},
+        {k:"d2", name:"Doctrinal Breakpoints", hint:"Does adversary doctrine become obsolete or ineffective, requiring fundamental reconceptualization rather than incremental adjustment?"},
+        {k:"d3", name:"Kill-Chain/Topology Shifts", hint:"Do operational sequencing, targeting topologies, or force employment patterns fundamentally change, rendering old playbooks invalid?"},
+        {k:"d4", name:"Adversary Scramble", hint:"Are adversaries forced into urgent counter-innovation efforts, crash programs, or strategic reorientation to regain parity?"},
       ],
       Generative: [
-        {k:"g1", name:"New Capability Families", hint:"Follow-ons"},
-        {k:"g2", name:"Cross-Domain Spillovers", hint:"Transfers"},
-        {k:"g3", name:"Organizational Implications", hint:"Formations/schools"},
-        {k:"g4", name:"Conceptual Platform", hint:"Base for further development"},
+        {k:"g1", name:"New Capability Families", hint:"Does the innovation spawn derivative systems or follow-on capabilities that would not exist without it as foundation?"},
+        {k:"g2", name:"Cross-Domain Spillovers", hint:"Do concepts, technologies, or operational patterns transfer to other domains (air-to-naval, tactical-to-strategic), enabling broader transformation?"},
+        {k:"g3", name:"Organizational Implications", hint:"Are new organizational structures, schools, career fields, or institutional forms created to exploit the innovation's potential?"},
+        {k:"g4", name:"Conceptual Platform", hint:"Does the innovation serve as intellectual foundation for further development, creating research agendas or doctrinal evolution paths?"},
       ]
     };
-
-    /* === Sub-panel component === */
     function SubPanel({dim, values, setValue, locked=false, isHistorical=false, rawScore, normScore, caseName, apiKey, searchEngineId, onEvidenceSearched, evidenceSearched}) {
       const items = SUBS[dim];
-      
       const rated = items.filter(it => {
         if (it.composite) {
           return it.subElements.some(subEl => values[subEl.k] > 0);
         }
         return values[it.k] > 0;
       }).length;
-
       const dMeta = DIMS.find(d=>d.key===dim);
-
       return (
         <div className="panel">
           <div className="panel-h">
@@ -635,7 +520,6 @@
                   </div>
                 </div>
                 <div className="hint">{it.hint}</div>
-
                 {it.composite && it.subElements && (
                   <div className="ml-4 space-y-2 border-l-2 border-gray-200 pl-3 mt-3">
                     <div className="c2-composite-header">
@@ -671,7 +555,6 @@
                     ))}
                   </div>
                 )}
-
                 {!it.composite && (
                   <>
                     {locked ? (
@@ -695,7 +578,6 @@
                 )}
               </div>
             ))}
-
             {!locked && (
               <DimensionEvidenceSearch
                 dimension={dim}
@@ -710,13 +592,10 @@
         </div>
       );
     }
-
-    /* === Charts === */
     function RadarChart({normScores}) {
       const ref = useRef(null);
       const chart = useRef(null);
       const values = useMemo(() => ORDER.map(k => +(normScores[k] || 0)), [normScores]);
-
       useEffect(() => {
         const ctx = ref.current.getContext('2d');
         if (chart.current) chart.current.destroy();
@@ -777,15 +656,12 @@
         });
         return () => { if (chart.current) chart.current.destroy(); };
       }, [values]);
-
       return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
     }
-
     function BarChart({rawScores}){
       const ref=useRef(null), chart=useRef(null);
       const values = useMemo(()=> ORDER.map(k => +(rawScores[k]||0)), [rawScores]);
       const colorFor=v=> v>=3?'rgba(22,163,74,0.85)':v>=2?'rgba(234,179,8,0.95)':'rgba(239,68,68,0.95)';
-      
       useEffect(()=>{
         const ctx=ref.current.getContext('2d');
         if(chart.current) chart.current.destroy();
@@ -835,13 +711,10 @@
       },[values]);
       return <div style={{height:"400px"}}><canvas ref={ref}/></div>;
     }
-
-    /* === Framework Guide === */
     function FrameworkGuide({onBack}) {
       return (
         <div className="space-y-6">
           <button onClick={onBack} className="back-btn">← Back to Assessment</button>
-
           <div className="guide-section">
             <h2>1. Overview: What is MIAF?</h2>
             <p>
@@ -853,6 +726,11 @@
               a problem structure and a proposed solution, not an inherent attribute of technology or individuals. This framework 
               distinguishes genuine innovations from upgrades, modernizations, and marginal improvements.
             </p>
+            <p><strong>Why this relational ontology matters:</strong></p>
+            <ul>
+              <li><strong>Rejects technological determinism:</strong> The view that innovations possess inherent transformative properties regardless of context. MIAF treats innovation status as relational, not intrinsic—the same technology can be transformative in one context (tanks in 1918 combined arms) and marginal in another (tanks in 1916 as mobile pillboxes).</li>
+              <li><strong>Rejects heroic agency myths:</strong> The view that great leaders drive innovation through force of will. MIAF treats innovation as emergent from problem-structure interaction, not individual genius.</li>
+            </ul>
             <h3>Why Assess Military Innovation?</h3>
             <ul>
               <li>Avoid strategic misallocation of resources to non-innovations</li>
@@ -861,13 +739,11 @@
               <li>Enable comparative analysis across historical and contemporary cases</li>
             </ul>
           </div>
-
           <div className="guide-section">
             <h2>2. Methodology: The Four Dimensions</h2>
             <p>
               MIAF evaluates innovations across four dimensions, each capturing a distinct aspect of military change:
             </p>
-
             <h3>Cognitive Dimension</h3>
             <p>
               Measures whether doctrine, training, and mental models change to accommodate the novelty. Innovations challenge 
@@ -876,15 +752,14 @@
             <p><strong>Sub-elements:</strong></p>
             <ul>
               <li>Core Assumptions Challenged: Does it require new operational thinking?</li>
-              <li>Process Logics/Systems: Changes to procedures, architecture, interfaces, skills</li>
+              <li>Procedural & Architectural Integration: Changes to procedures, architecture, interfaces, skills</li>
               <li>Doctrine/PME Revision: Updates to tactics, techniques, procedures, curricula</li>
               <li>New Success Criteria: Different measures of effectiveness</li>
             </ul>
-
             <h3>Irreversibility Dimension</h3>
             <p>
-              Assesses whether prior doctrine ceases to be viable as decisive practice. True innovation creates path dependence 
-              and institutional lock-in, making return to previous methods irrational.
+              Assesses whether prior doctrine ceases to be viable as decisive practice. Rational return becomes impossible 
+              through path dependence and institutional lock-in.
             </p>
             <p><strong>Sub-elements:</strong></p>
             <ul>
@@ -893,7 +768,6 @@
               <li>Adversary Compulsion to Mirror: Rival forced adoption</li>
               <li>Institutional Lock-in: Force structure and sunk costs</li>
             </ul>
-
             <h3>Disruption Dimension</h3>
             <p>
               Evaluates whether adversaries are compelled to abandon or radically alter existing methods. Disruption breaks 
@@ -906,11 +780,10 @@
               <li>Kill-Chain/Topology Shifts: Operational sequencing changes</li>
               <li>Adversary Scramble: Urgent counter-innovation required</li>
             </ul>
-
             <h3>Generative Dimension</h3>
             <p>
-              Measures whether the change enables new capabilities or follow-on innovations. Generativity indicates whether 
-              the innovation serves as a platform for derivative developments.
+              Measures whether the change serves as a platform for derivative innovations and capability families. Generativity 
+              indicates whether the innovation enables follow-on developments.
             </p>
             <p><strong>Sub-elements:</strong></p>
             <ul>
@@ -919,7 +792,6 @@
               <li>Organizational Implications: New formations, schools, doctrines</li>
               <li>Conceptual Platform: Foundation for further innovation</li>
             </ul>
-
             <h3>Scoring Logic</h3>
             <p>
               Each sub-element is rated on a 0-4 scale:
@@ -941,45 +813,47 @@
               </tbody>
             </table>
           </div>
-
           <div className="guide-section">
             <h2>3. Mathematics: From Scores to Classification</h2>
-            
             <h3>Step 1: Raw Dimension Scores</h3>
             <p>Each dimension score is the mean of its sub-element scores:</p>
             <div className="formula">
               Dimension_raw = mean(sub-element₁, sub-element₂, sub-element₃, sub-element₄)
             </div>
             <p>Range: [0, 4]</p>
-
             <h3>Step 2: Normalization</h3>
             <p>Raw scores are normalized to [0, 1] scale:</p>
             <div className="formula">
               Dimension_normalized = Dimension_raw / 4
             </div>
-
             <h3>Step 3: Necessary Conditions</h3>
             <p>Innovation requires BOTH cognitive transformation AND institutional embedding:</p>
             <div className="formula">
               Cognitive ≥ 0.5 AND Irreversibility ≥ 0.5
             </div>
+            <p><strong>Why these two dimensions are necessary:</strong></p>
+            <ul>
+              <li><strong>Without Cognitive (C &lt; 0.5):</strong> Technology adoption occurs within existing mental models. This is capability improvement, not innovation. Example: PGMs enhance strike accuracy but don't challenge air power doctrine.</li>
+              <li><strong>Without Irreversibility (I &lt; 0.5):</strong> Conceptual novelty remains reversible experiment, not embedded practice. Example: NCW had doctrinal advocates but forces could revert without strategic penalty.</li>
+              <li><strong>With both (C ≥ 0.5, I ≥ 0.5):</strong> Doctrine transforms AND reversal becomes untenable. This is threshold where innovation begins.</li>
+            </ul>
             <p>If either condition fails, classification = <strong>Upgradation</strong> (not an innovation).</p>
-
+            <p><strong>What is Upgradation?</strong> Changes that improve capability within existing paradigm but fail to meet necessary conditions for innovation (C &lt; 0.5 OR I &lt; 0.5). Includes both successful incremental improvements (F-16 Block D—works as intended, enhances air superiority, just not innovative) and failed innovation attempts (Network-Centric Warfare—claimed transformation but never achieved doctrinal embedding). The term prevents conflating 'non-innovation' with 'bad'—some upgradations are highly successful, they're just not paradigm-challenging.</p>
             <h3>Step 4: Innovation Likelihood (L)</h3>
-            <p>Measures how strongly necessary conditions are met:</p>
+            <p>Measures how strongly necessary conditions are met. This is NOT a probability measure—it's a threshold exceedance multiplier representing how far scores exceed minimum requirements.</p>
             <div className="formula">
               L = min(C / 0.5, I / 0.5)
             </div>
             <p>Where C = Cognitive (normalized), I = Irreversibility (normalized)</p>
-            <p>If L &lt; 1.0 → Upgradation</p>
-
+            <p>If L &lt; 1.0 → Upgradation (necessary conditions not met)</p>
+            <p>If L ≥ 1.0 → Both thresholds exceeded, qualifies as innovation. Values &gt; 1.0 amplify intensity proportionally.</p>
             <h3>Step 5: Innovation Intensity (I_intensity)</h3>
             <p>Combines likelihood with disruption and generativity:</p>
             <div className="formula">
               I_intensity = L × √(D² + G²)
             </div>
             <p>Where D = Disruption (normalized), G = Generative (normalized)</p>
-
+            <p><strong>Geometric interpretation:</strong> Disruption and Generative are orthogonal dimensions (an innovation can be highly disruptive with low generativity, or vice versa). The square root of the sum of squares calculates the Euclidean distance in two-dimensional D-G space, representing the combined magnitude of these effects. Multiplying by L ensures that intensity only matters when necessary conditions are met—without cognitive transformation and irreversibility, high D and G scores are meaningless.</p>
             <h3>Step 6: Classification Taxonomy</h3>
             <table>
               <thead>
@@ -989,37 +863,17 @@
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>Upgradation</td>
-                  <td>L &lt; 1.0 (necessary conditions not met)</td>
-                </tr>
-                <tr>
-                  <td>Marginal Innovation</td>
-                  <td>L ≥ 1.0 AND I_intensity &lt; 0.5</td>
-                </tr>
-                <tr>
-                  <td>Modernization</td>
-                  <td>L ≥ 1.0 AND 0.5 ≤ I_intensity &lt; 1.0</td>
-                </tr>
-                <tr>
-                  <td>Innovation</td>
-                  <td>L ≥ 1.0 AND 1.0 ≤ I_intensity &lt; 1.5</td>
-                </tr>
-                <tr>
-                  <td>Transformative Innovation</td>
-                  <td>L ≥ 1.0 AND I_intensity ≥ 1.5 (but not Revolutionary)</td>
-                </tr>
-                <tr>
-                  <td>Revolutionary Innovation</td>
-                  <td>L ≥ 1.0 AND I_intensity ≥ 1.5 AND all dimensions ≥ 0.75</td>
-                </tr>
+                <tr><td>Upgradation</td><td>L &lt; 1.0 (necessary conditions not met)</td></tr>
+                <tr><td>Marginal Innovation</td><td>L ≥ 1.0 AND I_intensity &lt; 0.5</td></tr>
+                <tr><td>Modernization</td><td>L ≥ 1.0 AND 0.5 ≤ I_intensity &lt; 1.0</td></tr>
+                <tr><td>Innovation</td><td>L ≥ 1.0 AND 1.0 ≤ I_intensity &lt; 1.5</td></tr>
+                <tr><td>Transformative Innovation</td><td>L ≥ 1.0 AND I_intensity ≥ 1.5 (but not Revolutionary)</td></tr>
+                <tr><td>Revolutionary Innovation</td><td>L ≥ 1.0 AND I_intensity ≥ 1.5 AND all dimensions ≥ 0.75</td></tr>
               </tbody>
             </table>
           </div>
-
           <div className="guide-section">
             <h2>4. Evidence Search: Agency, Not Automation</h2>
-            
             <h3>Why Search for Evidence?</h3>
             <ul>
               <li><strong>Reduce confirmation bias:</strong> Forces confrontation with counter-evidence</li>
@@ -1027,7 +881,6 @@
               <li><strong>Level expertise gap:</strong> Junior analysts gain automatic source access</li>
               <li><strong>Speed assessment:</strong> Eliminates manual literature review</li>
             </ul>
-
             <h3>How to Formulate Search Terms</h3>
             <p>
               The tool provides dimension-specific recommended terms (e.g., "doctrine revision" for Cognitive, 
@@ -1040,7 +893,6 @@
               <li>Theoretical concepts: "path dependence", "doctrinal breakpoint"</li>
             </ul>
             <p><strong>Avoid:</strong> Generic verbs ("improve", "enhance"), vague adjectives ("better", "new")</p>
-
             <h3>Interpreting Results</h3>
             <p>
               Search results provide external validation or contradiction of your assessment. Look for:
@@ -1054,7 +906,6 @@
               Absence of evidence is NOT evidence of absence. If no results appear, your search terms may be too narrow 
               or the innovation may be undertheorized in existing literature.
             </p>
-
             <h3>Philosophy: Agency, Not Automation</h3>
             <p>
               Evidence search is <em>optional and deliberate</em>. The system does computational work (query construction, 
@@ -1062,38 +913,31 @@
               "⚠️ Evidence not reviewed" serves as a nudge, not a requirement.
             </p>
           </div>
-
           <div className="guide-section">
             <h2>5. Use Cases</h2>
-
             <h3>Defense Planning & Acquisition</h3>
             <p>
               Evaluate technology proposals to distinguish genuine innovations from incremental improvements. Avoid 
               strategic misallocation by assessing whether claimed innovations meet necessary conditions.
             </p>
-
             <h3>Academic Research</h3>
             <p>
               Comparative analysis of historical innovations. MIAF provides standardized metrics for cross-case comparison, 
               enabling systematic study of innovation patterns.
             </p>
-
             <h3>Technology Assessment</h3>
             <p>
               Assess emerging technologies (AI, hypersonics, quantum) against innovation criteria. Distinguish hype from 
               substantive military change.
             </p>
-
             <h3>Policy Development</h3>
             <p>
               Inform innovation policy by understanding which characteristics predict successful adoption. Design programs 
               that address both cognitive and institutional dimensions.
             </p>
           </div>
-
           <div className="guide-section">
             <h2>6. How to Use This Tool</h2>
-
             <h3>Step-by-Step Walkthrough</h3>
             <p><strong>Tab 1: Test Your Idea</strong></p>
             <ol>
@@ -1105,7 +949,6 @@
               <li>Check the mathematical analysis for L and I_intensity values</li>
               <li>Click "View Detailed Analysis" for comprehensive feedback</li>
             </ol>
-
             <p><strong>Tab 2: Historical Examples</strong></p>
             <ol>
               <li>Select a case from the dropdown (27 historical innovations)</li>
@@ -1114,7 +957,6 @@
               <li>Compare MIAF classification to conventional narratives</li>
               <li>Learn from validated assessments to calibrate your own judgments</li>
             </ol>
-
             <h3>Reading the Charts</h3>
             <p><strong>Radar Chart (Normalized [0,1]):</strong></p>
             <ul>
@@ -1122,14 +964,12 @@
               <li>Red dashed line: Necessary condition threshold (C ≥ 0.5, I ≥ 0.5)</li>
               <li>Larger area = higher innovation intensity</li>
             </ul>
-
             <p><strong>Bar Chart (Raw [0-4]):</strong></p>
             <ul>
               <li>Green bars (≥3): Strong presence of characteristic</li>
               <li>Yellow bars (2): Moderate presence</li>
               <li>Red bars (&lt;2): Weak or absent</li>
             </ul>
-
             <h3>Understanding Violations/Warnings</h3>
             <p>The system flags potential assessment issues:</p>
             <ul>
@@ -1139,19 +979,15 @@
             </ul>
             <p>These are guidance, not failures. Consider whether your assessment accurately reflects the innovation's characteristics.</p>
           </div>
-
           <button onClick={onBack} className="back-btn">← Back to Assessment</button>
         </div>
       );
     }
-
-    /* === Historical Examples === */
     function HistoricalExamples({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey,searchEngineId}){
       const keys=Object.keys(EXAMPLES);
       const [sel,setSel]=useState("");
       const [subs,setSubs]=useState(null);
       const [evidenceSearched, setEvidenceSearched] = useState({});
-
       function buildSubFromExample(ex) {
         const s = {};
         const rep=(arr,val)=>arr.forEach(k=>s[k]=val);
@@ -1163,21 +999,17 @@
         s.c2c = ex.scores.Cognitive; s.c2d = ex.scores.Cognitive;
         return s;
       }
-
       function evaluateAndRender(nextSubs){
         const raw = computeRawFromSub(nextSubs);
         const norm = normalizeScores(raw);
         const classRes = classify(norm);
-        
         setRawScores(raw);
         setNormScores(norm);
         setClassResult(classRes);
         setSubScores(nextSubs);
-        
         const ex = EXAMPLES[sel];
         setIssues(getEducationalAnalysis(sel, ex, classRes));
       }
-
       function setValue(k,v){
         setSubs(prev=>{
           const next = {...prev, [k]: v};
@@ -1185,7 +1017,6 @@
           return next;
         });
       }
-
       function loadFromSelection(v){
         setSel(v);
         setEvidenceSearched({});
@@ -1204,9 +1035,7 @@
         setSubs(subVals);
         evaluateAndRender(subVals);
       }
-
       const ex = sel ? EXAMPLES[sel] : null;
-
       return (
         <div className="space-y-6">
           <div>
@@ -1215,7 +1044,6 @@
               Select a case. All 27 cases assessed using v1.6 mathematics (normalized scoring, L/I_intensity classification).
             </p>
           </div>
-
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-sm font-medium">Example</label>
             <select value={sel} onChange={e=>loadFromSelection(e.target.value)} className="border rounded-md px-3 py-2 text-sm min-w-[20rem]">
@@ -1223,7 +1051,6 @@
               {keys.map(k=><option key={k} value={k}>{k}</option>)}
             </select>
           </div>
-
           {ex && (
             <div className="grid md:grid-cols-2 gap-6">
               {ORDER.map(dim=>{
@@ -1262,8 +1089,6 @@
         </div>
       );
     }
-
-    /* === Test Your Idea === */
     function TestYourIdea({setRawScores,setNormScores,setMeta,setSubScores,setClassResult,setIssues,apiKey,searchEngineId}){
       const [label,setLabel]=useState("");
       const [sub,setSub]=useState({
@@ -1273,19 +1098,16 @@
         g1:0,g2:0,g3:0,g4:0
       });
       const [evidenceSearched, setEvidenceSearched] = useState({});
-
       function runEval(nextSub){
         const raw = computeRawFromSub(nextSub);
         const norm = normalizeScores(raw);
         const classRes = classify(norm);
-        
         setRawScores(raw);
         setNormScores(norm);
         setClassResult(classRes);
         setSubScores(nextSub);
         setIssues(generateUserFeedback(nextSub, raw, norm, classRes));
       }
-
       function setValue(k,v){
         setSub(prev=>{
           const next = {...prev, [k]: v};
@@ -1293,9 +1115,7 @@
           return next;
         });
       }
-
       useEffect(()=>{ setMeta({label}); },[label]);
-
       return (
         <div className="space-y-6">
           <div className="panel panel-b">
@@ -1312,7 +1132,6 @@
                 {!label && <div className="text-xs text-blue-600">Enter a descriptive title</div>}
               </div>
             </div>
-
             <div className="mt-6 grid md:grid-cols-2 gap-6">
               {ORDER.map(dim=>{
                 const pick = {};
@@ -1343,18 +1162,13 @@
         </div>
       );
     }
-
-    /* === Charts + Status === */
     function ChartsPanel({rawScores,normScores,classResult,meta,subScores,openModal}){
       const isHistorical = !!(meta && meta.ex && EXAMPLES[meta.label]);
-
       const violations = useMemo(()=>{
         if (!subScores || Object.keys(subScores).length===0) return {};
         return computeViolations(subScores, normScores, isHistorical);
       },[subScores, normScores, isHistorical]);
-
       const failedKeys = Object.entries(violations).filter(([_,v])=>v).map(([k])=>k);
-
       return (
         <div className="grid md:grid-cols-2 gap-6">
           <div className="panel">
@@ -1365,7 +1179,6 @@
             <div className="panel-h">Bar Chart (Raw [0-4])</div>
             <div className="panel-b"><BarChart rawScores={rawScores}/></div>
           </div>
-
           <div className="md:col-span-2 panel panel-b">
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-4 flex-wrap">
@@ -1374,7 +1187,6 @@
                 </div>
                 {meta && meta.label && <div className="text-gray-600">Case: <span className="font-medium">{meta.label}</span></div>}
               </div>
-
               <div className="math-box">
                 <div className="font-semibold mb-2">Mathematical Analysis (v1.6)</div>
                 <div>L (Innovation Likelihood) = min(C/0.5, I/0.5) = {classResult.L ? classResult.L.toFixed(2) : 'N/A'}</div>
@@ -1383,7 +1195,6 @@
                 )}
                 <div className="mt-2 text-sm">{classResult.reason}</div>
               </div>
-
               {failedKeys.length>0 && !isHistorical && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                   <div className="font-semibold text-amber-900 mb-2">Assessment Guidance</div>
@@ -1392,7 +1203,6 @@
                   ))}
                 </div>
               )}
-
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                 {DIMS.map(d=>(
                   <div key={d.key}>
@@ -1403,7 +1213,6 @@
                   </div>
                 ))}
               </div>
-
               <div className="flex justify-end">
                 <button
                   onClick={openModal}
@@ -1416,8 +1225,6 @@
         </div>
       );
     }
-
-    /* === App === */
     function App(){
       const [tab,setTab]=useState('test');
       const [rawScores,setRawScores]=useState({Cognitive:0,Irreversibility:0,Disruption:0,Generative:0});
@@ -1427,17 +1234,13 @@
       const [subScores,setSubScores]=useState({});
       const [issues,setIssues]=useState([]);
       const [modalOpen,setModalOpen]=useState(false);
-      
-      // Load API credentials from localStorage on mount
       const [apiKey,setApiKey]=useState("");
       const [searchEngineId,setSearchEngineId]=useState("");
-
       useEffect(() => {
         const storedKey = localStorage.getItem('google_api_key') || "AIzaSyBlXjjV8mZy_Smm1TIDBqviv6blbJqNYYM";
         const storedCx = localStorage.getItem('google_search_engine_id') || "61b572d99cb424a78";
         setApiKey(storedKey);
         setSearchEngineId(storedCx);
-        // Store defaults if not present
         if (!localStorage.getItem('google_api_key')) {
           localStorage.setItem('google_api_key', storedKey);
         }
@@ -1445,12 +1248,10 @@
           localStorage.setItem('google_search_engine_id', storedCx);
         }
       }, []);
-
       const violations = useMemo(()=>{
         if (!subScores || Object.keys(subScores).length===0) return {};
         return computeViolations(subScores, normScores, !!(meta && meta.ex && EXAMPLES[meta.label]));
       },[subScores, normScores, meta]);
-
       return (
         <main>
           <header className="text-center space-y-1 mb-6">
@@ -1458,7 +1259,6 @@
             <h2 className="text-xl md:text-2xl font-bold text-gray-800">v5.2</h2>
             <div className="text-xs text-gray-500 mt-1">© Manabrata Guha, 2025-2026</div>
           </header>
-
           <div className="big-tabs">
             {[
               {k:'test',label:'Test Your Idea'},
@@ -1469,7 +1269,6 @@
                 className={'big-tab ' + (tab===t.k?'big-tab-active':'big-tab-inactive')}>{t.label}</button>
             ))}
           </div>
-
           <section className="space-y-6">
             {tab==='test' && (
               <>
@@ -1505,16 +1304,13 @@
               <FrameworkGuide onBack={()=>setTab('test')} />
             )}
           </section>
-
           <footer className="mt-10 text-center text-xs text-gray-500">
             Military Innovation Assessment Framework v5.2 © Manabrata Guha, 2025-2026
           </footer>
-
           {modalOpen && <IssuesModal issues={issues} meta={meta} subScores={subScores} rawScores={rawScores} normScores={normScores} classResult={classResult} violations={violations} onClose={()=>setModalOpen(false)}/>}
         </main>
       );
     }
-
     ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
   </script>
 </body>
